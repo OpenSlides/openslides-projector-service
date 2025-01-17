@@ -1,0 +1,69 @@
+@font-face {
+	font-family: "OSFont";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 400;
+	src: url("/assets/fonts/fira-sans-latin-400.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont";
+	font-style: italic;
+	font-display: swap;
+	font-weight: 400;
+	src: url("/assets/fonts/fira-sans-latin-400italic.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 500;
+	src: url("/assets/fonts/fira-sans-latin-500.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont";
+	font-style: italic;
+	font-display: swap;
+	font-weight: 500;
+	src: url("/assets/fonts/fira-sans-latin-500italic.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont Condensed";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 400;
+	src: url("/assets/fonts/fira-sans-condensed-latin-400.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont Monospace";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 800;
+	src: url("/assets/fonts/roboto-condensed-bold.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont ChyronName";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 400;
+	src: url("/assets/fonts/fira-sans-latin-400.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont projectorH1";
+	font-style: normal;
+	font-display: swap;
+	src: url("/assets/fonts/fira-sans-latin-500.woff") format("woff");
+}
+
+@font-face {
+	font-family: "OSFont projectorH2";
+	font-style: normal;
+	font-display: swap;
+	src: url("/assets/fonts/fira-sans-latin-400.woff") format("woff");
+}

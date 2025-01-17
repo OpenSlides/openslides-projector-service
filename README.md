@@ -1,0 +1,4 @@
+# OpenSlides Projector Service
+
+WIP
+

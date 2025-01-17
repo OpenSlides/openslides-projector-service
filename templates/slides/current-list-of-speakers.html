@@ -1,0 +1,12 @@
+<div class="content">
+    <h1 class="projector_h1">
+        List of speakers
+    </h1>
+    <div class="detail-view-text">
+        {{range $index, $element := .Speakers}}
+            <div class="speaker">
+                {{ $index }}. {{$element}}
+            </div>
+        {{end}}
+    </div>
+</div>
