@@ -26,15 +26,23 @@ type AgendaItem struct {
 	Type            *string `json:"type"`
 	Weight          *int    `json:"weight"`
 	loadedRelations map[string]struct{}
+	childs          []*AgendaItem
 	meeting         *Meeting
+	parent          *AgendaItem
 	projections     []*Projection
 	tags            []*Tag
-	childs          []*AgendaItem
-	parent          *AgendaItem
 }
 
 func (m *AgendaItem) CollectionName() string {
 	return "agenda_item"
+}
+
+func (m *AgendaItem) Childs() []*AgendaItem {
+	if _, ok := m.loadedRelations["child_ids"]; !ok {
+		log.Panic().Msg("Tried to access Childs relation of AgendaItem which was not loaded.")
+	}
+
+	return m.childs
 }
 
 func (m *AgendaItem) Meeting() Meeting {
@@ -43,6 +51,14 @@ func (m *AgendaItem) Meeting() Meeting {
 	}
 
 	return *m.meeting
+}
+
+func (m *AgendaItem) Parent() *AgendaItem {
+	if _, ok := m.loadedRelations["parent_id"]; !ok {
+		log.Panic().Msg("Tried to access Parent relation of AgendaItem which was not loaded.")
+	}
+
+	return m.parent
 }
 
 func (m *AgendaItem) Projections() []*Projection {
@@ -61,35 +77,19 @@ func (m *AgendaItem) Tags() []*Tag {
 	return m.tags
 }
 
-func (m *AgendaItem) Childs() []*AgendaItem {
-	if _, ok := m.loadedRelations["child_ids"]; !ok {
-		log.Panic().Msg("Tried to access Childs relation of AgendaItem which was not loaded.")
-	}
-
-	return m.childs
-}
-
-func (m *AgendaItem) Parent() *AgendaItem {
-	if _, ok := m.loadedRelations["parent_id"]; !ok {
-		log.Panic().Msg("Tried to access Parent relation of AgendaItem which was not loaded.")
-	}
-
-	return m.parent
-}
-
 func (m *AgendaItem) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "child_ids":
+			m.childs = content.([]*AgendaItem)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
+		case "parent_id":
+			m.parent = content.(*AgendaItem)
 		case "projection_ids":
 			m.projections = content.([]*Projection)
 		case "tag_ids":
 			m.tags = content.([]*Tag)
-		case "child_ids":
-			m.childs = content.([]*AgendaItem)
-		case "parent_id":
-			m.parent = content.(*AgendaItem)
 		default:
 			return
 		}
@@ -104,6 +104,16 @@ func (m *AgendaItem) SetRelated(field string, content interface{}) {
 func (m *AgendaItem) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "child_ids":
+		var entry AgendaItem
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.childs = append(m.childs, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -112,6 +122,16 @@ func (m *AgendaItem) SetRelatedJSON(field string, content []byte) (*RelatedModel
 		}
 
 		m.meeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "parent_id":
+		var entry AgendaItem
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.parent = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "projection_ids":
@@ -132,26 +152,6 @@ func (m *AgendaItem) SetRelatedJSON(field string, content []byte) (*RelatedModel
 		}
 
 		m.tags = append(m.tags, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "child_ids":
-		var entry AgendaItem
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.childs = append(m.childs, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "parent_id":
-		var entry AgendaItem
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.parent = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -206,8 +206,20 @@ func (m *AgendaItem) Get(field string) interface{} {
 
 func (m *AgendaItem) GetFqids(field string) []string {
 	switch field {
+	case "child_ids":
+		r := make([]string, len(m.ChildIDs))
+		for i, id := range m.ChildIDs {
+			r[i] = "agenda_item/" + strconv.Itoa(id)
+		}
+		return r
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
+	case "parent_id":
+		if m.ParentID != nil {
+			return []string{"agenda_item/" + strconv.Itoa(*m.ParentID)}
+		}
 
 	case "projection_ids":
 		r := make([]string, len(m.ProjectionIDs))
@@ -222,18 +234,6 @@ func (m *AgendaItem) GetFqids(field string) []string {
 			r[i] = "tag/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "child_ids":
-		r := make([]string, len(m.ChildIDs))
-		for i, id := range m.ChildIDs {
-			r[i] = "agenda_item/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "parent_id":
-		if m.ParentID != nil {
-			return []string{"agenda_item/" + strconv.Itoa(*m.ParentID)}
-		}
 	}
 	return []string{}
 }

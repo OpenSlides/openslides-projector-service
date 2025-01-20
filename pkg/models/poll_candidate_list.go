@@ -14,13 +14,21 @@ type PollCandidateList struct {
 	OptionID         int   `json:"option_id"`
 	PollCandidateIDs []int `json:"poll_candidate_ids"`
 	loadedRelations  map[string]struct{}
+	meeting          *Meeting
 	option           *Option
 	pollCandidates   []*PollCandidate
-	meeting          *Meeting
 }
 
 func (m *PollCandidateList) CollectionName() string {
 	return "poll_candidate_list"
+}
+
+func (m *PollCandidateList) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of PollCandidateList which was not loaded.")
+	}
+
+	return *m.meeting
 }
 
 func (m *PollCandidateList) Option() Option {
@@ -39,23 +47,15 @@ func (m *PollCandidateList) PollCandidates() []*PollCandidate {
 	return m.pollCandidates
 }
 
-func (m *PollCandidateList) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of PollCandidateList which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
 func (m *PollCandidateList) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
 		case "option_id":
 			m.option = content.(*Option)
 		case "poll_candidate_ids":
 			m.pollCandidates = content.([]*PollCandidate)
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
 		default:
 			return
 		}
@@ -70,6 +70,16 @@ func (m *PollCandidateList) SetRelated(field string, content interface{}) {
 func (m *PollCandidateList) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "option_id":
 		var entry Option
 		err := json.Unmarshal(content, &entry)
@@ -88,16 +98,6 @@ func (m *PollCandidateList) SetRelatedJSON(field string, content []byte) (*Relat
 		}
 
 		m.pollCandidates = append(m.pollCandidates, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -128,6 +128,9 @@ func (m *PollCandidateList) Get(field string) interface{} {
 
 func (m *PollCandidateList) GetFqids(field string) []string {
 	switch field {
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
 	case "option_id":
 		return []string{"option/" + strconv.Itoa(m.OptionID)}
 
@@ -137,9 +140,6 @@ func (m *PollCandidateList) GetFqids(field string) []string {
 			r[i] = "poll_candidate/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 	}
 	return []string{}
 }

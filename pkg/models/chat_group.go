@@ -17,14 +17,22 @@ type ChatGroup struct {
 	Weight          *int   `json:"weight"`
 	WriteGroupIDs   []int  `json:"write_group_ids"`
 	loadedRelations map[string]struct{}
+	chatMessages    []*ChatMessage
 	meeting         *Meeting
 	readGroups      []*Group
 	writeGroups     []*Group
-	chatMessages    []*ChatMessage
 }
 
 func (m *ChatGroup) CollectionName() string {
 	return "chat_group"
+}
+
+func (m *ChatGroup) ChatMessages() []*ChatMessage {
+	if _, ok := m.loadedRelations["chat_message_ids"]; !ok {
+		log.Panic().Msg("Tried to access ChatMessages relation of ChatGroup which was not loaded.")
+	}
+
+	return m.chatMessages
 }
 
 func (m *ChatGroup) Meeting() Meeting {
@@ -51,25 +59,17 @@ func (m *ChatGroup) WriteGroups() []*Group {
 	return m.writeGroups
 }
 
-func (m *ChatGroup) ChatMessages() []*ChatMessage {
-	if _, ok := m.loadedRelations["chat_message_ids"]; !ok {
-		log.Panic().Msg("Tried to access ChatMessages relation of ChatGroup which was not loaded.")
-	}
-
-	return m.chatMessages
-}
-
 func (m *ChatGroup) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "chat_message_ids":
+			m.chatMessages = content.([]*ChatMessage)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "read_group_ids":
 			m.readGroups = content.([]*Group)
 		case "write_group_ids":
 			m.writeGroups = content.([]*Group)
-		case "chat_message_ids":
-			m.chatMessages = content.([]*ChatMessage)
 		default:
 			return
 		}
@@ -84,6 +84,16 @@ func (m *ChatGroup) SetRelated(field string, content interface{}) {
 func (m *ChatGroup) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "chat_message_ids":
+		var entry ChatMessage
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.chatMessages = append(m.chatMessages, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -112,16 +122,6 @@ func (m *ChatGroup) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		}
 
 		m.writeGroups = append(m.writeGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "chat_message_ids":
-		var entry ChatMessage
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.chatMessages = append(m.chatMessages, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -158,6 +158,13 @@ func (m *ChatGroup) Get(field string) interface{} {
 
 func (m *ChatGroup) GetFqids(field string) []string {
 	switch field {
+	case "chat_message_ids":
+		r := make([]string, len(m.ChatMessageIDs))
+		for i, id := range m.ChatMessageIDs {
+			r[i] = "chat_message/" + strconv.Itoa(id)
+		}
+		return r
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
@@ -172,13 +179,6 @@ func (m *ChatGroup) GetFqids(field string) []string {
 		r := make([]string, len(m.WriteGroupIDs))
 		for i, id := range m.WriteGroupIDs {
 			r[i] = "group/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "chat_message_ids":
-		r := make([]string, len(m.ChatMessageIDs))
-		for i, id := range m.ChatMessageIDs {
-			r[i] = "chat_message/" + strconv.Itoa(id)
 		}
 		return r
 	}

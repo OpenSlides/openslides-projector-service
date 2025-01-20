@@ -35,80 +35,32 @@ type MeetingMediafile struct {
 	UsedAsLogoProjectorMainInMeetingID     *int     `json:"used_as_logo_projector_main_in_meeting_id"`
 	UsedAsLogoWebHeaderInMeetingID         *int     `json:"used_as_logo_web_header_in_meeting_id"`
 	loadedRelations                        map[string]struct{}
-	projections                            []*Projection
-	usedAsLogoPdfFooterLInMeeting          *Meeting
-	usedAsLogoPdfHeaderRInMeeting          *Meeting
-	usedAsFontRegularInMeeting             *Meeting
-	usedAsLogoPdfFooterRInMeeting          *Meeting
-	usedAsLogoProjectorMainInMeeting       *Meeting
 	accessGroups                           []*Group
-	meeting                                *Meeting
-	usedAsFontChyronSpeakerNameInMeeting   *Meeting
-	usedAsFontItalicInMeeting              *Meeting
-	usedAsFontProjectorH1InMeeting         *Meeting
-	usedAsFontProjectorH2InMeeting         *Meeting
-	usedAsLogoPdfHeaderLInMeeting          *Meeting
-	mediafile                              *Mediafile
-	usedAsFontBoldInMeeting                *Meeting
-	usedAsFontBoldItalicInMeeting          *Meeting
-	usedAsLogoWebHeaderInMeeting           *Meeting
-	usedAsLogoProjectorHeaderInMeeting     *Meeting
 	inheritedAccessGroups                  []*Group
 	listOfSpeakers                         *ListOfSpeakers
+	mediafile                              *Mediafile
+	meeting                                *Meeting
+	projections                            []*Projection
+	usedAsFontBoldInMeeting                *Meeting
+	usedAsFontBoldItalicInMeeting          *Meeting
+	usedAsFontChyronSpeakerNameInMeeting   *Meeting
+	usedAsFontItalicInMeeting              *Meeting
 	usedAsFontMonospaceInMeeting           *Meeting
+	usedAsFontProjectorH1InMeeting         *Meeting
+	usedAsFontProjectorH2InMeeting         *Meeting
+	usedAsFontRegularInMeeting             *Meeting
 	usedAsLogoPdfBallotPaperInMeeting      *Meeting
+	usedAsLogoPdfFooterLInMeeting          *Meeting
+	usedAsLogoPdfFooterRInMeeting          *Meeting
+	usedAsLogoPdfHeaderLInMeeting          *Meeting
+	usedAsLogoPdfHeaderRInMeeting          *Meeting
+	usedAsLogoProjectorHeaderInMeeting     *Meeting
+	usedAsLogoProjectorMainInMeeting       *Meeting
+	usedAsLogoWebHeaderInMeeting           *Meeting
 }
 
 func (m *MeetingMediafile) CollectionName() string {
 	return "meeting_mediafile"
-}
-
-func (m *MeetingMediafile) Projections() []*Projection {
-	if _, ok := m.loadedRelations["projection_ids"]; !ok {
-		log.Panic().Msg("Tried to access Projections relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.projections
-}
-
-func (m *MeetingMediafile) UsedAsLogoPdfFooterLInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_pdf_footer_l_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoPdfFooterLInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoPdfFooterLInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsLogoPdfHeaderRInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_pdf_header_r_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoPdfHeaderRInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoPdfHeaderRInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsFontRegularInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_regular_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontRegularInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontRegularInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsLogoPdfFooterRInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_pdf_footer_r_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoPdfFooterRInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoPdfFooterRInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsLogoProjectorMainInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_projector_main_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoProjectorMainInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoProjectorMainInMeeting
 }
 
 func (m *MeetingMediafile) AccessGroups() []*Group {
@@ -117,94 +69,6 @@ func (m *MeetingMediafile) AccessGroups() []*Group {
 	}
 
 	return m.accessGroups
-}
-
-func (m *MeetingMediafile) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
-func (m *MeetingMediafile) UsedAsFontChyronSpeakerNameInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_chyron_speaker_name_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontChyronSpeakerNameInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontChyronSpeakerNameInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsFontItalicInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_italic_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontItalicInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontItalicInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsFontProjectorH1InMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_projector_h1_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontProjectorH1InMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontProjectorH1InMeeting
-}
-
-func (m *MeetingMediafile) UsedAsFontProjectorH2InMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_projector_h2_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontProjectorH2InMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontProjectorH2InMeeting
-}
-
-func (m *MeetingMediafile) UsedAsLogoPdfHeaderLInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_pdf_header_l_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoPdfHeaderLInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoPdfHeaderLInMeeting
-}
-
-func (m *MeetingMediafile) Mediafile() Mediafile {
-	if _, ok := m.loadedRelations["mediafile_id"]; !ok {
-		log.Panic().Msg("Tried to access Mediafile relation of MeetingMediafile which was not loaded.")
-	}
-
-	return *m.mediafile
-}
-
-func (m *MeetingMediafile) UsedAsFontBoldInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_bold_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontBoldInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontBoldInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsFontBoldItalicInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_font_bold_italic_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsFontBoldItalicInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsFontBoldItalicInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsLogoWebHeaderInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_web_header_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoWebHeaderInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoWebHeaderInMeeting
-}
-
-func (m *MeetingMediafile) UsedAsLogoProjectorHeaderInMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_logo_projector_header_in_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsLogoProjectorHeaderInMeeting relation of MeetingMediafile which was not loaded.")
-	}
-
-	return m.usedAsLogoProjectorHeaderInMeeting
 }
 
 func (m *MeetingMediafile) InheritedAccessGroups() []*Group {
@@ -223,12 +87,92 @@ func (m *MeetingMediafile) ListOfSpeakers() *ListOfSpeakers {
 	return m.listOfSpeakers
 }
 
+func (m *MeetingMediafile) Mediafile() Mediafile {
+	if _, ok := m.loadedRelations["mediafile_id"]; !ok {
+		log.Panic().Msg("Tried to access Mediafile relation of MeetingMediafile which was not loaded.")
+	}
+
+	return *m.mediafile
+}
+
+func (m *MeetingMediafile) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return *m.meeting
+}
+
+func (m *MeetingMediafile) Projections() []*Projection {
+	if _, ok := m.loadedRelations["projection_ids"]; !ok {
+		log.Panic().Msg("Tried to access Projections relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.projections
+}
+
+func (m *MeetingMediafile) UsedAsFontBoldInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_bold_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontBoldInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontBoldInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsFontBoldItalicInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_bold_italic_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontBoldItalicInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontBoldItalicInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsFontChyronSpeakerNameInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_chyron_speaker_name_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontChyronSpeakerNameInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontChyronSpeakerNameInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsFontItalicInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_italic_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontItalicInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontItalicInMeeting
+}
+
 func (m *MeetingMediafile) UsedAsFontMonospaceInMeeting() *Meeting {
 	if _, ok := m.loadedRelations["used_as_font_monospace_in_meeting_id"]; !ok {
 		log.Panic().Msg("Tried to access UsedAsFontMonospaceInMeeting relation of MeetingMediafile which was not loaded.")
 	}
 
 	return m.usedAsFontMonospaceInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsFontProjectorH1InMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_projector_h1_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontProjectorH1InMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontProjectorH1InMeeting
+}
+
+func (m *MeetingMediafile) UsedAsFontProjectorH2InMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_projector_h2_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontProjectorH2InMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontProjectorH2InMeeting
+}
+
+func (m *MeetingMediafile) UsedAsFontRegularInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_font_regular_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsFontRegularInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsFontRegularInMeeting
 }
 
 func (m *MeetingMediafile) UsedAsLogoPdfBallotPaperInMeeting() *Meeting {
@@ -239,53 +183,109 @@ func (m *MeetingMediafile) UsedAsLogoPdfBallotPaperInMeeting() *Meeting {
 	return m.usedAsLogoPdfBallotPaperInMeeting
 }
 
+func (m *MeetingMediafile) UsedAsLogoPdfFooterLInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_pdf_footer_l_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoPdfFooterLInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoPdfFooterLInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsLogoPdfFooterRInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_pdf_footer_r_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoPdfFooterRInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoPdfFooterRInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsLogoPdfHeaderLInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_pdf_header_l_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoPdfHeaderLInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoPdfHeaderLInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsLogoPdfHeaderRInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_pdf_header_r_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoPdfHeaderRInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoPdfHeaderRInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsLogoProjectorHeaderInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_projector_header_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoProjectorHeaderInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoProjectorHeaderInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsLogoProjectorMainInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_projector_main_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoProjectorMainInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoProjectorMainInMeeting
+}
+
+func (m *MeetingMediafile) UsedAsLogoWebHeaderInMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_logo_web_header_in_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsLogoWebHeaderInMeeting relation of MeetingMediafile which was not loaded.")
+	}
+
+	return m.usedAsLogoWebHeaderInMeeting
+}
+
 func (m *MeetingMediafile) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "projection_ids":
-			m.projections = content.([]*Projection)
-		case "used_as_logo_pdf_footer_l_in_meeting_id":
-			m.usedAsLogoPdfFooterLInMeeting = content.(*Meeting)
-		case "used_as_logo_pdf_header_r_in_meeting_id":
-			m.usedAsLogoPdfHeaderRInMeeting = content.(*Meeting)
-		case "used_as_font_regular_in_meeting_id":
-			m.usedAsFontRegularInMeeting = content.(*Meeting)
-		case "used_as_logo_pdf_footer_r_in_meeting_id":
-			m.usedAsLogoPdfFooterRInMeeting = content.(*Meeting)
-		case "used_as_logo_projector_main_in_meeting_id":
-			m.usedAsLogoProjectorMainInMeeting = content.(*Meeting)
 		case "access_group_ids":
 			m.accessGroups = content.([]*Group)
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
-		case "used_as_font_chyron_speaker_name_in_meeting_id":
-			m.usedAsFontChyronSpeakerNameInMeeting = content.(*Meeting)
-		case "used_as_font_italic_in_meeting_id":
-			m.usedAsFontItalicInMeeting = content.(*Meeting)
-		case "used_as_font_projector_h1_in_meeting_id":
-			m.usedAsFontProjectorH1InMeeting = content.(*Meeting)
-		case "used_as_font_projector_h2_in_meeting_id":
-			m.usedAsFontProjectorH2InMeeting = content.(*Meeting)
-		case "used_as_logo_pdf_header_l_in_meeting_id":
-			m.usedAsLogoPdfHeaderLInMeeting = content.(*Meeting)
-		case "mediafile_id":
-			m.mediafile = content.(*Mediafile)
-		case "used_as_font_bold_in_meeting_id":
-			m.usedAsFontBoldInMeeting = content.(*Meeting)
-		case "used_as_font_bold_italic_in_meeting_id":
-			m.usedAsFontBoldItalicInMeeting = content.(*Meeting)
-		case "used_as_logo_web_header_in_meeting_id":
-			m.usedAsLogoWebHeaderInMeeting = content.(*Meeting)
-		case "used_as_logo_projector_header_in_meeting_id":
-			m.usedAsLogoProjectorHeaderInMeeting = content.(*Meeting)
 		case "inherited_access_group_ids":
 			m.inheritedAccessGroups = content.([]*Group)
 		case "list_of_speakers_id":
 			m.listOfSpeakers = content.(*ListOfSpeakers)
+		case "mediafile_id":
+			m.mediafile = content.(*Mediafile)
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
+		case "projection_ids":
+			m.projections = content.([]*Projection)
+		case "used_as_font_bold_in_meeting_id":
+			m.usedAsFontBoldInMeeting = content.(*Meeting)
+		case "used_as_font_bold_italic_in_meeting_id":
+			m.usedAsFontBoldItalicInMeeting = content.(*Meeting)
+		case "used_as_font_chyron_speaker_name_in_meeting_id":
+			m.usedAsFontChyronSpeakerNameInMeeting = content.(*Meeting)
+		case "used_as_font_italic_in_meeting_id":
+			m.usedAsFontItalicInMeeting = content.(*Meeting)
 		case "used_as_font_monospace_in_meeting_id":
 			m.usedAsFontMonospaceInMeeting = content.(*Meeting)
+		case "used_as_font_projector_h1_in_meeting_id":
+			m.usedAsFontProjectorH1InMeeting = content.(*Meeting)
+		case "used_as_font_projector_h2_in_meeting_id":
+			m.usedAsFontProjectorH2InMeeting = content.(*Meeting)
+		case "used_as_font_regular_in_meeting_id":
+			m.usedAsFontRegularInMeeting = content.(*Meeting)
 		case "used_as_logo_pdf_ballot_paper_in_meeting_id":
 			m.usedAsLogoPdfBallotPaperInMeeting = content.(*Meeting)
+		case "used_as_logo_pdf_footer_l_in_meeting_id":
+			m.usedAsLogoPdfFooterLInMeeting = content.(*Meeting)
+		case "used_as_logo_pdf_footer_r_in_meeting_id":
+			m.usedAsLogoPdfFooterRInMeeting = content.(*Meeting)
+		case "used_as_logo_pdf_header_l_in_meeting_id":
+			m.usedAsLogoPdfHeaderLInMeeting = content.(*Meeting)
+		case "used_as_logo_pdf_header_r_in_meeting_id":
+			m.usedAsLogoPdfHeaderRInMeeting = content.(*Meeting)
+		case "used_as_logo_projector_header_in_meeting_id":
+			m.usedAsLogoProjectorHeaderInMeeting = content.(*Meeting)
+		case "used_as_logo_projector_main_in_meeting_id":
+			m.usedAsLogoProjectorMainInMeeting = content.(*Meeting)
+		case "used_as_logo_web_header_in_meeting_id":
+			m.usedAsLogoWebHeaderInMeeting = content.(*Meeting)
 		default:
 			return
 		}
@@ -300,66 +300,6 @@ func (m *MeetingMediafile) SetRelated(field string, content interface{}) {
 func (m *MeetingMediafile) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "projection_ids":
-		var entry Projection
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.projections = append(m.projections, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_pdf_footer_l_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoPdfFooterLInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_pdf_header_r_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoPdfHeaderRInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_regular_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontRegularInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_pdf_footer_r_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoPdfFooterRInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_projector_main_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoProjectorMainInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "access_group_ids":
 		var entry Group
 		err := json.Unmarshal(content, &entry)
@@ -368,116 +308,6 @@ func (m *MeetingMediafile) SetRelatedJSON(field string, content []byte) (*Relate
 		}
 
 		m.accessGroups = append(m.accessGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_chyron_speaker_name_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontChyronSpeakerNameInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_italic_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontItalicInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_projector_h1_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontProjectorH1InMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_projector_h2_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontProjectorH2InMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_pdf_header_l_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoPdfHeaderLInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "mediafile_id":
-		var entry Mediafile
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.mediafile = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_bold_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontBoldInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_font_bold_italic_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsFontBoldItalicInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_web_header_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoWebHeaderInMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_logo_projector_header_in_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsLogoProjectorHeaderInMeeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "inherited_access_group_ids":
@@ -500,6 +330,76 @@ func (m *MeetingMediafile) SetRelatedJSON(field string, content []byte) (*Relate
 		m.listOfSpeakers = &entry
 
 		result = entry.GetRelatedModelsAccessor()
+	case "mediafile_id":
+		var entry Mediafile
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.mediafile = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "projection_ids":
+		var entry Projection
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.projections = append(m.projections, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_bold_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontBoldInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_bold_italic_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontBoldItalicInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_chyron_speaker_name_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontChyronSpeakerNameInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_italic_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontItalicInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "used_as_font_monospace_in_meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -510,6 +410,36 @@ func (m *MeetingMediafile) SetRelatedJSON(field string, content []byte) (*Relate
 		m.usedAsFontMonospaceInMeeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_projector_h1_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontProjectorH1InMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_projector_h2_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontProjectorH2InMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_font_regular_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsFontRegularInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "used_as_logo_pdf_ballot_paper_in_meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -518,6 +448,76 @@ func (m *MeetingMediafile) SetRelatedJSON(field string, content []byte) (*Relate
 		}
 
 		m.usedAsLogoPdfBallotPaperInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_footer_l_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoPdfFooterLInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_footer_r_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoPdfFooterRInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_header_l_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoPdfHeaderLInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_header_r_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoPdfHeaderRInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_projector_header_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoProjectorHeaderInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_projector_main_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoProjectorMainInMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_logo_web_header_in_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsLogoWebHeaderInMeeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -590,95 +590,12 @@ func (m *MeetingMediafile) Get(field string) interface{} {
 
 func (m *MeetingMediafile) GetFqids(field string) []string {
 	switch field {
-	case "projection_ids":
-		r := make([]string, len(m.ProjectionIDs))
-		for i, id := range m.ProjectionIDs {
-			r[i] = "projection/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "used_as_logo_pdf_footer_l_in_meeting_id":
-		if m.UsedAsLogoPdfFooterLInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfFooterLInMeetingID)}
-		}
-
-	case "used_as_logo_pdf_header_r_in_meeting_id":
-		if m.UsedAsLogoPdfHeaderRInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfHeaderRInMeetingID)}
-		}
-
-	case "used_as_font_regular_in_meeting_id":
-		if m.UsedAsFontRegularInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontRegularInMeetingID)}
-		}
-
-	case "used_as_logo_pdf_footer_r_in_meeting_id":
-		if m.UsedAsLogoPdfFooterRInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfFooterRInMeetingID)}
-		}
-
-	case "used_as_logo_projector_main_in_meeting_id":
-		if m.UsedAsLogoProjectorMainInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoProjectorMainInMeetingID)}
-		}
-
 	case "access_group_ids":
 		r := make([]string, len(m.AccessGroupIDs))
 		for i, id := range m.AccessGroupIDs {
 			r[i] = "group/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
-
-	case "used_as_font_chyron_speaker_name_in_meeting_id":
-		if m.UsedAsFontChyronSpeakerNameInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontChyronSpeakerNameInMeetingID)}
-		}
-
-	case "used_as_font_italic_in_meeting_id":
-		if m.UsedAsFontItalicInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontItalicInMeetingID)}
-		}
-
-	case "used_as_font_projector_h1_in_meeting_id":
-		if m.UsedAsFontProjectorH1InMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontProjectorH1InMeetingID)}
-		}
-
-	case "used_as_font_projector_h2_in_meeting_id":
-		if m.UsedAsFontProjectorH2InMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontProjectorH2InMeetingID)}
-		}
-
-	case "used_as_logo_pdf_header_l_in_meeting_id":
-		if m.UsedAsLogoPdfHeaderLInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfHeaderLInMeetingID)}
-		}
-
-	case "mediafile_id":
-		return []string{"mediafile/" + strconv.Itoa(m.MediafileID)}
-
-	case "used_as_font_bold_in_meeting_id":
-		if m.UsedAsFontBoldInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontBoldInMeetingID)}
-		}
-
-	case "used_as_font_bold_italic_in_meeting_id":
-		if m.UsedAsFontBoldItalicInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontBoldItalicInMeetingID)}
-		}
-
-	case "used_as_logo_web_header_in_meeting_id":
-		if m.UsedAsLogoWebHeaderInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoWebHeaderInMeetingID)}
-		}
-
-	case "used_as_logo_projector_header_in_meeting_id":
-		if m.UsedAsLogoProjectorHeaderInMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoProjectorHeaderInMeetingID)}
-		}
 
 	case "inherited_access_group_ids":
 		r := make([]string, len(m.InheritedAccessGroupIDs))
@@ -692,14 +609,97 @@ func (m *MeetingMediafile) GetFqids(field string) []string {
 			return []string{"list_of_speakers/" + strconv.Itoa(*m.ListOfSpeakersID)}
 		}
 
+	case "mediafile_id":
+		return []string{"mediafile/" + strconv.Itoa(m.MediafileID)}
+
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
+	case "projection_ids":
+		r := make([]string, len(m.ProjectionIDs))
+		for i, id := range m.ProjectionIDs {
+			r[i] = "projection/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "used_as_font_bold_in_meeting_id":
+		if m.UsedAsFontBoldInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontBoldInMeetingID)}
+		}
+
+	case "used_as_font_bold_italic_in_meeting_id":
+		if m.UsedAsFontBoldItalicInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontBoldItalicInMeetingID)}
+		}
+
+	case "used_as_font_chyron_speaker_name_in_meeting_id":
+		if m.UsedAsFontChyronSpeakerNameInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontChyronSpeakerNameInMeetingID)}
+		}
+
+	case "used_as_font_italic_in_meeting_id":
+		if m.UsedAsFontItalicInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontItalicInMeetingID)}
+		}
+
 	case "used_as_font_monospace_in_meeting_id":
 		if m.UsedAsFontMonospaceInMeetingID != nil {
 			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontMonospaceInMeetingID)}
 		}
 
+	case "used_as_font_projector_h1_in_meeting_id":
+		if m.UsedAsFontProjectorH1InMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontProjectorH1InMeetingID)}
+		}
+
+	case "used_as_font_projector_h2_in_meeting_id":
+		if m.UsedAsFontProjectorH2InMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontProjectorH2InMeetingID)}
+		}
+
+	case "used_as_font_regular_in_meeting_id":
+		if m.UsedAsFontRegularInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsFontRegularInMeetingID)}
+		}
+
 	case "used_as_logo_pdf_ballot_paper_in_meeting_id":
 		if m.UsedAsLogoPdfBallotPaperInMeetingID != nil {
 			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfBallotPaperInMeetingID)}
+		}
+
+	case "used_as_logo_pdf_footer_l_in_meeting_id":
+		if m.UsedAsLogoPdfFooterLInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfFooterLInMeetingID)}
+		}
+
+	case "used_as_logo_pdf_footer_r_in_meeting_id":
+		if m.UsedAsLogoPdfFooterRInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfFooterRInMeetingID)}
+		}
+
+	case "used_as_logo_pdf_header_l_in_meeting_id":
+		if m.UsedAsLogoPdfHeaderLInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfHeaderLInMeetingID)}
+		}
+
+	case "used_as_logo_pdf_header_r_in_meeting_id":
+		if m.UsedAsLogoPdfHeaderRInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoPdfHeaderRInMeetingID)}
+		}
+
+	case "used_as_logo_projector_header_in_meeting_id":
+		if m.UsedAsLogoProjectorHeaderInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoProjectorHeaderInMeetingID)}
+		}
+
+	case "used_as_logo_projector_main_in_meeting_id":
+		if m.UsedAsLogoProjectorMainInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoProjectorMainInMeetingID)}
+		}
+
+	case "used_as_logo_web_header_in_meeting_id":
+		if m.UsedAsLogoWebHeaderInMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsLogoWebHeaderInMeetingID)}
 		}
 	}
 	return []string{}

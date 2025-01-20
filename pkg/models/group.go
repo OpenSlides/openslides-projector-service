@@ -31,26 +31,50 @@ type Group struct {
 	WriteChatGroupIDs                       []int    `json:"write_chat_group_ids"`
 	WriteCommentSectionIDs                  []int    `json:"write_comment_section_ids"`
 	loadedRelations                         map[string]struct{}
-	meeting                                 *Meeting
-	meetingUsers                            []*MeetingUser
-	readChatGroups                          []*ChatGroup
-	writeChatGroups                         []*ChatGroup
+	adminGroupForMeeting                    *Meeting
 	anonymousGroupForMeeting                *Meeting
+	defaultGroupForMeeting                  *Meeting
+	meeting                                 *Meeting
+	meetingMediafileAccessGroups            []*MeetingMediafile
+	meetingMediafileInheritedAccessGroups   []*MeetingMediafile
+	meetingUsers                            []*MeetingUser
+	polls                                   []*Poll
+	readChatGroups                          []*ChatGroup
 	readCommentSections                     []*MotionCommentSection
 	usedAsAssignmentPollDefault             *Meeting
 	usedAsMotionPollDefault                 *Meeting
-	polls                                   []*Poll
-	meetingMediafileAccessGroups            []*MeetingMediafile
-	meetingMediafileInheritedAccessGroups   []*MeetingMediafile
-	writeCommentSections                    []*MotionCommentSection
-	defaultGroupForMeeting                  *Meeting
 	usedAsPollDefault                       *Meeting
 	usedAsTopicPollDefault                  *Meeting
-	adminGroupForMeeting                    *Meeting
+	writeChatGroups                         []*ChatGroup
+	writeCommentSections                    []*MotionCommentSection
 }
 
 func (m *Group) CollectionName() string {
 	return "group"
+}
+
+func (m *Group) AdminGroupForMeeting() *Meeting {
+	if _, ok := m.loadedRelations["admin_group_for_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access AdminGroupForMeeting relation of Group which was not loaded.")
+	}
+
+	return m.adminGroupForMeeting
+}
+
+func (m *Group) AnonymousGroupForMeeting() *Meeting {
+	if _, ok := m.loadedRelations["anonymous_group_for_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access AnonymousGroupForMeeting relation of Group which was not loaded.")
+	}
+
+	return m.anonymousGroupForMeeting
+}
+
+func (m *Group) DefaultGroupForMeeting() *Meeting {
+	if _, ok := m.loadedRelations["default_group_for_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access DefaultGroupForMeeting relation of Group which was not loaded.")
+	}
+
+	return m.defaultGroupForMeeting
 }
 
 func (m *Group) Meeting() Meeting {
@@ -61,6 +85,22 @@ func (m *Group) Meeting() Meeting {
 	return *m.meeting
 }
 
+func (m *Group) MeetingMediafileAccessGroups() []*MeetingMediafile {
+	if _, ok := m.loadedRelations["meeting_mediafile_access_group_ids"]; !ok {
+		log.Panic().Msg("Tried to access MeetingMediafileAccessGroups relation of Group which was not loaded.")
+	}
+
+	return m.meetingMediafileAccessGroups
+}
+
+func (m *Group) MeetingMediafileInheritedAccessGroups() []*MeetingMediafile {
+	if _, ok := m.loadedRelations["meeting_mediafile_inherited_access_group_ids"]; !ok {
+		log.Panic().Msg("Tried to access MeetingMediafileInheritedAccessGroups relation of Group which was not loaded.")
+	}
+
+	return m.meetingMediafileInheritedAccessGroups
+}
+
 func (m *Group) MeetingUsers() []*MeetingUser {
 	if _, ok := m.loadedRelations["meeting_user_ids"]; !ok {
 		log.Panic().Msg("Tried to access MeetingUsers relation of Group which was not loaded.")
@@ -69,28 +109,20 @@ func (m *Group) MeetingUsers() []*MeetingUser {
 	return m.meetingUsers
 }
 
+func (m *Group) Polls() []*Poll {
+	if _, ok := m.loadedRelations["poll_ids"]; !ok {
+		log.Panic().Msg("Tried to access Polls relation of Group which was not loaded.")
+	}
+
+	return m.polls
+}
+
 func (m *Group) ReadChatGroups() []*ChatGroup {
 	if _, ok := m.loadedRelations["read_chat_group_ids"]; !ok {
 		log.Panic().Msg("Tried to access ReadChatGroups relation of Group which was not loaded.")
 	}
 
 	return m.readChatGroups
-}
-
-func (m *Group) WriteChatGroups() []*ChatGroup {
-	if _, ok := m.loadedRelations["write_chat_group_ids"]; !ok {
-		log.Panic().Msg("Tried to access WriteChatGroups relation of Group which was not loaded.")
-	}
-
-	return m.writeChatGroups
-}
-
-func (m *Group) AnonymousGroupForMeeting() *Meeting {
-	if _, ok := m.loadedRelations["anonymous_group_for_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access AnonymousGroupForMeeting relation of Group which was not loaded.")
-	}
-
-	return m.anonymousGroupForMeeting
 }
 
 func (m *Group) ReadCommentSections() []*MotionCommentSection {
@@ -117,46 +149,6 @@ func (m *Group) UsedAsMotionPollDefault() *Meeting {
 	return m.usedAsMotionPollDefault
 }
 
-func (m *Group) Polls() []*Poll {
-	if _, ok := m.loadedRelations["poll_ids"]; !ok {
-		log.Panic().Msg("Tried to access Polls relation of Group which was not loaded.")
-	}
-
-	return m.polls
-}
-
-func (m *Group) MeetingMediafileAccessGroups() []*MeetingMediafile {
-	if _, ok := m.loadedRelations["meeting_mediafile_access_group_ids"]; !ok {
-		log.Panic().Msg("Tried to access MeetingMediafileAccessGroups relation of Group which was not loaded.")
-	}
-
-	return m.meetingMediafileAccessGroups
-}
-
-func (m *Group) MeetingMediafileInheritedAccessGroups() []*MeetingMediafile {
-	if _, ok := m.loadedRelations["meeting_mediafile_inherited_access_group_ids"]; !ok {
-		log.Panic().Msg("Tried to access MeetingMediafileInheritedAccessGroups relation of Group which was not loaded.")
-	}
-
-	return m.meetingMediafileInheritedAccessGroups
-}
-
-func (m *Group) WriteCommentSections() []*MotionCommentSection {
-	if _, ok := m.loadedRelations["write_comment_section_ids"]; !ok {
-		log.Panic().Msg("Tried to access WriteCommentSections relation of Group which was not loaded.")
-	}
-
-	return m.writeCommentSections
-}
-
-func (m *Group) DefaultGroupForMeeting() *Meeting {
-	if _, ok := m.loadedRelations["default_group_for_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access DefaultGroupForMeeting relation of Group which was not loaded.")
-	}
-
-	return m.defaultGroupForMeeting
-}
-
 func (m *Group) UsedAsPollDefault() *Meeting {
 	if _, ok := m.loadedRelations["used_as_poll_default_id"]; !ok {
 		log.Panic().Msg("Tried to access UsedAsPollDefault relation of Group which was not loaded.")
@@ -173,49 +165,57 @@ func (m *Group) UsedAsTopicPollDefault() *Meeting {
 	return m.usedAsTopicPollDefault
 }
 
-func (m *Group) AdminGroupForMeeting() *Meeting {
-	if _, ok := m.loadedRelations["admin_group_for_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access AdminGroupForMeeting relation of Group which was not loaded.")
+func (m *Group) WriteChatGroups() []*ChatGroup {
+	if _, ok := m.loadedRelations["write_chat_group_ids"]; !ok {
+		log.Panic().Msg("Tried to access WriteChatGroups relation of Group which was not loaded.")
 	}
 
-	return m.adminGroupForMeeting
+	return m.writeChatGroups
+}
+
+func (m *Group) WriteCommentSections() []*MotionCommentSection {
+	if _, ok := m.loadedRelations["write_comment_section_ids"]; !ok {
+		log.Panic().Msg("Tried to access WriteCommentSections relation of Group which was not loaded.")
+	}
+
+	return m.writeCommentSections
 }
 
 func (m *Group) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
-		case "meeting_user_ids":
-			m.meetingUsers = content.([]*MeetingUser)
-		case "read_chat_group_ids":
-			m.readChatGroups = content.([]*ChatGroup)
-		case "write_chat_group_ids":
-			m.writeChatGroups = content.([]*ChatGroup)
+		case "admin_group_for_meeting_id":
+			m.adminGroupForMeeting = content.(*Meeting)
 		case "anonymous_group_for_meeting_id":
 			m.anonymousGroupForMeeting = content.(*Meeting)
+		case "default_group_for_meeting_id":
+			m.defaultGroupForMeeting = content.(*Meeting)
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
+		case "meeting_mediafile_access_group_ids":
+			m.meetingMediafileAccessGroups = content.([]*MeetingMediafile)
+		case "meeting_mediafile_inherited_access_group_ids":
+			m.meetingMediafileInheritedAccessGroups = content.([]*MeetingMediafile)
+		case "meeting_user_ids":
+			m.meetingUsers = content.([]*MeetingUser)
+		case "poll_ids":
+			m.polls = content.([]*Poll)
+		case "read_chat_group_ids":
+			m.readChatGroups = content.([]*ChatGroup)
 		case "read_comment_section_ids":
 			m.readCommentSections = content.([]*MotionCommentSection)
 		case "used_as_assignment_poll_default_id":
 			m.usedAsAssignmentPollDefault = content.(*Meeting)
 		case "used_as_motion_poll_default_id":
 			m.usedAsMotionPollDefault = content.(*Meeting)
-		case "poll_ids":
-			m.polls = content.([]*Poll)
-		case "meeting_mediafile_access_group_ids":
-			m.meetingMediafileAccessGroups = content.([]*MeetingMediafile)
-		case "meeting_mediafile_inherited_access_group_ids":
-			m.meetingMediafileInheritedAccessGroups = content.([]*MeetingMediafile)
-		case "write_comment_section_ids":
-			m.writeCommentSections = content.([]*MotionCommentSection)
-		case "default_group_for_meeting_id":
-			m.defaultGroupForMeeting = content.(*Meeting)
 		case "used_as_poll_default_id":
 			m.usedAsPollDefault = content.(*Meeting)
 		case "used_as_topic_poll_default_id":
 			m.usedAsTopicPollDefault = content.(*Meeting)
-		case "admin_group_for_meeting_id":
-			m.adminGroupForMeeting = content.(*Meeting)
+		case "write_chat_group_ids":
+			m.writeChatGroups = content.([]*ChatGroup)
+		case "write_comment_section_ids":
+			m.writeCommentSections = content.([]*MotionCommentSection)
 		default:
 			return
 		}
@@ -230,6 +230,36 @@ func (m *Group) SetRelated(field string, content interface{}) {
 func (m *Group) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "admin_group_for_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.adminGroupForMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "anonymous_group_for_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.anonymousGroupForMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "default_group_for_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.defaultGroupForMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -238,6 +268,26 @@ func (m *Group) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		}
 
 		m.meeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "meeting_mediafile_access_group_ids":
+		var entry MeetingMediafile
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meetingMediafileAccessGroups = append(m.meetingMediafileAccessGroups, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "meeting_mediafile_inherited_access_group_ids":
+		var entry MeetingMediafile
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meetingMediafileInheritedAccessGroups = append(m.meetingMediafileInheritedAccessGroups, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "meeting_user_ids":
@@ -250,6 +300,16 @@ func (m *Group) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		m.meetingUsers = append(m.meetingUsers, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "poll_ids":
+		var entry Poll
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.polls = append(m.polls, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
 	case "read_chat_group_ids":
 		var entry ChatGroup
 		err := json.Unmarshal(content, &entry)
@@ -258,26 +318,6 @@ func (m *Group) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		}
 
 		m.readChatGroups = append(m.readChatGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "write_chat_group_ids":
-		var entry ChatGroup
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.writeChatGroups = append(m.writeChatGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "anonymous_group_for_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.anonymousGroupForMeeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "read_comment_section_ids":
@@ -310,56 +350,6 @@ func (m *Group) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		m.usedAsMotionPollDefault = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "poll_ids":
-		var entry Poll
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.polls = append(m.polls, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_mediafile_access_group_ids":
-		var entry MeetingMediafile
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meetingMediafileAccessGroups = append(m.meetingMediafileAccessGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_mediafile_inherited_access_group_ids":
-		var entry MeetingMediafile
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meetingMediafileInheritedAccessGroups = append(m.meetingMediafileInheritedAccessGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "write_comment_section_ids":
-		var entry MotionCommentSection
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.writeCommentSections = append(m.writeCommentSections, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "default_group_for_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.defaultGroupForMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "used_as_poll_default_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -380,14 +370,24 @@ func (m *Group) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		m.usedAsTopicPollDefault = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "admin_group_for_meeting_id":
-		var entry Meeting
+	case "write_chat_group_ids":
+		var entry ChatGroup
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.adminGroupForMeeting = &entry
+		m.writeChatGroups = append(m.writeChatGroups, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "write_comment_section_ids":
+		var entry MotionCommentSection
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.writeCommentSections = append(m.writeCommentSections, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -452,13 +452,49 @@ func (m *Group) Get(field string) interface{} {
 
 func (m *Group) GetFqids(field string) []string {
 	switch field {
+	case "admin_group_for_meeting_id":
+		if m.AdminGroupForMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.AdminGroupForMeetingID)}
+		}
+
+	case "anonymous_group_for_meeting_id":
+		if m.AnonymousGroupForMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.AnonymousGroupForMeetingID)}
+		}
+
+	case "default_group_for_meeting_id":
+		if m.DefaultGroupForMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.DefaultGroupForMeetingID)}
+		}
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
+	case "meeting_mediafile_access_group_ids":
+		r := make([]string, len(m.MeetingMediafileAccessGroupIDs))
+		for i, id := range m.MeetingMediafileAccessGroupIDs {
+			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "meeting_mediafile_inherited_access_group_ids":
+		r := make([]string, len(m.MeetingMediafileInheritedAccessGroupIDs))
+		for i, id := range m.MeetingMediafileInheritedAccessGroupIDs {
+			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
+		}
+		return r
 
 	case "meeting_user_ids":
 		r := make([]string, len(m.MeetingUserIDs))
 		for i, id := range m.MeetingUserIDs {
 			r[i] = "meeting_user/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "poll_ids":
+		r := make([]string, len(m.PollIDs))
+		for i, id := range m.PollIDs {
+			r[i] = "poll/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -468,18 +504,6 @@ func (m *Group) GetFqids(field string) []string {
 			r[i] = "chat_group/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "write_chat_group_ids":
-		r := make([]string, len(m.WriteChatGroupIDs))
-		for i, id := range m.WriteChatGroupIDs {
-			r[i] = "chat_group/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "anonymous_group_for_meeting_id":
-		if m.AnonymousGroupForMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.AnonymousGroupForMeetingID)}
-		}
 
 	case "read_comment_section_ids":
 		r := make([]string, len(m.ReadCommentSectionIDs))
@@ -498,39 +522,6 @@ func (m *Group) GetFqids(field string) []string {
 			return []string{"meeting/" + strconv.Itoa(*m.UsedAsMotionPollDefaultID)}
 		}
 
-	case "poll_ids":
-		r := make([]string, len(m.PollIDs))
-		for i, id := range m.PollIDs {
-			r[i] = "poll/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "meeting_mediafile_access_group_ids":
-		r := make([]string, len(m.MeetingMediafileAccessGroupIDs))
-		for i, id := range m.MeetingMediafileAccessGroupIDs {
-			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "meeting_mediafile_inherited_access_group_ids":
-		r := make([]string, len(m.MeetingMediafileInheritedAccessGroupIDs))
-		for i, id := range m.MeetingMediafileInheritedAccessGroupIDs {
-			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "write_comment_section_ids":
-		r := make([]string, len(m.WriteCommentSectionIDs))
-		for i, id := range m.WriteCommentSectionIDs {
-			r[i] = "motion_comment_section/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "default_group_for_meeting_id":
-		if m.DefaultGroupForMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.DefaultGroupForMeetingID)}
-		}
-
 	case "used_as_poll_default_id":
 		if m.UsedAsPollDefaultID != nil {
 			return []string{"meeting/" + strconv.Itoa(*m.UsedAsPollDefaultID)}
@@ -541,10 +532,19 @@ func (m *Group) GetFqids(field string) []string {
 			return []string{"meeting/" + strconv.Itoa(*m.UsedAsTopicPollDefaultID)}
 		}
 
-	case "admin_group_for_meeting_id":
-		if m.AdminGroupForMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.AdminGroupForMeetingID)}
+	case "write_chat_group_ids":
+		r := make([]string, len(m.WriteChatGroupIDs))
+		for i, id := range m.WriteChatGroupIDs {
+			r[i] = "chat_group/" + strconv.Itoa(id)
 		}
+		return r
+
+	case "write_comment_section_ids":
+		r := make([]string, len(m.WriteCommentSectionIDs))
+		for i, id := range m.WriteCommentSectionIDs {
+			r[i] = "motion_comment_section/" + strconv.Itoa(id)
+		}
+		return r
 	}
 	return []string{}
 }

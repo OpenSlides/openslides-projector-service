@@ -128,6 +128,10 @@ func parse(r io.Reader) ([]collection, error) {
 					Required:       modelField.Required,
 					List:           modelField.Type == "relation-list",
 				})
+
+				sort.Slice(relations, func(i, j int) bool {
+					return relations[i].PropName < relations[j].PropName
+				})
 			}
 
 			fields = append(fields, f)

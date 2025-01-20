@@ -14,20 +14,12 @@ type ProjectorMessage struct {
 	Message         *string `json:"message"`
 	ProjectionIDs   []int   `json:"projection_ids"`
 	loadedRelations map[string]struct{}
-	projections     []*Projection
 	meeting         *Meeting
+	projections     []*Projection
 }
 
 func (m *ProjectorMessage) CollectionName() string {
 	return "projector_message"
-}
-
-func (m *ProjectorMessage) Projections() []*Projection {
-	if _, ok := m.loadedRelations["projection_ids"]; !ok {
-		log.Panic().Msg("Tried to access Projections relation of ProjectorMessage which was not loaded.")
-	}
-
-	return m.projections
 }
 
 func (m *ProjectorMessage) Meeting() Meeting {
@@ -38,13 +30,21 @@ func (m *ProjectorMessage) Meeting() Meeting {
 	return *m.meeting
 }
 
+func (m *ProjectorMessage) Projections() []*Projection {
+	if _, ok := m.loadedRelations["projection_ids"]; !ok {
+		log.Panic().Msg("Tried to access Projections relation of ProjectorMessage which was not loaded.")
+	}
+
+	return m.projections
+}
+
 func (m *ProjectorMessage) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "projection_ids":
-			m.projections = content.([]*Projection)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
+		case "projection_ids":
+			m.projections = content.([]*Projection)
 		default:
 			return
 		}
@@ -59,16 +59,6 @@ func (m *ProjectorMessage) SetRelated(field string, content interface{}) {
 func (m *ProjectorMessage) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "projection_ids":
-		var entry Projection
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.projections = append(m.projections, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -77,6 +67,16 @@ func (m *ProjectorMessage) SetRelatedJSON(field string, content []byte) (*Relate
 		}
 
 		m.meeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "projection_ids":
+		var entry Projection
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.projections = append(m.projections, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -107,15 +107,15 @@ func (m *ProjectorMessage) Get(field string) interface{} {
 
 func (m *ProjectorMessage) GetFqids(field string) []string {
 	switch field {
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
 	case "projection_ids":
 		r := make([]string, len(m.ProjectionIDs))
 		for i, id := range m.ProjectionIDs {
 			r[i] = "projection/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 	}
 	return []string{}
 }

@@ -42,22 +42,38 @@ type User struct {
 	Username                    string  `json:"username"`
 	VoteIDs                     []int   `json:"vote_ids"`
 	loadedRelations             map[string]struct{}
+	committeeManagements        []*Committee
+	committees                  []*Committee
 	delegatedVotes              []*Vote
+	forwardingCommittees        []*Committee
+	gender                      *Gender
+	isPresentInMeetings         []*Meeting
+	meetingUsers                []*MeetingUser
+	options                     []*Option
 	organization                *Organization
 	pollCandidates              []*PollCandidate
-	committeeManagements        []*Committee
-	options                     []*Option
 	pollVoteds                  []*Poll
-	isPresentInMeetings         []*Meeting
-	forwardingCommittees        []*Committee
-	meetingUsers                []*MeetingUser
 	votes                       []*Vote
-	committees                  []*Committee
-	gender                      *Gender
 }
 
 func (m *User) CollectionName() string {
 	return "user"
+}
+
+func (m *User) CommitteeManagements() []*Committee {
+	if _, ok := m.loadedRelations["committee_management_ids"]; !ok {
+		log.Panic().Msg("Tried to access CommitteeManagements relation of User which was not loaded.")
+	}
+
+	return m.committeeManagements
+}
+
+func (m *User) Committees() []*Committee {
+	if _, ok := m.loadedRelations["committee_ids"]; !ok {
+		log.Panic().Msg("Tried to access Committees relation of User which was not loaded.")
+	}
+
+	return m.committees
 }
 
 func (m *User) DelegatedVotes() []*Vote {
@@ -66,6 +82,46 @@ func (m *User) DelegatedVotes() []*Vote {
 	}
 
 	return m.delegatedVotes
+}
+
+func (m *User) ForwardingCommittees() []*Committee {
+	if _, ok := m.loadedRelations["forwarding_committee_ids"]; !ok {
+		log.Panic().Msg("Tried to access ForwardingCommittees relation of User which was not loaded.")
+	}
+
+	return m.forwardingCommittees
+}
+
+func (m *User) Gender() *Gender {
+	if _, ok := m.loadedRelations["gender_id"]; !ok {
+		log.Panic().Msg("Tried to access Gender relation of User which was not loaded.")
+	}
+
+	return m.gender
+}
+
+func (m *User) IsPresentInMeetings() []*Meeting {
+	if _, ok := m.loadedRelations["is_present_in_meeting_ids"]; !ok {
+		log.Panic().Msg("Tried to access IsPresentInMeetings relation of User which was not loaded.")
+	}
+
+	return m.isPresentInMeetings
+}
+
+func (m *User) MeetingUsers() []*MeetingUser {
+	if _, ok := m.loadedRelations["meeting_user_ids"]; !ok {
+		log.Panic().Msg("Tried to access MeetingUsers relation of User which was not loaded.")
+	}
+
+	return m.meetingUsers
+}
+
+func (m *User) Options() []*Option {
+	if _, ok := m.loadedRelations["option_ids"]; !ok {
+		log.Panic().Msg("Tried to access Options relation of User which was not loaded.")
+	}
+
+	return m.options
 }
 
 func (m *User) Organization() Organization {
@@ -84,52 +140,12 @@ func (m *User) PollCandidates() []*PollCandidate {
 	return m.pollCandidates
 }
 
-func (m *User) CommitteeManagements() []*Committee {
-	if _, ok := m.loadedRelations["committee_management_ids"]; !ok {
-		log.Panic().Msg("Tried to access CommitteeManagements relation of User which was not loaded.")
-	}
-
-	return m.committeeManagements
-}
-
-func (m *User) Options() []*Option {
-	if _, ok := m.loadedRelations["option_ids"]; !ok {
-		log.Panic().Msg("Tried to access Options relation of User which was not loaded.")
-	}
-
-	return m.options
-}
-
 func (m *User) PollVoteds() []*Poll {
 	if _, ok := m.loadedRelations["poll_voted_ids"]; !ok {
 		log.Panic().Msg("Tried to access PollVoteds relation of User which was not loaded.")
 	}
 
 	return m.pollVoteds
-}
-
-func (m *User) IsPresentInMeetings() []*Meeting {
-	if _, ok := m.loadedRelations["is_present_in_meeting_ids"]; !ok {
-		log.Panic().Msg("Tried to access IsPresentInMeetings relation of User which was not loaded.")
-	}
-
-	return m.isPresentInMeetings
-}
-
-func (m *User) ForwardingCommittees() []*Committee {
-	if _, ok := m.loadedRelations["forwarding_committee_ids"]; !ok {
-		log.Panic().Msg("Tried to access ForwardingCommittees relation of User which was not loaded.")
-	}
-
-	return m.forwardingCommittees
-}
-
-func (m *User) MeetingUsers() []*MeetingUser {
-	if _, ok := m.loadedRelations["meeting_user_ids"]; !ok {
-		log.Panic().Msg("Tried to access MeetingUsers relation of User which was not loaded.")
-	}
-
-	return m.meetingUsers
 }
 
 func (m *User) Votes() []*Vote {
@@ -140,49 +156,33 @@ func (m *User) Votes() []*Vote {
 	return m.votes
 }
 
-func (m *User) Committees() []*Committee {
-	if _, ok := m.loadedRelations["committee_ids"]; !ok {
-		log.Panic().Msg("Tried to access Committees relation of User which was not loaded.")
-	}
-
-	return m.committees
-}
-
-func (m *User) Gender() *Gender {
-	if _, ok := m.loadedRelations["gender_id"]; !ok {
-		log.Panic().Msg("Tried to access Gender relation of User which was not loaded.")
-	}
-
-	return m.gender
-}
-
 func (m *User) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "committee_management_ids":
+			m.committeeManagements = content.([]*Committee)
+		case "committee_ids":
+			m.committees = content.([]*Committee)
 		case "delegated_vote_ids":
 			m.delegatedVotes = content.([]*Vote)
+		case "forwarding_committee_ids":
+			m.forwardingCommittees = content.([]*Committee)
+		case "gender_id":
+			m.gender = content.(*Gender)
+		case "is_present_in_meeting_ids":
+			m.isPresentInMeetings = content.([]*Meeting)
+		case "meeting_user_ids":
+			m.meetingUsers = content.([]*MeetingUser)
+		case "option_ids":
+			m.options = content.([]*Option)
 		case "organization_id":
 			m.organization = content.(*Organization)
 		case "poll_candidate_ids":
 			m.pollCandidates = content.([]*PollCandidate)
-		case "committee_management_ids":
-			m.committeeManagements = content.([]*Committee)
-		case "option_ids":
-			m.options = content.([]*Option)
 		case "poll_voted_ids":
 			m.pollVoteds = content.([]*Poll)
-		case "is_present_in_meeting_ids":
-			m.isPresentInMeetings = content.([]*Meeting)
-		case "forwarding_committee_ids":
-			m.forwardingCommittees = content.([]*Committee)
-		case "meeting_user_ids":
-			m.meetingUsers = content.([]*MeetingUser)
 		case "vote_ids":
 			m.votes = content.([]*Vote)
-		case "committee_ids":
-			m.committees = content.([]*Committee)
-		case "gender_id":
-			m.gender = content.(*Gender)
 		default:
 			return
 		}
@@ -197,6 +197,26 @@ func (m *User) SetRelated(field string, content interface{}) {
 func (m *User) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "committee_management_ids":
+		var entry Committee
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.committeeManagements = append(m.committeeManagements, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "committee_ids":
+		var entry Committee
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.committees = append(m.committees, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
 	case "delegated_vote_ids":
 		var entry Vote
 		err := json.Unmarshal(content, &entry)
@@ -205,6 +225,56 @@ func (m *User) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcces
 		}
 
 		m.delegatedVotes = append(m.delegatedVotes, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "forwarding_committee_ids":
+		var entry Committee
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.forwardingCommittees = append(m.forwardingCommittees, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "gender_id":
+		var entry Gender
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.gender = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "is_present_in_meeting_ids":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.isPresentInMeetings = append(m.isPresentInMeetings, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "meeting_user_ids":
+		var entry MeetingUser
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meetingUsers = append(m.meetingUsers, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "option_ids":
+		var entry Option
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.options = append(m.options, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "organization_id":
@@ -227,26 +297,6 @@ func (m *User) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcces
 		m.pollCandidates = append(m.pollCandidates, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "committee_management_ids":
-		var entry Committee
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.committeeManagements = append(m.committeeManagements, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "option_ids":
-		var entry Option
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.options = append(m.options, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "poll_voted_ids":
 		var entry Poll
 		err := json.Unmarshal(content, &entry)
@@ -257,36 +307,6 @@ func (m *User) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcces
 		m.pollVoteds = append(m.pollVoteds, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "is_present_in_meeting_ids":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.isPresentInMeetings = append(m.isPresentInMeetings, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "forwarding_committee_ids":
-		var entry Committee
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.forwardingCommittees = append(m.forwardingCommittees, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_user_ids":
-		var entry MeetingUser
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meetingUsers = append(m.meetingUsers, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "vote_ids":
 		var entry Vote
 		err := json.Unmarshal(content, &entry)
@@ -295,26 +315,6 @@ func (m *User) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcces
 		}
 
 		m.votes = append(m.votes, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "committee_ids":
-		var entry Committee
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.committees = append(m.committees, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "gender_id":
-		var entry Gender
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.gender = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -401,10 +401,57 @@ func (m *User) Get(field string) interface{} {
 
 func (m *User) GetFqids(field string) []string {
 	switch field {
+	case "committee_management_ids":
+		r := make([]string, len(m.CommitteeManagementIDs))
+		for i, id := range m.CommitteeManagementIDs {
+			r[i] = "committee/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "committee_ids":
+		r := make([]string, len(m.CommitteeIDs))
+		for i, id := range m.CommitteeIDs {
+			r[i] = "committee/" + strconv.Itoa(id)
+		}
+		return r
+
 	case "delegated_vote_ids":
 		r := make([]string, len(m.DelegatedVoteIDs))
 		for i, id := range m.DelegatedVoteIDs {
 			r[i] = "vote/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "forwarding_committee_ids":
+		r := make([]string, len(m.ForwardingCommitteeIDs))
+		for i, id := range m.ForwardingCommitteeIDs {
+			r[i] = "committee/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "gender_id":
+		if m.GenderID != nil {
+			return []string{"gender/" + strconv.Itoa(*m.GenderID)}
+		}
+
+	case "is_present_in_meeting_ids":
+		r := make([]string, len(m.IsPresentInMeetingIDs))
+		for i, id := range m.IsPresentInMeetingIDs {
+			r[i] = "meeting/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "meeting_user_ids":
+		r := make([]string, len(m.MeetingUserIDs))
+		for i, id := range m.MeetingUserIDs {
+			r[i] = "meeting_user/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "option_ids":
+		r := make([]string, len(m.OptionIDs))
+		for i, id := range m.OptionIDs {
+			r[i] = "option/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -418,45 +465,10 @@ func (m *User) GetFqids(field string) []string {
 		}
 		return r
 
-	case "committee_management_ids":
-		r := make([]string, len(m.CommitteeManagementIDs))
-		for i, id := range m.CommitteeManagementIDs {
-			r[i] = "committee/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "option_ids":
-		r := make([]string, len(m.OptionIDs))
-		for i, id := range m.OptionIDs {
-			r[i] = "option/" + strconv.Itoa(id)
-		}
-		return r
-
 	case "poll_voted_ids":
 		r := make([]string, len(m.PollVotedIDs))
 		for i, id := range m.PollVotedIDs {
 			r[i] = "poll/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "is_present_in_meeting_ids":
-		r := make([]string, len(m.IsPresentInMeetingIDs))
-		for i, id := range m.IsPresentInMeetingIDs {
-			r[i] = "meeting/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "forwarding_committee_ids":
-		r := make([]string, len(m.ForwardingCommitteeIDs))
-		for i, id := range m.ForwardingCommitteeIDs {
-			r[i] = "committee/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "meeting_user_ids":
-		r := make([]string, len(m.MeetingUserIDs))
-		for i, id := range m.MeetingUserIDs {
-			r[i] = "meeting_user/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -466,18 +478,6 @@ func (m *User) GetFqids(field string) []string {
 			r[i] = "vote/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "committee_ids":
-		r := make([]string, len(m.CommitteeIDs))
-		for i, id := range m.CommitteeIDs {
-			r[i] = "committee/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "gender_id":
-		if m.GenderID != nil {
-			return []string{"gender/" + strconv.Itoa(*m.GenderID)}
-		}
 	}
 	return []string{}
 }

@@ -20,30 +20,14 @@ type ProjectorCountdown struct {
 	UsedAsListOfSpeakersCountdownMeetingID *int     `json:"used_as_list_of_speakers_countdown_meeting_id"`
 	UsedAsPollCountdownMeetingID           *int     `json:"used_as_poll_countdown_meeting_id"`
 	loadedRelations                        map[string]struct{}
-	usedAsListOfSpeakersCountdownMeeting   *Meeting
-	usedAsPollCountdownMeeting             *Meeting
 	meeting                                *Meeting
 	projections                            []*Projection
+	usedAsListOfSpeakersCountdownMeeting   *Meeting
+	usedAsPollCountdownMeeting             *Meeting
 }
 
 func (m *ProjectorCountdown) CollectionName() string {
 	return "projector_countdown"
-}
-
-func (m *ProjectorCountdown) UsedAsListOfSpeakersCountdownMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_list_of_speakers_countdown_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsListOfSpeakersCountdownMeeting relation of ProjectorCountdown which was not loaded.")
-	}
-
-	return m.usedAsListOfSpeakersCountdownMeeting
-}
-
-func (m *ProjectorCountdown) UsedAsPollCountdownMeeting() *Meeting {
-	if _, ok := m.loadedRelations["used_as_poll_countdown_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access UsedAsPollCountdownMeeting relation of ProjectorCountdown which was not loaded.")
-	}
-
-	return m.usedAsPollCountdownMeeting
 }
 
 func (m *ProjectorCountdown) Meeting() Meeting {
@@ -62,17 +46,33 @@ func (m *ProjectorCountdown) Projections() []*Projection {
 	return m.projections
 }
 
+func (m *ProjectorCountdown) UsedAsListOfSpeakersCountdownMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_list_of_speakers_countdown_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsListOfSpeakersCountdownMeeting relation of ProjectorCountdown which was not loaded.")
+	}
+
+	return m.usedAsListOfSpeakersCountdownMeeting
+}
+
+func (m *ProjectorCountdown) UsedAsPollCountdownMeeting() *Meeting {
+	if _, ok := m.loadedRelations["used_as_poll_countdown_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access UsedAsPollCountdownMeeting relation of ProjectorCountdown which was not loaded.")
+	}
+
+	return m.usedAsPollCountdownMeeting
+}
+
 func (m *ProjectorCountdown) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "used_as_list_of_speakers_countdown_meeting_id":
-			m.usedAsListOfSpeakersCountdownMeeting = content.(*Meeting)
-		case "used_as_poll_countdown_meeting_id":
-			m.usedAsPollCountdownMeeting = content.(*Meeting)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "projection_ids":
 			m.projections = content.([]*Projection)
+		case "used_as_list_of_speakers_countdown_meeting_id":
+			m.usedAsListOfSpeakersCountdownMeeting = content.(*Meeting)
+		case "used_as_poll_countdown_meeting_id":
+			m.usedAsPollCountdownMeeting = content.(*Meeting)
 		default:
 			return
 		}
@@ -87,26 +87,6 @@ func (m *ProjectorCountdown) SetRelated(field string, content interface{}) {
 func (m *ProjectorCountdown) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "used_as_list_of_speakers_countdown_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsListOfSpeakersCountdownMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "used_as_poll_countdown_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.usedAsPollCountdownMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -125,6 +105,26 @@ func (m *ProjectorCountdown) SetRelatedJSON(field string, content []byte) (*Rela
 		}
 
 		m.projections = append(m.projections, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_list_of_speakers_countdown_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsListOfSpeakersCountdownMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "used_as_poll_countdown_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.usedAsPollCountdownMeeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -167,16 +167,6 @@ func (m *ProjectorCountdown) Get(field string) interface{} {
 
 func (m *ProjectorCountdown) GetFqids(field string) []string {
 	switch field {
-	case "used_as_list_of_speakers_countdown_meeting_id":
-		if m.UsedAsListOfSpeakersCountdownMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsListOfSpeakersCountdownMeetingID)}
-		}
-
-	case "used_as_poll_countdown_meeting_id":
-		if m.UsedAsPollCountdownMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.UsedAsPollCountdownMeetingID)}
-		}
-
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
@@ -186,6 +176,16 @@ func (m *ProjectorCountdown) GetFqids(field string) []string {
 			r[i] = "projection/" + strconv.Itoa(id)
 		}
 		return r
+
+	case "used_as_list_of_speakers_countdown_meeting_id":
+		if m.UsedAsListOfSpeakersCountdownMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsListOfSpeakersCountdownMeetingID)}
+		}
+
+	case "used_as_poll_countdown_meeting_id":
+		if m.UsedAsPollCountdownMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.UsedAsPollCountdownMeetingID)}
+		}
 	}
 	return []string{}
 }

@@ -35,67 +35,19 @@ type MotionState struct {
 	Weight                           int      `json:"weight"`
 	WorkflowID                       int      `json:"workflow_id"`
 	loadedRelations                  map[string]struct{}
-	motions                          []*Motion
-	submitterWithdrawState           *MotionState
-	meeting                          *Meeting
-	previousStates                   []*MotionState
-	nextStates                       []*MotionState
-	workflow                         *MotionWorkflow
 	firstStateOfWorkflow             *MotionWorkflow
+	meeting                          *Meeting
 	motionRecommendations            []*Motion
+	motions                          []*Motion
+	nextStates                       []*MotionState
+	previousStates                   []*MotionState
 	submitterWithdrawBacks           []*MotionState
+	submitterWithdrawState           *MotionState
+	workflow                         *MotionWorkflow
 }
 
 func (m *MotionState) CollectionName() string {
 	return "motion_state"
-}
-
-func (m *MotionState) Motions() []*Motion {
-	if _, ok := m.loadedRelations["motion_ids"]; !ok {
-		log.Panic().Msg("Tried to access Motions relation of MotionState which was not loaded.")
-	}
-
-	return m.motions
-}
-
-func (m *MotionState) SubmitterWithdrawState() *MotionState {
-	if _, ok := m.loadedRelations["submitter_withdraw_state_id"]; !ok {
-		log.Panic().Msg("Tried to access SubmitterWithdrawState relation of MotionState which was not loaded.")
-	}
-
-	return m.submitterWithdrawState
-}
-
-func (m *MotionState) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of MotionState which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
-func (m *MotionState) PreviousStates() []*MotionState {
-	if _, ok := m.loadedRelations["previous_state_ids"]; !ok {
-		log.Panic().Msg("Tried to access PreviousStates relation of MotionState which was not loaded.")
-	}
-
-	return m.previousStates
-}
-
-func (m *MotionState) NextStates() []*MotionState {
-	if _, ok := m.loadedRelations["next_state_ids"]; !ok {
-		log.Panic().Msg("Tried to access NextStates relation of MotionState which was not loaded.")
-	}
-
-	return m.nextStates
-}
-
-func (m *MotionState) Workflow() MotionWorkflow {
-	if _, ok := m.loadedRelations["workflow_id"]; !ok {
-		log.Panic().Msg("Tried to access Workflow relation of MotionState which was not loaded.")
-	}
-
-	return *m.workflow
 }
 
 func (m *MotionState) FirstStateOfWorkflow() *MotionWorkflow {
@@ -106,12 +58,44 @@ func (m *MotionState) FirstStateOfWorkflow() *MotionWorkflow {
 	return m.firstStateOfWorkflow
 }
 
+func (m *MotionState) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of MotionState which was not loaded.")
+	}
+
+	return *m.meeting
+}
+
 func (m *MotionState) MotionRecommendations() []*Motion {
 	if _, ok := m.loadedRelations["motion_recommendation_ids"]; !ok {
 		log.Panic().Msg("Tried to access MotionRecommendations relation of MotionState which was not loaded.")
 	}
 
 	return m.motionRecommendations
+}
+
+func (m *MotionState) Motions() []*Motion {
+	if _, ok := m.loadedRelations["motion_ids"]; !ok {
+		log.Panic().Msg("Tried to access Motions relation of MotionState which was not loaded.")
+	}
+
+	return m.motions
+}
+
+func (m *MotionState) NextStates() []*MotionState {
+	if _, ok := m.loadedRelations["next_state_ids"]; !ok {
+		log.Panic().Msg("Tried to access NextStates relation of MotionState which was not loaded.")
+	}
+
+	return m.nextStates
+}
+
+func (m *MotionState) PreviousStates() []*MotionState {
+	if _, ok := m.loadedRelations["previous_state_ids"]; !ok {
+		log.Panic().Msg("Tried to access PreviousStates relation of MotionState which was not loaded.")
+	}
+
+	return m.previousStates
 }
 
 func (m *MotionState) SubmitterWithdrawBacks() []*MotionState {
@@ -122,27 +106,43 @@ func (m *MotionState) SubmitterWithdrawBacks() []*MotionState {
 	return m.submitterWithdrawBacks
 }
 
+func (m *MotionState) SubmitterWithdrawState() *MotionState {
+	if _, ok := m.loadedRelations["submitter_withdraw_state_id"]; !ok {
+		log.Panic().Msg("Tried to access SubmitterWithdrawState relation of MotionState which was not loaded.")
+	}
+
+	return m.submitterWithdrawState
+}
+
+func (m *MotionState) Workflow() MotionWorkflow {
+	if _, ok := m.loadedRelations["workflow_id"]; !ok {
+		log.Panic().Msg("Tried to access Workflow relation of MotionState which was not loaded.")
+	}
+
+	return *m.workflow
+}
+
 func (m *MotionState) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "motion_ids":
-			m.motions = content.([]*Motion)
-		case "submitter_withdraw_state_id":
-			m.submitterWithdrawState = content.(*MotionState)
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
-		case "previous_state_ids":
-			m.previousStates = content.([]*MotionState)
-		case "next_state_ids":
-			m.nextStates = content.([]*MotionState)
-		case "workflow_id":
-			m.workflow = content.(*MotionWorkflow)
 		case "first_state_of_workflow_id":
 			m.firstStateOfWorkflow = content.(*MotionWorkflow)
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
 		case "motion_recommendation_ids":
 			m.motionRecommendations = content.([]*Motion)
+		case "motion_ids":
+			m.motions = content.([]*Motion)
+		case "next_state_ids":
+			m.nextStates = content.([]*MotionState)
+		case "previous_state_ids":
+			m.previousStates = content.([]*MotionState)
 		case "submitter_withdraw_back_ids":
 			m.submitterWithdrawBacks = content.([]*MotionState)
+		case "submitter_withdraw_state_id":
+			m.submitterWithdrawState = content.(*MotionState)
+		case "workflow_id":
+			m.workflow = content.(*MotionWorkflow)
 		default:
 			return
 		}
@@ -157,24 +157,14 @@ func (m *MotionState) SetRelated(field string, content interface{}) {
 func (m *MotionState) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "motion_ids":
-		var entry Motion
+	case "first_state_of_workflow_id":
+		var entry MotionWorkflow
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.motions = append(m.motions, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "submitter_withdraw_state_id":
-		var entry MotionState
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.submitterWithdrawState = &entry
+		m.firstStateOfWorkflow = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
@@ -187,14 +177,24 @@ func (m *MotionState) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "previous_state_ids":
-		var entry MotionState
+	case "motion_recommendation_ids":
+		var entry Motion
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.previousStates = append(m.previousStates, &entry)
+		m.motionRecommendations = append(m.motionRecommendations, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "motion_ids":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.motions = append(m.motions, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "next_state_ids":
@@ -207,34 +207,14 @@ func (m *MotionState) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		m.nextStates = append(m.nextStates, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "workflow_id":
-		var entry MotionWorkflow
+	case "previous_state_ids":
+		var entry MotionState
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.workflow = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "first_state_of_workflow_id":
-		var entry MotionWorkflow
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.firstStateOfWorkflow = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "motion_recommendation_ids":
-		var entry Motion
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.motionRecommendations = append(m.motionRecommendations, &entry)
+		m.previousStates = append(m.previousStates, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "submitter_withdraw_back_ids":
@@ -245,6 +225,26 @@ func (m *MotionState) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		}
 
 		m.submitterWithdrawBacks = append(m.submitterWithdrawBacks, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "submitter_withdraw_state_id":
+		var entry MotionState
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.submitterWithdrawState = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "workflow_id":
+		var entry MotionWorkflow
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.workflow = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -317,25 +317,25 @@ func (m *MotionState) Get(field string) interface{} {
 
 func (m *MotionState) GetFqids(field string) []string {
 	switch field {
-	case "motion_ids":
-		r := make([]string, len(m.MotionIDs))
-		for i, id := range m.MotionIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "submitter_withdraw_state_id":
-		if m.SubmitterWithdrawStateID != nil {
-			return []string{"motion_state/" + strconv.Itoa(*m.SubmitterWithdrawStateID)}
+	case "first_state_of_workflow_id":
+		if m.FirstStateOfWorkflowID != nil {
+			return []string{"motion_workflow/" + strconv.Itoa(*m.FirstStateOfWorkflowID)}
 		}
 
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
-	case "previous_state_ids":
-		r := make([]string, len(m.PreviousStateIDs))
-		for i, id := range m.PreviousStateIDs {
-			r[i] = "motion_state/" + strconv.Itoa(id)
+	case "motion_recommendation_ids":
+		r := make([]string, len(m.MotionRecommendationIDs))
+		for i, id := range m.MotionRecommendationIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "motion_ids":
+		r := make([]string, len(m.MotionIDs))
+		for i, id := range m.MotionIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -346,18 +346,10 @@ func (m *MotionState) GetFqids(field string) []string {
 		}
 		return r
 
-	case "workflow_id":
-		return []string{"motion_workflow/" + strconv.Itoa(m.WorkflowID)}
-
-	case "first_state_of_workflow_id":
-		if m.FirstStateOfWorkflowID != nil {
-			return []string{"motion_workflow/" + strconv.Itoa(*m.FirstStateOfWorkflowID)}
-		}
-
-	case "motion_recommendation_ids":
-		r := make([]string, len(m.MotionRecommendationIDs))
-		for i, id := range m.MotionRecommendationIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
+	case "previous_state_ids":
+		r := make([]string, len(m.PreviousStateIDs))
+		for i, id := range m.PreviousStateIDs {
+			r[i] = "motion_state/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -367,6 +359,14 @@ func (m *MotionState) GetFqids(field string) []string {
 			r[i] = "motion_state/" + strconv.Itoa(id)
 		}
 		return r
+
+	case "submitter_withdraw_state_id":
+		if m.SubmitterWithdrawStateID != nil {
+			return []string{"motion_state/" + strconv.Itoa(*m.SubmitterWithdrawStateID)}
+		}
+
+	case "workflow_id":
+		return []string{"motion_workflow/" + strconv.Itoa(m.WorkflowID)}
 	}
 	return []string{}
 }

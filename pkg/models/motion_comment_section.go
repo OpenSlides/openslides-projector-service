@@ -19,22 +19,14 @@ type MotionCommentSection struct {
 	Weight            *int   `json:"weight"`
 	WriteGroupIDs     []int  `json:"write_group_ids"`
 	loadedRelations   map[string]struct{}
-	writeGroups       []*Group
 	comments          []*MotionComment
 	meeting           *Meeting
 	readGroups        []*Group
+	writeGroups       []*Group
 }
 
 func (m *MotionCommentSection) CollectionName() string {
 	return "motion_comment_section"
-}
-
-func (m *MotionCommentSection) WriteGroups() []*Group {
-	if _, ok := m.loadedRelations["write_group_ids"]; !ok {
-		log.Panic().Msg("Tried to access WriteGroups relation of MotionCommentSection which was not loaded.")
-	}
-
-	return m.writeGroups
 }
 
 func (m *MotionCommentSection) Comments() []*MotionComment {
@@ -61,17 +53,25 @@ func (m *MotionCommentSection) ReadGroups() []*Group {
 	return m.readGroups
 }
 
+func (m *MotionCommentSection) WriteGroups() []*Group {
+	if _, ok := m.loadedRelations["write_group_ids"]; !ok {
+		log.Panic().Msg("Tried to access WriteGroups relation of MotionCommentSection which was not loaded.")
+	}
+
+	return m.writeGroups
+}
+
 func (m *MotionCommentSection) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "write_group_ids":
-			m.writeGroups = content.([]*Group)
 		case "comment_ids":
 			m.comments = content.([]*MotionComment)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "read_group_ids":
 			m.readGroups = content.([]*Group)
+		case "write_group_ids":
+			m.writeGroups = content.([]*Group)
 		default:
 			return
 		}
@@ -86,16 +86,6 @@ func (m *MotionCommentSection) SetRelated(field string, content interface{}) {
 func (m *MotionCommentSection) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "write_group_ids":
-		var entry Group
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.writeGroups = append(m.writeGroups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "comment_ids":
 		var entry MotionComment
 		err := json.Unmarshal(content, &entry)
@@ -124,6 +114,16 @@ func (m *MotionCommentSection) SetRelatedJSON(field string, content []byte) (*Re
 		}
 
 		m.readGroups = append(m.readGroups, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "write_group_ids":
+		var entry Group
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.writeGroups = append(m.writeGroups, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -164,13 +164,6 @@ func (m *MotionCommentSection) Get(field string) interface{} {
 
 func (m *MotionCommentSection) GetFqids(field string) []string {
 	switch field {
-	case "write_group_ids":
-		r := make([]string, len(m.WriteGroupIDs))
-		for i, id := range m.WriteGroupIDs {
-			r[i] = "group/" + strconv.Itoa(id)
-		}
-		return r
-
 	case "comment_ids":
 		r := make([]string, len(m.CommentIDs))
 		for i, id := range m.CommentIDs {
@@ -184,6 +177,13 @@ func (m *MotionCommentSection) GetFqids(field string) []string {
 	case "read_group_ids":
 		r := make([]string, len(m.ReadGroupIDs))
 		for i, id := range m.ReadGroupIDs {
+			r[i] = "group/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "write_group_ids":
+		r := make([]string, len(m.WriteGroupIDs))
+		for i, id := range m.WriteGroupIDs {
 			r[i] = "group/" + strconv.Itoa(id)
 		}
 		return r
