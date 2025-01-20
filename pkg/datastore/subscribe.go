@@ -13,8 +13,13 @@ import (
 type subscription[V any] struct {
 	db            *Datastore
 	updateChannel chan map[string]map[string]string
+	load          func() error
 	Channel       V
 	Unsubscribe   func()
+}
+
+func (s *subscription[V]) Reload() error {
+	return s.load()
 }
 
 func (q *query[T, PT]) Subscribe() *subscription[<-chan map[string]map[string]interface{}] {
@@ -52,7 +57,7 @@ func (q *query[T, PT]) Subscribe() *subscription[<-chan map[string]map[string]in
 		q.datastore.change.RemoveListener <- updateChannel
 	}()
 
-	return &subscription[<-chan map[string]map[string]interface{}]{q.datastore, updateChannel, notifyChannel, func() {
+	return &subscription[<-chan map[string]map[string]interface{}]{q.datastore, updateChannel, func() error { return nil }, notifyChannel, func() {
 		close(notifyChannel)
 	}}
 }
@@ -67,11 +72,25 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 	}
 	q.datastore.change.AddListener <- &listener
 
-	data, err := q.GetOne()
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch inital data from db: %w", err)
+	load := func() error {
+		listener.fqids = q.fqids
+
+		data, err := q.GetOne()
+		if err != nil {
+			return fmt.Errorf("failed to fetch data from db: %w", err)
+		}
+		*model = *data
+		go func() {
+			notifyChannel <- []string{}
+		}()
+		return nil
 	}
-	*model = *data
+
+	if len(q.fqids) > 0 {
+		if err := load(); err != nil {
+			return nil, err
+		}
+	}
 
 	go func() {
 		for update := range updateChannel {
@@ -91,7 +110,7 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 		q.datastore.change.RemoveListener <- updateChannel
 	}()
 
-	return &subscription[<-chan []string]{q.datastore, updateChannel, notifyChannel, func() {
+	return &subscription[<-chan []string]{q.datastore, updateChannel, load, notifyChannel, func() {
 		close(notifyChannel)
 	}}, nil
 }
@@ -138,7 +157,7 @@ func (q *query[T, PT]) SubscribeField(field interface{}) (*subscription[<-chan s
 		q.datastore.change.RemoveListener <- updateChannel
 	}()
 
-	return &subscription[<-chan struct{}]{q.datastore, updateChannel, notifyChannel, func() {
+	return &subscription[<-chan struct{}]{q.datastore, updateChannel, func() error { return nil }, notifyChannel, func() {
 		close(notifyChannel)
 	}}, nil
 }
