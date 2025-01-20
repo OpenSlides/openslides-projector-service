@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -16,12 +17,21 @@ type PersonalNote struct {
 	Note            *string `json:"note"`
 	Star            *bool   `json:"star"`
 	loadedRelations map[string]struct{}
+	contentObject   IBaseModel
 	meeting         *Meeting
 	meetingUser     *MeetingUser
 }
 
 func (m *PersonalNote) CollectionName() string {
 	return "personal_note"
+}
+
+func (m *PersonalNote) ContentObject() IBaseModel {
+	if _, ok := m.loadedRelations["content_object_id"]; !ok {
+		log.Panic().Msg("Tried to access ContentObject relation of PersonalNote which was not loaded.")
+	}
+
+	return m.contentObject
 }
 
 func (m *PersonalNote) Meeting() Meeting {
@@ -43,6 +53,8 @@ func (m *PersonalNote) MeetingUser() MeetingUser {
 func (m *PersonalNote) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "content_object_id":
+			panic("not implemented")
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "meeting_user_id":
@@ -61,6 +73,26 @@ func (m *PersonalNote) SetRelated(field string, content interface{}) {
 func (m *PersonalNote) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "content_object_id":
+		if m.ContentObjectID == nil {
+			return nil, fmt.Errorf("cannot fill relation for ContentObjectID while id field is empty")
+		}
+		parts := strings.Split(*m.ContentObjectID, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] {
+		case "motion":
+			var entry Motion
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+		}
+
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -113,6 +145,11 @@ func (m *PersonalNote) Get(field string) interface{} {
 
 func (m *PersonalNote) GetFqids(field string) []string {
 	switch field {
+	case "content_object_id":
+		if m.ContentObjectID != nil {
+			return []string{*m.ContentObjectID}
+		}
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -19,6 +20,7 @@ type ListOfSpeakers struct {
 	SpeakerIDs                      []int   `json:"speaker_ids"`
 	StructureLevelListOfSpeakersIDs []int   `json:"structure_level_list_of_speakers_ids"`
 	loadedRelations                 map[string]struct{}
+	contentObject                   IBaseModel
 	meeting                         *Meeting
 	projections                     []*Projection
 	speakers                        []*Speaker
@@ -27,6 +29,14 @@ type ListOfSpeakers struct {
 
 func (m *ListOfSpeakers) CollectionName() string {
 	return "list_of_speakers"
+}
+
+func (m *ListOfSpeakers) ContentObject() IBaseModel {
+	if _, ok := m.loadedRelations["content_object_id"]; !ok {
+		log.Panic().Msg("Tried to access ContentObject relation of ListOfSpeakers which was not loaded.")
+	}
+
+	return m.contentObject
 }
 
 func (m *ListOfSpeakers) Meeting() Meeting {
@@ -64,6 +74,8 @@ func (m *ListOfSpeakers) StructureLevelListOfSpeakerss() []*StructureLevelListOf
 func (m *ListOfSpeakers) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "content_object_id":
+			panic("not implemented")
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "projection_ids":
@@ -86,6 +98,59 @@ func (m *ListOfSpeakers) SetRelated(field string, content interface{}) {
 func (m *ListOfSpeakers) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "content_object_id":
+		parts := strings.Split(m.ContentObjectID, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] {
+		case "assignment":
+			var entry Assignment
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "meeting_mediafile":
+			var entry MeetingMediafile
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "motion":
+			var entry Motion
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "motion_block":
+			var entry MotionBlock
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "topic":
+			var entry Topic
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+		}
+
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -164,6 +229,9 @@ func (m *ListOfSpeakers) Get(field string) interface{} {
 
 func (m *ListOfSpeakers) GetFqids(field string) []string {
 	switch field {
+	case "content_object_id":
+		return []string{m.ContentObjectID}
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 

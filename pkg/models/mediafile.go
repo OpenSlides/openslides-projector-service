@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -26,6 +27,7 @@ type Mediafile struct {
 	loadedRelations                     map[string]struct{}
 	childs                              []*Mediafile
 	meetingMediafiles                   []*MeetingMediafile
+	owner                               IBaseModel
 	parent                              *Mediafile
 	publishedToMeetingsInOrganization   *Organization
 }
@@ -48,6 +50,14 @@ func (m *Mediafile) MeetingMediafiles() []*MeetingMediafile {
 	}
 
 	return m.meetingMediafiles
+}
+
+func (m *Mediafile) Owner() IBaseModel {
+	if _, ok := m.loadedRelations["owner_id"]; !ok {
+		log.Panic().Msg("Tried to access Owner relation of Mediafile which was not loaded.")
+	}
+
+	return m.owner
 }
 
 func (m *Mediafile) Parent() *Mediafile {
@@ -73,6 +83,8 @@ func (m *Mediafile) SetRelated(field string, content interface{}) {
 			m.childs = content.([]*Mediafile)
 		case "meeting_mediafile_ids":
 			m.meetingMediafiles = content.([]*MeetingMediafile)
+		case "owner_id":
+			panic("not implemented")
 		case "parent_id":
 			m.parent = content.(*Mediafile)
 		case "published_to_meetings_in_organization_id":
@@ -111,6 +123,32 @@ func (m *Mediafile) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		m.meetingMediafiles = append(m.meetingMediafiles, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "owner_id":
+		parts := strings.Split(m.OwnerID, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] {
+		case "meeting":
+			var entry Meeting
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.owner = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "organization":
+			var entry Organization
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.owner = &entry
+			result = entry.GetRelatedModelsAccessor()
+		}
+
 	case "parent_id":
 		var entry Mediafile
 		err := json.Unmarshal(content, &entry)
@@ -192,6 +230,9 @@ func (m *Mediafile) GetFqids(field string) []string {
 			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
 		}
 		return r
+
+	case "owner_id":
+		return []string{m.OwnerID}
 
 	case "parent_id":
 		if m.ParentID != nil {

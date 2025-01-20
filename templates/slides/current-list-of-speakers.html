@@ -1,11 +1,17 @@
-<div class="content">
+<div class="content{{if .Overlay}} overlay{{end}}">
+    {{if .Overlay}}
+    <h3>
+        List of speakers
+    </h3>
+    {{else}}
     <h1 class="projector_h1">
         List of speakers
     </h1>
+    {{end}}
     <div class="detail-view-text">
         {{range $index, $element := .Speakers}}
             <div class="speaker">
-                {{ $index }}. {{$element}}
+                {{ $element.Number }}. {{ $element.Name }}
             </div>
         {{end}}
     </div>

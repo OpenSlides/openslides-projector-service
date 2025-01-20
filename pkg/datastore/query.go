@@ -41,7 +41,7 @@ type query[T any, PT baseModelPtr[T]] struct {
 }
 
 func (q *query[T, PT]) SetFqids(ids ...string) *query[T, PT] {
-	q.fqids = append(q.fqids, ids...)
+	q.fqids = append([]string{}, ids...)
 
 	return q
 }
@@ -71,6 +71,8 @@ func (q *query[T, PT]) GetSubquery(idField string) *recursiveSubqueryList {
 // Sets the fqids of the query by plain ids
 func (q *query[T, PT]) SetIds(ids ...int) *query[T, PT] {
 	typeName := strcase.ToSnake(reflect.ValueOf(q.collection).Elem().Type().Name())
+
+	q.fqids = []string{}
 	for _, id := range ids {
 		q.fqids = append(q.fqids, fmt.Sprintf("%s/%d", typeName, id))
 	}
@@ -80,7 +82,7 @@ func (q *query[T, PT]) SetIds(ids ...int) *query[T, PT] {
 
 // Sets the fqids of the query by plain ids
 func (q *query[T, PT]) SetFields(fields ...string) *query[T, PT] {
-	q.Fields = append(q.Fields, fields...)
+	q.Fields = append([]string{}, fields...)
 
 	return q
 }
