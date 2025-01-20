@@ -94,6 +94,10 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 
 	go func() {
 		for update := range updateChannel {
+			if len(q.fqids) == 0 {
+				continue
+			}
+
 			if obj, ok := update[q.fqids[0]]; ok {
 				if obj == nil {
 					close(notifyChannel)
