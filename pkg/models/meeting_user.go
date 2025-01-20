@@ -30,40 +30,24 @@ type MeetingUser struct {
 	VoteDelegationsFromIDs       []int   `json:"vote_delegations_from_ids"`
 	VoteWeight                   *string `json:"vote_weight"`
 	loadedRelations              map[string]struct{}
-	structureLevels              []*StructureLevel
-	user                         *User
 	assignmentCandidates         []*AssignmentCandidate
 	chatMessages                 []*ChatMessage
-	motionSubmitters             []*MotionSubmitter
-	speakers                     []*Speaker
-	voteDelegatedTo              *MeetingUser
-	motionEditors                []*MotionEditor
-	motionWorkingGroupSpeakers   []*MotionWorkingGroupSpeaker
-	personalNotes                []*PersonalNote
-	supportedMotions             []*Motion
-	voteDelegationsFroms         []*MeetingUser
 	groups                       []*Group
 	meeting                      *Meeting
+	motionEditors                []*MotionEditor
+	motionSubmitters             []*MotionSubmitter
+	motionWorkingGroupSpeakers   []*MotionWorkingGroupSpeaker
+	personalNotes                []*PersonalNote
+	speakers                     []*Speaker
+	structureLevels              []*StructureLevel
+	supportedMotions             []*Motion
+	user                         *User
+	voteDelegatedTo              *MeetingUser
+	voteDelegationsFroms         []*MeetingUser
 }
 
 func (m *MeetingUser) CollectionName() string {
 	return "meeting_user"
-}
-
-func (m *MeetingUser) StructureLevels() []*StructureLevel {
-	if _, ok := m.loadedRelations["structure_level_ids"]; !ok {
-		log.Panic().Msg("Tried to access StructureLevels relation of MeetingUser which was not loaded.")
-	}
-
-	return m.structureLevels
-}
-
-func (m *MeetingUser) User() User {
-	if _, ok := m.loadedRelations["user_id"]; !ok {
-		log.Panic().Msg("Tried to access User relation of MeetingUser which was not loaded.")
-	}
-
-	return *m.user
 }
 
 func (m *MeetingUser) AssignmentCandidates() []*AssignmentCandidate {
@@ -82,28 +66,20 @@ func (m *MeetingUser) ChatMessages() []*ChatMessage {
 	return m.chatMessages
 }
 
-func (m *MeetingUser) MotionSubmitters() []*MotionSubmitter {
-	if _, ok := m.loadedRelations["motion_submitter_ids"]; !ok {
-		log.Panic().Msg("Tried to access MotionSubmitters relation of MeetingUser which was not loaded.")
+func (m *MeetingUser) Groups() []*Group {
+	if _, ok := m.loadedRelations["group_ids"]; !ok {
+		log.Panic().Msg("Tried to access Groups relation of MeetingUser which was not loaded.")
 	}
 
-	return m.motionSubmitters
+	return m.groups
 }
 
-func (m *MeetingUser) Speakers() []*Speaker {
-	if _, ok := m.loadedRelations["speaker_ids"]; !ok {
-		log.Panic().Msg("Tried to access Speakers relation of MeetingUser which was not loaded.")
+func (m *MeetingUser) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of MeetingUser which was not loaded.")
 	}
 
-	return m.speakers
-}
-
-func (m *MeetingUser) VoteDelegatedTo() *MeetingUser {
-	if _, ok := m.loadedRelations["vote_delegated_to_id"]; !ok {
-		log.Panic().Msg("Tried to access VoteDelegatedTo relation of MeetingUser which was not loaded.")
-	}
-
-	return m.voteDelegatedTo
+	return *m.meeting
 }
 
 func (m *MeetingUser) MotionEditors() []*MotionEditor {
@@ -112,6 +88,14 @@ func (m *MeetingUser) MotionEditors() []*MotionEditor {
 	}
 
 	return m.motionEditors
+}
+
+func (m *MeetingUser) MotionSubmitters() []*MotionSubmitter {
+	if _, ok := m.loadedRelations["motion_submitter_ids"]; !ok {
+		log.Panic().Msg("Tried to access MotionSubmitters relation of MeetingUser which was not loaded.")
+	}
+
+	return m.motionSubmitters
 }
 
 func (m *MeetingUser) MotionWorkingGroupSpeakers() []*MotionWorkingGroupSpeaker {
@@ -130,12 +114,44 @@ func (m *MeetingUser) PersonalNotes() []*PersonalNote {
 	return m.personalNotes
 }
 
+func (m *MeetingUser) Speakers() []*Speaker {
+	if _, ok := m.loadedRelations["speaker_ids"]; !ok {
+		log.Panic().Msg("Tried to access Speakers relation of MeetingUser which was not loaded.")
+	}
+
+	return m.speakers
+}
+
+func (m *MeetingUser) StructureLevels() []*StructureLevel {
+	if _, ok := m.loadedRelations["structure_level_ids"]; !ok {
+		log.Panic().Msg("Tried to access StructureLevels relation of MeetingUser which was not loaded.")
+	}
+
+	return m.structureLevels
+}
+
 func (m *MeetingUser) SupportedMotions() []*Motion {
 	if _, ok := m.loadedRelations["supported_motion_ids"]; !ok {
 		log.Panic().Msg("Tried to access SupportedMotions relation of MeetingUser which was not loaded.")
 	}
 
 	return m.supportedMotions
+}
+
+func (m *MeetingUser) User() User {
+	if _, ok := m.loadedRelations["user_id"]; !ok {
+		log.Panic().Msg("Tried to access User relation of MeetingUser which was not loaded.")
+	}
+
+	return *m.user
+}
+
+func (m *MeetingUser) VoteDelegatedTo() *MeetingUser {
+	if _, ok := m.loadedRelations["vote_delegated_to_id"]; !ok {
+		log.Panic().Msg("Tried to access VoteDelegatedTo relation of MeetingUser which was not loaded.")
+	}
+
+	return m.voteDelegatedTo
 }
 
 func (m *MeetingUser) VoteDelegationsFroms() []*MeetingUser {
@@ -146,53 +162,37 @@ func (m *MeetingUser) VoteDelegationsFroms() []*MeetingUser {
 	return m.voteDelegationsFroms
 }
 
-func (m *MeetingUser) Groups() []*Group {
-	if _, ok := m.loadedRelations["group_ids"]; !ok {
-		log.Panic().Msg("Tried to access Groups relation of MeetingUser which was not loaded.")
-	}
-
-	return m.groups
-}
-
-func (m *MeetingUser) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of MeetingUser which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
 func (m *MeetingUser) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "structure_level_ids":
-			m.structureLevels = content.([]*StructureLevel)
-		case "user_id":
-			m.user = content.(*User)
 		case "assignment_candidate_ids":
 			m.assignmentCandidates = content.([]*AssignmentCandidate)
 		case "chat_message_ids":
 			m.chatMessages = content.([]*ChatMessage)
-		case "motion_submitter_ids":
-			m.motionSubmitters = content.([]*MotionSubmitter)
-		case "speaker_ids":
-			m.speakers = content.([]*Speaker)
-		case "vote_delegated_to_id":
-			m.voteDelegatedTo = content.(*MeetingUser)
-		case "motion_editor_ids":
-			m.motionEditors = content.([]*MotionEditor)
-		case "motion_working_group_speaker_ids":
-			m.motionWorkingGroupSpeakers = content.([]*MotionWorkingGroupSpeaker)
-		case "personal_note_ids":
-			m.personalNotes = content.([]*PersonalNote)
-		case "supported_motion_ids":
-			m.supportedMotions = content.([]*Motion)
-		case "vote_delegations_from_ids":
-			m.voteDelegationsFroms = content.([]*MeetingUser)
 		case "group_ids":
 			m.groups = content.([]*Group)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
+		case "motion_editor_ids":
+			m.motionEditors = content.([]*MotionEditor)
+		case "motion_submitter_ids":
+			m.motionSubmitters = content.([]*MotionSubmitter)
+		case "motion_working_group_speaker_ids":
+			m.motionWorkingGroupSpeakers = content.([]*MotionWorkingGroupSpeaker)
+		case "personal_note_ids":
+			m.personalNotes = content.([]*PersonalNote)
+		case "speaker_ids":
+			m.speakers = content.([]*Speaker)
+		case "structure_level_ids":
+			m.structureLevels = content.([]*StructureLevel)
+		case "supported_motion_ids":
+			m.supportedMotions = content.([]*Motion)
+		case "user_id":
+			m.user = content.(*User)
+		case "vote_delegated_to_id":
+			m.voteDelegatedTo = content.(*MeetingUser)
+		case "vote_delegations_from_ids":
+			m.voteDelegationsFroms = content.([]*MeetingUser)
 		default:
 			return
 		}
@@ -207,26 +207,6 @@ func (m *MeetingUser) SetRelated(field string, content interface{}) {
 func (m *MeetingUser) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "structure_level_ids":
-		var entry StructureLevel
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.structureLevels = append(m.structureLevels, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "user_id":
-		var entry User
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.user = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "assignment_candidate_ids":
 		var entry AssignmentCandidate
 		err := json.Unmarshal(content, &entry)
@@ -247,34 +227,24 @@ func (m *MeetingUser) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		m.chatMessages = append(m.chatMessages, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "motion_submitter_ids":
-		var entry MotionSubmitter
+	case "group_ids":
+		var entry Group
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.motionSubmitters = append(m.motionSubmitters, &entry)
+		m.groups = append(m.groups, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "speaker_ids":
-		var entry Speaker
+	case "meeting_id":
+		var entry Meeting
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.speakers = append(m.speakers, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "vote_delegated_to_id":
-		var entry MeetingUser
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.voteDelegatedTo = &entry
+		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "motion_editor_ids":
@@ -285,6 +255,16 @@ func (m *MeetingUser) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		}
 
 		m.motionEditors = append(m.motionEditors, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "motion_submitter_ids":
+		var entry MotionSubmitter
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.motionSubmitters = append(m.motionSubmitters, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "motion_working_group_speaker_ids":
@@ -307,6 +287,26 @@ func (m *MeetingUser) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		m.personalNotes = append(m.personalNotes, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "speaker_ids":
+		var entry Speaker
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.speakers = append(m.speakers, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "structure_level_ids":
+		var entry StructureLevel
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.structureLevels = append(m.structureLevels, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
 	case "supported_motion_ids":
 		var entry Motion
 		err := json.Unmarshal(content, &entry)
@@ -317,6 +317,26 @@ func (m *MeetingUser) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		m.supportedMotions = append(m.supportedMotions, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "user_id":
+		var entry User
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.user = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "vote_delegated_to_id":
+		var entry MeetingUser
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.voteDelegatedTo = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "vote_delegations_from_ids":
 		var entry MeetingUser
 		err := json.Unmarshal(content, &entry)
@@ -325,26 +345,6 @@ func (m *MeetingUser) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		}
 
 		m.voteDelegationsFroms = append(m.voteDelegationsFroms, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "group_ids":
-		var entry Group
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.groups = append(m.groups, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -407,16 +407,6 @@ func (m *MeetingUser) Get(field string) interface{} {
 
 func (m *MeetingUser) GetFqids(field string) []string {
 	switch field {
-	case "structure_level_ids":
-		r := make([]string, len(m.StructureLevelIDs))
-		for i, id := range m.StructureLevelIDs {
-			r[i] = "structure_level/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "user_id":
-		return []string{"user/" + strconv.Itoa(m.UserID)}
-
 	case "assignment_candidate_ids":
 		r := make([]string, len(m.AssignmentCandidateIDs))
 		for i, id := range m.AssignmentCandidateIDs {
@@ -431,29 +421,27 @@ func (m *MeetingUser) GetFqids(field string) []string {
 		}
 		return r
 
-	case "motion_submitter_ids":
-		r := make([]string, len(m.MotionSubmitterIDs))
-		for i, id := range m.MotionSubmitterIDs {
-			r[i] = "motion_submitter/" + strconv.Itoa(id)
+	case "group_ids":
+		r := make([]string, len(m.GroupIDs))
+		for i, id := range m.GroupIDs {
+			r[i] = "group/" + strconv.Itoa(id)
 		}
 		return r
 
-	case "speaker_ids":
-		r := make([]string, len(m.SpeakerIDs))
-		for i, id := range m.SpeakerIDs {
-			r[i] = "speaker/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "vote_delegated_to_id":
-		if m.VoteDelegatedToID != nil {
-			return []string{"meeting_user/" + strconv.Itoa(*m.VoteDelegatedToID)}
-		}
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
 	case "motion_editor_ids":
 		r := make([]string, len(m.MotionEditorIDs))
 		for i, id := range m.MotionEditorIDs {
 			r[i] = "motion_editor/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "motion_submitter_ids":
+		r := make([]string, len(m.MotionSubmitterIDs))
+		for i, id := range m.MotionSubmitterIDs {
+			r[i] = "motion_submitter/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -471,6 +459,20 @@ func (m *MeetingUser) GetFqids(field string) []string {
 		}
 		return r
 
+	case "speaker_ids":
+		r := make([]string, len(m.SpeakerIDs))
+		for i, id := range m.SpeakerIDs {
+			r[i] = "speaker/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "structure_level_ids":
+		r := make([]string, len(m.StructureLevelIDs))
+		for i, id := range m.StructureLevelIDs {
+			r[i] = "structure_level/" + strconv.Itoa(id)
+		}
+		return r
+
 	case "supported_motion_ids":
 		r := make([]string, len(m.SupportedMotionIDs))
 		for i, id := range m.SupportedMotionIDs {
@@ -478,22 +480,20 @@ func (m *MeetingUser) GetFqids(field string) []string {
 		}
 		return r
 
+	case "user_id":
+		return []string{"user/" + strconv.Itoa(m.UserID)}
+
+	case "vote_delegated_to_id":
+		if m.VoteDelegatedToID != nil {
+			return []string{"meeting_user/" + strconv.Itoa(*m.VoteDelegatedToID)}
+		}
+
 	case "vote_delegations_from_ids":
 		r := make([]string, len(m.VoteDelegationsFromIDs))
 		for i, id := range m.VoteDelegationsFromIDs {
 			r[i] = "meeting_user/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "group_ids":
-		r := make([]string, len(m.GroupIDs))
-		for i, id := range m.GroupIDs {
-			r[i] = "group/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 	}
 	return []string{}
 }

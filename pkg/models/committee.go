@@ -23,19 +23,27 @@ type Committee struct {
 	ReceiveForwardingsFromCommitteeIDs []int   `json:"receive_forwardings_from_committee_ids"`
 	UserIDs                            []int   `json:"user_ids"`
 	loadedRelations                    map[string]struct{}
+	defaultMeeting                     *Meeting
 	forwardToCommittees                []*Committee
+	forwardingUser                     *User
+	managers                           []*User
 	meetings                           []*Meeting
 	organization                       *Organization
 	organizationTags                   []*OrganizationTag
-	users                              []*User
-	defaultMeeting                     *Meeting
-	forwardingUser                     *User
-	managers                           []*User
 	receiveForwardingsFromCommittees   []*Committee
+	users                              []*User
 }
 
 func (m *Committee) CollectionName() string {
 	return "committee"
+}
+
+func (m *Committee) DefaultMeeting() *Meeting {
+	if _, ok := m.loadedRelations["default_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access DefaultMeeting relation of Committee which was not loaded.")
+	}
+
+	return m.defaultMeeting
 }
 
 func (m *Committee) ForwardToCommittees() []*Committee {
@@ -44,6 +52,22 @@ func (m *Committee) ForwardToCommittees() []*Committee {
 	}
 
 	return m.forwardToCommittees
+}
+
+func (m *Committee) ForwardingUser() *User {
+	if _, ok := m.loadedRelations["forwarding_user_id"]; !ok {
+		log.Panic().Msg("Tried to access ForwardingUser relation of Committee which was not loaded.")
+	}
+
+	return m.forwardingUser
+}
+
+func (m *Committee) Managers() []*User {
+	if _, ok := m.loadedRelations["manager_ids"]; !ok {
+		log.Panic().Msg("Tried to access Managers relation of Committee which was not loaded.")
+	}
+
+	return m.managers
 }
 
 func (m *Committee) Meetings() []*Meeting {
@@ -70,38 +94,6 @@ func (m *Committee) OrganizationTags() []*OrganizationTag {
 	return m.organizationTags
 }
 
-func (m *Committee) Users() []*User {
-	if _, ok := m.loadedRelations["user_ids"]; !ok {
-		log.Panic().Msg("Tried to access Users relation of Committee which was not loaded.")
-	}
-
-	return m.users
-}
-
-func (m *Committee) DefaultMeeting() *Meeting {
-	if _, ok := m.loadedRelations["default_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access DefaultMeeting relation of Committee which was not loaded.")
-	}
-
-	return m.defaultMeeting
-}
-
-func (m *Committee) ForwardingUser() *User {
-	if _, ok := m.loadedRelations["forwarding_user_id"]; !ok {
-		log.Panic().Msg("Tried to access ForwardingUser relation of Committee which was not loaded.")
-	}
-
-	return m.forwardingUser
-}
-
-func (m *Committee) Managers() []*User {
-	if _, ok := m.loadedRelations["manager_ids"]; !ok {
-		log.Panic().Msg("Tried to access Managers relation of Committee which was not loaded.")
-	}
-
-	return m.managers
-}
-
 func (m *Committee) ReceiveForwardingsFromCommittees() []*Committee {
 	if _, ok := m.loadedRelations["receive_forwardings_from_committee_ids"]; !ok {
 		log.Panic().Msg("Tried to access ReceiveForwardingsFromCommittees relation of Committee which was not loaded.")
@@ -110,27 +102,35 @@ func (m *Committee) ReceiveForwardingsFromCommittees() []*Committee {
 	return m.receiveForwardingsFromCommittees
 }
 
+func (m *Committee) Users() []*User {
+	if _, ok := m.loadedRelations["user_ids"]; !ok {
+		log.Panic().Msg("Tried to access Users relation of Committee which was not loaded.")
+	}
+
+	return m.users
+}
+
 func (m *Committee) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "default_meeting_id":
+			m.defaultMeeting = content.(*Meeting)
 		case "forward_to_committee_ids":
 			m.forwardToCommittees = content.([]*Committee)
+		case "forwarding_user_id":
+			m.forwardingUser = content.(*User)
+		case "manager_ids":
+			m.managers = content.([]*User)
 		case "meeting_ids":
 			m.meetings = content.([]*Meeting)
 		case "organization_id":
 			m.organization = content.(*Organization)
 		case "organization_tag_ids":
 			m.organizationTags = content.([]*OrganizationTag)
-		case "user_ids":
-			m.users = content.([]*User)
-		case "default_meeting_id":
-			m.defaultMeeting = content.(*Meeting)
-		case "forwarding_user_id":
-			m.forwardingUser = content.(*User)
-		case "manager_ids":
-			m.managers = content.([]*User)
 		case "receive_forwardings_from_committee_ids":
 			m.receiveForwardingsFromCommittees = content.([]*Committee)
+		case "user_ids":
+			m.users = content.([]*User)
 		default:
 			return
 		}
@@ -145,6 +145,16 @@ func (m *Committee) SetRelated(field string, content interface{}) {
 func (m *Committee) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "default_meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.defaultMeeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "forward_to_committee_ids":
 		var entry Committee
 		err := json.Unmarshal(content, &entry)
@@ -153,6 +163,26 @@ func (m *Committee) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		}
 
 		m.forwardToCommittees = append(m.forwardToCommittees, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "forwarding_user_id":
+		var entry User
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.forwardingUser = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "manager_ids":
+		var entry User
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.managers = append(m.managers, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "meeting_ids":
@@ -185,46 +215,6 @@ func (m *Committee) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		m.organizationTags = append(m.organizationTags, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "user_ids":
-		var entry User
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.users = append(m.users, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "default_meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.defaultMeeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "forwarding_user_id":
-		var entry User
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.forwardingUser = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "manager_ids":
-		var entry User
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.managers = append(m.managers, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "receive_forwardings_from_committee_ids":
 		var entry Committee
 		err := json.Unmarshal(content, &entry)
@@ -233,6 +223,16 @@ func (m *Committee) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		}
 
 		m.receiveForwardingsFromCommittees = append(m.receiveForwardingsFromCommittees, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "user_ids":
+		var entry User
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.users = append(m.users, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -281,10 +281,27 @@ func (m *Committee) Get(field string) interface{} {
 
 func (m *Committee) GetFqids(field string) []string {
 	switch field {
+	case "default_meeting_id":
+		if m.DefaultMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.DefaultMeetingID)}
+		}
+
 	case "forward_to_committee_ids":
 		r := make([]string, len(m.ForwardToCommitteeIDs))
 		for i, id := range m.ForwardToCommitteeIDs {
 			r[i] = "committee/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "forwarding_user_id":
+		if m.ForwardingUserID != nil {
+			return []string{"user/" + strconv.Itoa(*m.ForwardingUserID)}
+		}
+
+	case "manager_ids":
+		r := make([]string, len(m.ManagerIDs))
+		for i, id := range m.ManagerIDs {
+			r[i] = "user/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -305,34 +322,17 @@ func (m *Committee) GetFqids(field string) []string {
 		}
 		return r
 
-	case "user_ids":
-		r := make([]string, len(m.UserIDs))
-		for i, id := range m.UserIDs {
-			r[i] = "user/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "default_meeting_id":
-		if m.DefaultMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.DefaultMeetingID)}
-		}
-
-	case "forwarding_user_id":
-		if m.ForwardingUserID != nil {
-			return []string{"user/" + strconv.Itoa(*m.ForwardingUserID)}
-		}
-
-	case "manager_ids":
-		r := make([]string, len(m.ManagerIDs))
-		for i, id := range m.ManagerIDs {
-			r[i] = "user/" + strconv.Itoa(id)
-		}
-		return r
-
 	case "receive_forwardings_from_committee_ids":
 		r := make([]string, len(m.ReceiveForwardingsFromCommitteeIDs))
 		for i, id := range m.ReceiveForwardingsFromCommitteeIDs {
 			r[i] = "committee/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "user_ids":
+		r := make([]string, len(m.UserIDs))
+		for i, id := range m.UserIDs {
+			r[i] = "user/" + strconv.Itoa(id)
 		}
 		return r
 	}

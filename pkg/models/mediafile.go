@@ -25,9 +25,9 @@ type Mediafile struct {
 	Token                               *string         `json:"token"`
 	loadedRelations                     map[string]struct{}
 	childs                              []*Mediafile
-	publishedToMeetingsInOrganization   *Organization
 	meetingMediafiles                   []*MeetingMediafile
 	parent                              *Mediafile
+	publishedToMeetingsInOrganization   *Organization
 }
 
 func (m *Mediafile) CollectionName() string {
@@ -40,14 +40,6 @@ func (m *Mediafile) Childs() []*Mediafile {
 	}
 
 	return m.childs
-}
-
-func (m *Mediafile) PublishedToMeetingsInOrganization() *Organization {
-	if _, ok := m.loadedRelations["published_to_meetings_in_organization_id"]; !ok {
-		log.Panic().Msg("Tried to access PublishedToMeetingsInOrganization relation of Mediafile which was not loaded.")
-	}
-
-	return m.publishedToMeetingsInOrganization
 }
 
 func (m *Mediafile) MeetingMediafiles() []*MeetingMediafile {
@@ -66,17 +58,25 @@ func (m *Mediafile) Parent() *Mediafile {
 	return m.parent
 }
 
+func (m *Mediafile) PublishedToMeetingsInOrganization() *Organization {
+	if _, ok := m.loadedRelations["published_to_meetings_in_organization_id"]; !ok {
+		log.Panic().Msg("Tried to access PublishedToMeetingsInOrganization relation of Mediafile which was not loaded.")
+	}
+
+	return m.publishedToMeetingsInOrganization
+}
+
 func (m *Mediafile) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
 		case "child_ids":
 			m.childs = content.([]*Mediafile)
-		case "published_to_meetings_in_organization_id":
-			m.publishedToMeetingsInOrganization = content.(*Organization)
 		case "meeting_mediafile_ids":
 			m.meetingMediafiles = content.([]*MeetingMediafile)
 		case "parent_id":
 			m.parent = content.(*Mediafile)
+		case "published_to_meetings_in_organization_id":
+			m.publishedToMeetingsInOrganization = content.(*Organization)
 		default:
 			return
 		}
@@ -101,16 +101,6 @@ func (m *Mediafile) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		m.childs = append(m.childs, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "published_to_meetings_in_organization_id":
-		var entry Organization
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.publishedToMeetingsInOrganization = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "meeting_mediafile_ids":
 		var entry MeetingMediafile
 		err := json.Unmarshal(content, &entry)
@@ -129,6 +119,16 @@ func (m *Mediafile) SetRelatedJSON(field string, content []byte) (*RelatedModels
 		}
 
 		m.parent = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "published_to_meetings_in_organization_id":
+		var entry Organization
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.publishedToMeetingsInOrganization = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -186,11 +186,6 @@ func (m *Mediafile) GetFqids(field string) []string {
 		}
 		return r
 
-	case "published_to_meetings_in_organization_id":
-		if m.PublishedToMeetingsInOrganizationID != nil {
-			return []string{"organization/" + strconv.Itoa(*m.PublishedToMeetingsInOrganizationID)}
-		}
-
 	case "meeting_mediafile_ids":
 		r := make([]string, len(m.MeetingMediafileIDs))
 		for i, id := range m.MeetingMediafileIDs {
@@ -201,6 +196,11 @@ func (m *Mediafile) GetFqids(field string) []string {
 	case "parent_id":
 		if m.ParentID != nil {
 			return []string{"mediafile/" + strconv.Itoa(*m.ParentID)}
+		}
+
+	case "published_to_meetings_in_organization_id":
+		if m.PublishedToMeetingsInOrganizationID != nil {
+			return []string{"organization/" + strconv.Itoa(*m.PublishedToMeetingsInOrganizationID)}
 		}
 	}
 	return []string{}

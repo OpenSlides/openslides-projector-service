@@ -21,9 +21,9 @@ type MotionCategory struct {
 	Weight           *int    `json:"weight"`
 	loadedRelations  map[string]struct{}
 	childs           []*MotionCategory
+	meeting          *Meeting
 	motions          []*Motion
 	parent           *MotionCategory
-	meeting          *Meeting
 }
 
 func (m *MotionCategory) CollectionName() string {
@@ -36,6 +36,14 @@ func (m *MotionCategory) Childs() []*MotionCategory {
 	}
 
 	return m.childs
+}
+
+func (m *MotionCategory) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of MotionCategory which was not loaded.")
+	}
+
+	return *m.meeting
 }
 
 func (m *MotionCategory) Motions() []*Motion {
@@ -54,25 +62,17 @@ func (m *MotionCategory) Parent() *MotionCategory {
 	return m.parent
 }
 
-func (m *MotionCategory) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of MotionCategory which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
 func (m *MotionCategory) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
 		case "child_ids":
 			m.childs = content.([]*MotionCategory)
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
 		case "motion_ids":
 			m.motions = content.([]*Motion)
 		case "parent_id":
 			m.parent = content.(*MotionCategory)
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
 		default:
 			return
 		}
@@ -97,6 +97,16 @@ func (m *MotionCategory) SetRelatedJSON(field string, content []byte) (*RelatedM
 		m.childs = append(m.childs, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meeting = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "motion_ids":
 		var entry Motion
 		err := json.Unmarshal(content, &entry)
@@ -115,16 +125,6 @@ func (m *MotionCategory) SetRelatedJSON(field string, content []byte) (*RelatedM
 		}
 
 		m.parent = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -174,6 +174,9 @@ func (m *MotionCategory) GetFqids(field string) []string {
 		}
 		return r
 
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
 	case "motion_ids":
 		r := make([]string, len(m.MotionIDs))
 		for i, id := range m.MotionIDs {
@@ -185,9 +188,6 @@ func (m *MotionCategory) GetFqids(field string) []string {
 		if m.ParentID != nil {
 			return []string{"motion_category/" + strconv.Itoa(*m.ParentID)}
 		}
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 	}
 	return []string{}
 }

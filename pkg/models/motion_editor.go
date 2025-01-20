@@ -15,21 +15,13 @@ type MotionEditor struct {
 	MotionID        int  `json:"motion_id"`
 	Weight          *int `json:"weight"`
 	loadedRelations map[string]struct{}
-	motion          *Motion
 	meeting         *Meeting
 	meetingUser     *MeetingUser
+	motion          *Motion
 }
 
 func (m *MotionEditor) CollectionName() string {
 	return "motion_editor"
-}
-
-func (m *MotionEditor) Motion() Motion {
-	if _, ok := m.loadedRelations["motion_id"]; !ok {
-		log.Panic().Msg("Tried to access Motion relation of MotionEditor which was not loaded.")
-	}
-
-	return *m.motion
 }
 
 func (m *MotionEditor) Meeting() Meeting {
@@ -48,15 +40,23 @@ func (m *MotionEditor) MeetingUser() MeetingUser {
 	return *m.meetingUser
 }
 
+func (m *MotionEditor) Motion() Motion {
+	if _, ok := m.loadedRelations["motion_id"]; !ok {
+		log.Panic().Msg("Tried to access Motion relation of MotionEditor which was not loaded.")
+	}
+
+	return *m.motion
+}
+
 func (m *MotionEditor) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "motion_id":
-			m.motion = content.(*Motion)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "meeting_user_id":
 			m.meetingUser = content.(*MeetingUser)
+		case "motion_id":
+			m.motion = content.(*Motion)
 		default:
 			return
 		}
@@ -71,16 +71,6 @@ func (m *MotionEditor) SetRelated(field string, content interface{}) {
 func (m *MotionEditor) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "motion_id":
-		var entry Motion
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.motion = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -99,6 +89,16 @@ func (m *MotionEditor) SetRelatedJSON(field string, content []byte) (*RelatedMod
 		}
 
 		m.meetingUser = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "motion_id":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.motion = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -131,14 +131,14 @@ func (m *MotionEditor) Get(field string) interface{} {
 
 func (m *MotionEditor) GetFqids(field string) []string {
 	switch field {
-	case "motion_id":
-		return []string{"motion/" + strconv.Itoa(m.MotionID)}
-
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
 	case "meeting_user_id":
 		return []string{"meeting_user/" + strconv.Itoa(m.MeetingUserID)}
+
+	case "motion_id":
+		return []string{"motion/" + strconv.Itoa(m.MotionID)}
 	}
 	return []string{}
 }

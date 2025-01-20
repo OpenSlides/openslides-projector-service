@@ -21,8 +21,8 @@ type ListOfSpeakers struct {
 	loadedRelations                 map[string]struct{}
 	meeting                         *Meeting
 	projections                     []*Projection
-	structureLevelListOfSpeakerss   []*StructureLevelListOfSpeakers
 	speakers                        []*Speaker
+	structureLevelListOfSpeakerss   []*StructureLevelListOfSpeakers
 }
 
 func (m *ListOfSpeakers) CollectionName() string {
@@ -45,20 +45,20 @@ func (m *ListOfSpeakers) Projections() []*Projection {
 	return m.projections
 }
 
-func (m *ListOfSpeakers) StructureLevelListOfSpeakerss() []*StructureLevelListOfSpeakers {
-	if _, ok := m.loadedRelations["structure_level_list_of_speakers_ids"]; !ok {
-		log.Panic().Msg("Tried to access StructureLevelListOfSpeakerss relation of ListOfSpeakers which was not loaded.")
-	}
-
-	return m.structureLevelListOfSpeakerss
-}
-
 func (m *ListOfSpeakers) Speakers() []*Speaker {
 	if _, ok := m.loadedRelations["speaker_ids"]; !ok {
 		log.Panic().Msg("Tried to access Speakers relation of ListOfSpeakers which was not loaded.")
 	}
 
 	return m.speakers
+}
+
+func (m *ListOfSpeakers) StructureLevelListOfSpeakerss() []*StructureLevelListOfSpeakers {
+	if _, ok := m.loadedRelations["structure_level_list_of_speakers_ids"]; !ok {
+		log.Panic().Msg("Tried to access StructureLevelListOfSpeakerss relation of ListOfSpeakers which was not loaded.")
+	}
+
+	return m.structureLevelListOfSpeakerss
 }
 
 func (m *ListOfSpeakers) SetRelated(field string, content interface{}) {
@@ -68,10 +68,10 @@ func (m *ListOfSpeakers) SetRelated(field string, content interface{}) {
 			m.meeting = content.(*Meeting)
 		case "projection_ids":
 			m.projections = content.([]*Projection)
-		case "structure_level_list_of_speakers_ids":
-			m.structureLevelListOfSpeakerss = content.([]*StructureLevelListOfSpeakers)
 		case "speaker_ids":
 			m.speakers = content.([]*Speaker)
+		case "structure_level_list_of_speakers_ids":
+			m.structureLevelListOfSpeakerss = content.([]*StructureLevelListOfSpeakers)
 		default:
 			return
 		}
@@ -106,16 +106,6 @@ func (m *ListOfSpeakers) SetRelatedJSON(field string, content []byte) (*RelatedM
 		m.projections = append(m.projections, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "structure_level_list_of_speakers_ids":
-		var entry StructureLevelListOfSpeakers
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.structureLevelListOfSpeakerss = append(m.structureLevelListOfSpeakerss, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "speaker_ids":
 		var entry Speaker
 		err := json.Unmarshal(content, &entry)
@@ -124,6 +114,16 @@ func (m *ListOfSpeakers) SetRelatedJSON(field string, content []byte) (*RelatedM
 		}
 
 		m.speakers = append(m.speakers, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "structure_level_list_of_speakers_ids":
+		var entry StructureLevelListOfSpeakers
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.structureLevelListOfSpeakerss = append(m.structureLevelListOfSpeakerss, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -174,17 +174,17 @@ func (m *ListOfSpeakers) GetFqids(field string) []string {
 		}
 		return r
 
-	case "structure_level_list_of_speakers_ids":
-		r := make([]string, len(m.StructureLevelListOfSpeakersIDs))
-		for i, id := range m.StructureLevelListOfSpeakersIDs {
-			r[i] = "structure_level_list_of_speakers/" + strconv.Itoa(id)
-		}
-		return r
-
 	case "speaker_ids":
 		r := make([]string, len(m.SpeakerIDs))
 		for i, id := range m.SpeakerIDs {
 			r[i] = "speaker/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "structure_level_list_of_speakers_ids":
+		r := make([]string, len(m.StructureLevelListOfSpeakersIDs))
+		for i, id := range m.StructureLevelListOfSpeakersIDs {
+			r[i] = "structure_level_list_of_speakers/" + strconv.Itoa(id)
 		}
 		return r
 	}

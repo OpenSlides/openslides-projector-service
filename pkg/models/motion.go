@@ -63,57 +63,65 @@ type Motion struct {
 	WorkflowTimestamp                            *int            `json:"workflow_timestamp"`
 	WorkingGroupSpeakerIDs                       []int           `json:"working_group_speaker_ids"`
 	loadedRelations                              map[string]struct{}
-	originMeeting                                *Meeting
-	iDenticalMotions                             []*Motion
+	agendaItem                                   *AgendaItem
+	allDerivedMotions                            []*Motion
+	allOrigins                                   []*Motion
 	amendments                                   []*Motion
-	projections                                  []*Projection
+	attachmentMeetingMediafiles                  []*MeetingMediafile
+	block                                        *MotionBlock
+	category                                     *MotionCategory
+	changeRecommendations                        []*MotionChangeRecommendation
+	comments                                     []*MotionComment
+	derivedMotions                               []*Motion
+	editors                                      []*MotionEditor
+	iDenticalMotions                             []*Motion
 	leadMotion                                   *Motion
 	listOfSpeakers                               *ListOfSpeakers
-	personalNotes                                []*PersonalNote
-	allDerivedMotions                            []*Motion
-	state                                        *MotionState
-	origin                                       *Motion
-	referencedInMotionStateExtensions            []*Motion
-	supporterMeetingUsers                        []*MeetingUser
-	workingGroupSpeakers                         []*MotionWorkingGroupSpeaker
-	attachmentMeetingMediafiles                  []*MeetingMediafile
-	comments                                     []*MotionComment
-	sortChilds                                   []*Motion
-	changeRecommendations                        []*MotionChangeRecommendation
-	category                                     *MotionCategory
-	editors                                      []*MotionEditor
-	allOrigins                                   []*Motion
-	block                                        *MotionBlock
-	polls                                        []*Poll
-	agendaItem                                   *AgendaItem
-	tags                                         []*Tag
-	sortParent                                   *Motion
 	meeting                                      *Meeting
+	options                                      []*Option
+	origin                                       *Motion
+	originMeeting                                *Meeting
+	personalNotes                                []*PersonalNote
+	polls                                        []*Poll
+	projections                                  []*Projection
 	recommendation                               *MotionState
 	referencedInMotionRecommendationExtensions   []*Motion
+	referencedInMotionStateExtensions            []*Motion
+	sortChilds                                   []*Motion
+	sortParent                                   *Motion
+	state                                        *MotionState
 	submitters                                   []*MotionSubmitter
-	derivedMotions                               []*Motion
-	options                                      []*Option
+	supporterMeetingUsers                        []*MeetingUser
+	tags                                         []*Tag
+	workingGroupSpeakers                         []*MotionWorkingGroupSpeaker
 }
 
 func (m *Motion) CollectionName() string {
 	return "motion"
 }
 
-func (m *Motion) OriginMeeting() *Meeting {
-	if _, ok := m.loadedRelations["origin_meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access OriginMeeting relation of Motion which was not loaded.")
+func (m *Motion) AgendaItem() *AgendaItem {
+	if _, ok := m.loadedRelations["agenda_item_id"]; !ok {
+		log.Panic().Msg("Tried to access AgendaItem relation of Motion which was not loaded.")
 	}
 
-	return m.originMeeting
+	return m.agendaItem
 }
 
-func (m *Motion) IDenticalMotions() []*Motion {
-	if _, ok := m.loadedRelations["identical_motion_ids"]; !ok {
-		log.Panic().Msg("Tried to access IDenticalMotions relation of Motion which was not loaded.")
+func (m *Motion) AllDerivedMotions() []*Motion {
+	if _, ok := m.loadedRelations["all_derived_motion_ids"]; !ok {
+		log.Panic().Msg("Tried to access AllDerivedMotions relation of Motion which was not loaded.")
 	}
 
-	return m.iDenticalMotions
+	return m.allDerivedMotions
+}
+
+func (m *Motion) AllOrigins() []*Motion {
+	if _, ok := m.loadedRelations["all_origin_ids"]; !ok {
+		log.Panic().Msg("Tried to access AllOrigins relation of Motion which was not loaded.")
+	}
+
+	return m.allOrigins
 }
 
 func (m *Motion) Amendments() []*Motion {
@@ -124,12 +132,68 @@ func (m *Motion) Amendments() []*Motion {
 	return m.amendments
 }
 
-func (m *Motion) Projections() []*Projection {
-	if _, ok := m.loadedRelations["projection_ids"]; !ok {
-		log.Panic().Msg("Tried to access Projections relation of Motion which was not loaded.")
+func (m *Motion) AttachmentMeetingMediafiles() []*MeetingMediafile {
+	if _, ok := m.loadedRelations["attachment_meeting_mediafile_ids"]; !ok {
+		log.Panic().Msg("Tried to access AttachmentMeetingMediafiles relation of Motion which was not loaded.")
 	}
 
-	return m.projections
+	return m.attachmentMeetingMediafiles
+}
+
+func (m *Motion) Block() *MotionBlock {
+	if _, ok := m.loadedRelations["block_id"]; !ok {
+		log.Panic().Msg("Tried to access Block relation of Motion which was not loaded.")
+	}
+
+	return m.block
+}
+
+func (m *Motion) Category() *MotionCategory {
+	if _, ok := m.loadedRelations["category_id"]; !ok {
+		log.Panic().Msg("Tried to access Category relation of Motion which was not loaded.")
+	}
+
+	return m.category
+}
+
+func (m *Motion) ChangeRecommendations() []*MotionChangeRecommendation {
+	if _, ok := m.loadedRelations["change_recommendation_ids"]; !ok {
+		log.Panic().Msg("Tried to access ChangeRecommendations relation of Motion which was not loaded.")
+	}
+
+	return m.changeRecommendations
+}
+
+func (m *Motion) Comments() []*MotionComment {
+	if _, ok := m.loadedRelations["comment_ids"]; !ok {
+		log.Panic().Msg("Tried to access Comments relation of Motion which was not loaded.")
+	}
+
+	return m.comments
+}
+
+func (m *Motion) DerivedMotions() []*Motion {
+	if _, ok := m.loadedRelations["derived_motion_ids"]; !ok {
+		log.Panic().Msg("Tried to access DerivedMotions relation of Motion which was not loaded.")
+	}
+
+	return m.derivedMotions
+}
+
+func (m *Motion) Editors() []*MotionEditor {
+	if _, ok := m.loadedRelations["editor_ids"]; !ok {
+		log.Panic().Msg("Tried to access Editors relation of Motion which was not loaded.")
+	}
+
+	return m.editors
+}
+
+func (m *Motion) IDenticalMotions() []*Motion {
+	if _, ok := m.loadedRelations["identical_motion_ids"]; !ok {
+		log.Panic().Msg("Tried to access IDenticalMotions relation of Motion which was not loaded.")
+	}
+
+	return m.iDenticalMotions
 }
 
 func (m *Motion) LeadMotion() *Motion {
@@ -148,28 +212,20 @@ func (m *Motion) ListOfSpeakers() ListOfSpeakers {
 	return *m.listOfSpeakers
 }
 
-func (m *Motion) PersonalNotes() []*PersonalNote {
-	if _, ok := m.loadedRelations["personal_note_ids"]; !ok {
-		log.Panic().Msg("Tried to access PersonalNotes relation of Motion which was not loaded.")
+func (m *Motion) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of Motion which was not loaded.")
 	}
 
-	return m.personalNotes
+	return *m.meeting
 }
 
-func (m *Motion) AllDerivedMotions() []*Motion {
-	if _, ok := m.loadedRelations["all_derived_motion_ids"]; !ok {
-		log.Panic().Msg("Tried to access AllDerivedMotions relation of Motion which was not loaded.")
+func (m *Motion) Options() []*Option {
+	if _, ok := m.loadedRelations["option_ids"]; !ok {
+		log.Panic().Msg("Tried to access Options relation of Motion which was not loaded.")
 	}
 
-	return m.allDerivedMotions
-}
-
-func (m *Motion) State() MotionState {
-	if _, ok := m.loadedRelations["state_id"]; !ok {
-		log.Panic().Msg("Tried to access State relation of Motion which was not loaded.")
-	}
-
-	return *m.state
+	return m.options
 }
 
 func (m *Motion) Origin() *Motion {
@@ -180,92 +236,20 @@ func (m *Motion) Origin() *Motion {
 	return m.origin
 }
 
-func (m *Motion) ReferencedInMotionStateExtensions() []*Motion {
-	if _, ok := m.loadedRelations["referenced_in_motion_state_extension_ids"]; !ok {
-		log.Panic().Msg("Tried to access ReferencedInMotionStateExtensions relation of Motion which was not loaded.")
+func (m *Motion) OriginMeeting() *Meeting {
+	if _, ok := m.loadedRelations["origin_meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access OriginMeeting relation of Motion which was not loaded.")
 	}
 
-	return m.referencedInMotionStateExtensions
+	return m.originMeeting
 }
 
-func (m *Motion) SupporterMeetingUsers() []*MeetingUser {
-	if _, ok := m.loadedRelations["supporter_meeting_user_ids"]; !ok {
-		log.Panic().Msg("Tried to access SupporterMeetingUsers relation of Motion which was not loaded.")
+func (m *Motion) PersonalNotes() []*PersonalNote {
+	if _, ok := m.loadedRelations["personal_note_ids"]; !ok {
+		log.Panic().Msg("Tried to access PersonalNotes relation of Motion which was not loaded.")
 	}
 
-	return m.supporterMeetingUsers
-}
-
-func (m *Motion) WorkingGroupSpeakers() []*MotionWorkingGroupSpeaker {
-	if _, ok := m.loadedRelations["working_group_speaker_ids"]; !ok {
-		log.Panic().Msg("Tried to access WorkingGroupSpeakers relation of Motion which was not loaded.")
-	}
-
-	return m.workingGroupSpeakers
-}
-
-func (m *Motion) AttachmentMeetingMediafiles() []*MeetingMediafile {
-	if _, ok := m.loadedRelations["attachment_meeting_mediafile_ids"]; !ok {
-		log.Panic().Msg("Tried to access AttachmentMeetingMediafiles relation of Motion which was not loaded.")
-	}
-
-	return m.attachmentMeetingMediafiles
-}
-
-func (m *Motion) Comments() []*MotionComment {
-	if _, ok := m.loadedRelations["comment_ids"]; !ok {
-		log.Panic().Msg("Tried to access Comments relation of Motion which was not loaded.")
-	}
-
-	return m.comments
-}
-
-func (m *Motion) SortChilds() []*Motion {
-	if _, ok := m.loadedRelations["sort_child_ids"]; !ok {
-		log.Panic().Msg("Tried to access SortChilds relation of Motion which was not loaded.")
-	}
-
-	return m.sortChilds
-}
-
-func (m *Motion) ChangeRecommendations() []*MotionChangeRecommendation {
-	if _, ok := m.loadedRelations["change_recommendation_ids"]; !ok {
-		log.Panic().Msg("Tried to access ChangeRecommendations relation of Motion which was not loaded.")
-	}
-
-	return m.changeRecommendations
-}
-
-func (m *Motion) Category() *MotionCategory {
-	if _, ok := m.loadedRelations["category_id"]; !ok {
-		log.Panic().Msg("Tried to access Category relation of Motion which was not loaded.")
-	}
-
-	return m.category
-}
-
-func (m *Motion) Editors() []*MotionEditor {
-	if _, ok := m.loadedRelations["editor_ids"]; !ok {
-		log.Panic().Msg("Tried to access Editors relation of Motion which was not loaded.")
-	}
-
-	return m.editors
-}
-
-func (m *Motion) AllOrigins() []*Motion {
-	if _, ok := m.loadedRelations["all_origin_ids"]; !ok {
-		log.Panic().Msg("Tried to access AllOrigins relation of Motion which was not loaded.")
-	}
-
-	return m.allOrigins
-}
-
-func (m *Motion) Block() *MotionBlock {
-	if _, ok := m.loadedRelations["block_id"]; !ok {
-		log.Panic().Msg("Tried to access Block relation of Motion which was not loaded.")
-	}
-
-	return m.block
+	return m.personalNotes
 }
 
 func (m *Motion) Polls() []*Poll {
@@ -276,36 +260,12 @@ func (m *Motion) Polls() []*Poll {
 	return m.polls
 }
 
-func (m *Motion) AgendaItem() *AgendaItem {
-	if _, ok := m.loadedRelations["agenda_item_id"]; !ok {
-		log.Panic().Msg("Tried to access AgendaItem relation of Motion which was not loaded.")
+func (m *Motion) Projections() []*Projection {
+	if _, ok := m.loadedRelations["projection_ids"]; !ok {
+		log.Panic().Msg("Tried to access Projections relation of Motion which was not loaded.")
 	}
 
-	return m.agendaItem
-}
-
-func (m *Motion) Tags() []*Tag {
-	if _, ok := m.loadedRelations["tag_ids"]; !ok {
-		log.Panic().Msg("Tried to access Tags relation of Motion which was not loaded.")
-	}
-
-	return m.tags
-}
-
-func (m *Motion) SortParent() *Motion {
-	if _, ok := m.loadedRelations["sort_parent_id"]; !ok {
-		log.Panic().Msg("Tried to access SortParent relation of Motion which was not loaded.")
-	}
-
-	return m.sortParent
-}
-
-func (m *Motion) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of Motion which was not loaded.")
-	}
-
-	return *m.meeting
+	return m.projections
 }
 
 func (m *Motion) Recommendation() *MotionState {
@@ -324,6 +284,38 @@ func (m *Motion) ReferencedInMotionRecommendationExtensions() []*Motion {
 	return m.referencedInMotionRecommendationExtensions
 }
 
+func (m *Motion) ReferencedInMotionStateExtensions() []*Motion {
+	if _, ok := m.loadedRelations["referenced_in_motion_state_extension_ids"]; !ok {
+		log.Panic().Msg("Tried to access ReferencedInMotionStateExtensions relation of Motion which was not loaded.")
+	}
+
+	return m.referencedInMotionStateExtensions
+}
+
+func (m *Motion) SortChilds() []*Motion {
+	if _, ok := m.loadedRelations["sort_child_ids"]; !ok {
+		log.Panic().Msg("Tried to access SortChilds relation of Motion which was not loaded.")
+	}
+
+	return m.sortChilds
+}
+
+func (m *Motion) SortParent() *Motion {
+	if _, ok := m.loadedRelations["sort_parent_id"]; !ok {
+		log.Panic().Msg("Tried to access SortParent relation of Motion which was not loaded.")
+	}
+
+	return m.sortParent
+}
+
+func (m *Motion) State() MotionState {
+	if _, ok := m.loadedRelations["state_id"]; !ok {
+		log.Panic().Msg("Tried to access State relation of Motion which was not loaded.")
+	}
+
+	return *m.state
+}
+
 func (m *Motion) Submitters() []*MotionSubmitter {
 	if _, ok := m.loadedRelations["submitter_ids"]; !ok {
 		log.Panic().Msg("Tried to access Submitters relation of Motion which was not loaded.")
@@ -332,87 +324,95 @@ func (m *Motion) Submitters() []*MotionSubmitter {
 	return m.submitters
 }
 
-func (m *Motion) DerivedMotions() []*Motion {
-	if _, ok := m.loadedRelations["derived_motion_ids"]; !ok {
-		log.Panic().Msg("Tried to access DerivedMotions relation of Motion which was not loaded.")
+func (m *Motion) SupporterMeetingUsers() []*MeetingUser {
+	if _, ok := m.loadedRelations["supporter_meeting_user_ids"]; !ok {
+		log.Panic().Msg("Tried to access SupporterMeetingUsers relation of Motion which was not loaded.")
 	}
 
-	return m.derivedMotions
+	return m.supporterMeetingUsers
 }
 
-func (m *Motion) Options() []*Option {
-	if _, ok := m.loadedRelations["option_ids"]; !ok {
-		log.Panic().Msg("Tried to access Options relation of Motion which was not loaded.")
+func (m *Motion) Tags() []*Tag {
+	if _, ok := m.loadedRelations["tag_ids"]; !ok {
+		log.Panic().Msg("Tried to access Tags relation of Motion which was not loaded.")
 	}
 
-	return m.options
+	return m.tags
+}
+
+func (m *Motion) WorkingGroupSpeakers() []*MotionWorkingGroupSpeaker {
+	if _, ok := m.loadedRelations["working_group_speaker_ids"]; !ok {
+		log.Panic().Msg("Tried to access WorkingGroupSpeakers relation of Motion which was not loaded.")
+	}
+
+	return m.workingGroupSpeakers
 }
 
 func (m *Motion) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "origin_meeting_id":
-			m.originMeeting = content.(*Meeting)
-		case "identical_motion_ids":
-			m.iDenticalMotions = content.([]*Motion)
+		case "agenda_item_id":
+			m.agendaItem = content.(*AgendaItem)
+		case "all_derived_motion_ids":
+			m.allDerivedMotions = content.([]*Motion)
+		case "all_origin_ids":
+			m.allOrigins = content.([]*Motion)
 		case "amendment_ids":
 			m.amendments = content.([]*Motion)
-		case "projection_ids":
-			m.projections = content.([]*Projection)
+		case "attachment_meeting_mediafile_ids":
+			m.attachmentMeetingMediafiles = content.([]*MeetingMediafile)
+		case "block_id":
+			m.block = content.(*MotionBlock)
+		case "category_id":
+			m.category = content.(*MotionCategory)
+		case "change_recommendation_ids":
+			m.changeRecommendations = content.([]*MotionChangeRecommendation)
+		case "comment_ids":
+			m.comments = content.([]*MotionComment)
+		case "derived_motion_ids":
+			m.derivedMotions = content.([]*Motion)
+		case "editor_ids":
+			m.editors = content.([]*MotionEditor)
+		case "identical_motion_ids":
+			m.iDenticalMotions = content.([]*Motion)
 		case "lead_motion_id":
 			m.leadMotion = content.(*Motion)
 		case "list_of_speakers_id":
 			m.listOfSpeakers = content.(*ListOfSpeakers)
-		case "personal_note_ids":
-			m.personalNotes = content.([]*PersonalNote)
-		case "all_derived_motion_ids":
-			m.allDerivedMotions = content.([]*Motion)
-		case "state_id":
-			m.state = content.(*MotionState)
-		case "origin_id":
-			m.origin = content.(*Motion)
-		case "referenced_in_motion_state_extension_ids":
-			m.referencedInMotionStateExtensions = content.([]*Motion)
-		case "supporter_meeting_user_ids":
-			m.supporterMeetingUsers = content.([]*MeetingUser)
-		case "working_group_speaker_ids":
-			m.workingGroupSpeakers = content.([]*MotionWorkingGroupSpeaker)
-		case "attachment_meeting_mediafile_ids":
-			m.attachmentMeetingMediafiles = content.([]*MeetingMediafile)
-		case "comment_ids":
-			m.comments = content.([]*MotionComment)
-		case "sort_child_ids":
-			m.sortChilds = content.([]*Motion)
-		case "change_recommendation_ids":
-			m.changeRecommendations = content.([]*MotionChangeRecommendation)
-		case "category_id":
-			m.category = content.(*MotionCategory)
-		case "editor_ids":
-			m.editors = content.([]*MotionEditor)
-		case "all_origin_ids":
-			m.allOrigins = content.([]*Motion)
-		case "block_id":
-			m.block = content.(*MotionBlock)
-		case "poll_ids":
-			m.polls = content.([]*Poll)
-		case "agenda_item_id":
-			m.agendaItem = content.(*AgendaItem)
-		case "tag_ids":
-			m.tags = content.([]*Tag)
-		case "sort_parent_id":
-			m.sortParent = content.(*Motion)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
+		case "option_ids":
+			m.options = content.([]*Option)
+		case "origin_id":
+			m.origin = content.(*Motion)
+		case "origin_meeting_id":
+			m.originMeeting = content.(*Meeting)
+		case "personal_note_ids":
+			m.personalNotes = content.([]*PersonalNote)
+		case "poll_ids":
+			m.polls = content.([]*Poll)
+		case "projection_ids":
+			m.projections = content.([]*Projection)
 		case "recommendation_id":
 			m.recommendation = content.(*MotionState)
 		case "referenced_in_motion_recommendation_extension_ids":
 			m.referencedInMotionRecommendationExtensions = content.([]*Motion)
+		case "referenced_in_motion_state_extension_ids":
+			m.referencedInMotionStateExtensions = content.([]*Motion)
+		case "sort_child_ids":
+			m.sortChilds = content.([]*Motion)
+		case "sort_parent_id":
+			m.sortParent = content.(*Motion)
+		case "state_id":
+			m.state = content.(*MotionState)
 		case "submitter_ids":
 			m.submitters = content.([]*MotionSubmitter)
-		case "derived_motion_ids":
-			m.derivedMotions = content.([]*Motion)
-		case "option_ids":
-			m.options = content.([]*Option)
+		case "supporter_meeting_user_ids":
+			m.supporterMeetingUsers = content.([]*MeetingUser)
+		case "tag_ids":
+			m.tags = content.([]*Tag)
+		case "working_group_speaker_ids":
+			m.workingGroupSpeakers = content.([]*MotionWorkingGroupSpeaker)
 		default:
 			return
 		}
@@ -427,24 +427,34 @@ func (m *Motion) SetRelated(field string, content interface{}) {
 func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "origin_meeting_id":
-		var entry Meeting
+	case "agenda_item_id":
+		var entry AgendaItem
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.originMeeting = &entry
+		m.agendaItem = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "identical_motion_ids":
+	case "all_derived_motion_ids":
 		var entry Motion
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.iDenticalMotions = append(m.iDenticalMotions, &entry)
+		m.allDerivedMotions = append(m.allDerivedMotions, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "all_origin_ids":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.allOrigins = append(m.allOrigins, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "amendment_ids":
@@ -457,14 +467,84 @@ func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcc
 		m.amendments = append(m.amendments, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "projection_ids":
-		var entry Projection
+	case "attachment_meeting_mediafile_ids":
+		var entry MeetingMediafile
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.projections = append(m.projections, &entry)
+		m.attachmentMeetingMediafiles = append(m.attachmentMeetingMediafiles, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "block_id":
+		var entry MotionBlock
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.block = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "category_id":
+		var entry MotionCategory
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.category = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "change_recommendation_ids":
+		var entry MotionChangeRecommendation
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.changeRecommendations = append(m.changeRecommendations, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "comment_ids":
+		var entry MotionComment
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.comments = append(m.comments, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "derived_motion_ids":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.derivedMotions = append(m.derivedMotions, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "editor_ids":
+		var entry MotionEditor
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.editors = append(m.editors, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "identical_motion_ids":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.iDenticalMotions = append(m.iDenticalMotions, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "lead_motion_id":
@@ -487,34 +567,24 @@ func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcc
 		m.listOfSpeakers = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "personal_note_ids":
-		var entry PersonalNote
+	case "meeting_id":
+		var entry Meeting
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.personalNotes = append(m.personalNotes, &entry)
+		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "all_derived_motion_ids":
-		var entry Motion
+	case "option_ids":
+		var entry Option
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.allDerivedMotions = append(m.allDerivedMotions, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "state_id":
-		var entry MotionState
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.state = &entry
+		m.options = append(m.options, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "origin_id":
@@ -527,114 +597,24 @@ func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcc
 		m.origin = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "referenced_in_motion_state_extension_ids":
-		var entry Motion
+	case "origin_meeting_id":
+		var entry Meeting
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.referencedInMotionStateExtensions = append(m.referencedInMotionStateExtensions, &entry)
+		m.originMeeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "supporter_meeting_user_ids":
-		var entry MeetingUser
+	case "personal_note_ids":
+		var entry PersonalNote
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.supporterMeetingUsers = append(m.supporterMeetingUsers, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "working_group_speaker_ids":
-		var entry MotionWorkingGroupSpeaker
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.workingGroupSpeakers = append(m.workingGroupSpeakers, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "attachment_meeting_mediafile_ids":
-		var entry MeetingMediafile
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.attachmentMeetingMediafiles = append(m.attachmentMeetingMediafiles, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "comment_ids":
-		var entry MotionComment
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.comments = append(m.comments, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "sort_child_ids":
-		var entry Motion
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.sortChilds = append(m.sortChilds, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "change_recommendation_ids":
-		var entry MotionChangeRecommendation
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.changeRecommendations = append(m.changeRecommendations, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "category_id":
-		var entry MotionCategory
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.category = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "editor_ids":
-		var entry MotionEditor
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.editors = append(m.editors, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "all_origin_ids":
-		var entry Motion
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.allOrigins = append(m.allOrigins, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "block_id":
-		var entry MotionBlock
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.block = &entry
+		m.personalNotes = append(m.personalNotes, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "poll_ids":
@@ -647,44 +627,14 @@ func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcc
 		m.polls = append(m.polls, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "agenda_item_id":
-		var entry AgendaItem
+	case "projection_ids":
+		var entry Projection
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.agendaItem = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "tag_ids":
-		var entry Tag
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.tags = append(m.tags, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "sort_parent_id":
-		var entry Motion
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.sortParent = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
+		m.projections = append(m.projections, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	case "recommendation_id":
@@ -707,6 +657,46 @@ func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcc
 		m.referencedInMotionRecommendationExtensions = append(m.referencedInMotionRecommendationExtensions, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "referenced_in_motion_state_extension_ids":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.referencedInMotionStateExtensions = append(m.referencedInMotionStateExtensions, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "sort_child_ids":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.sortChilds = append(m.sortChilds, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "sort_parent_id":
+		var entry Motion
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.sortParent = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "state_id":
+		var entry MotionState
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.state = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "submitter_ids":
 		var entry MotionSubmitter
 		err := json.Unmarshal(content, &entry)
@@ -717,24 +707,34 @@ func (m *Motion) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcc
 		m.submitters = append(m.submitters, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "derived_motion_ids":
-		var entry Motion
+	case "supporter_meeting_user_ids":
+		var entry MeetingUser
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.derivedMotions = append(m.derivedMotions, &entry)
+		m.supporterMeetingUsers = append(m.supporterMeetingUsers, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
-	case "option_ids":
-		var entry Option
+	case "tag_ids":
+		var entry Tag
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
 			return nil, err
 		}
 
-		m.options = append(m.options, &entry)
+		m.tags = append(m.tags, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "working_group_speaker_ids":
+		var entry MotionWorkingGroupSpeaker
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.workingGroupSpeakers = append(m.workingGroupSpeakers, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -863,14 +863,21 @@ func (m *Motion) Get(field string) interface{} {
 
 func (m *Motion) GetFqids(field string) []string {
 	switch field {
-	case "origin_meeting_id":
-		if m.OriginMeetingID != nil {
-			return []string{"meeting/" + strconv.Itoa(*m.OriginMeetingID)}
+	case "agenda_item_id":
+		if m.AgendaItemID != nil {
+			return []string{"agenda_item/" + strconv.Itoa(*m.AgendaItemID)}
 		}
 
-	case "identical_motion_ids":
-		r := make([]string, len(m.IDenticalMotionIDs))
-		for i, id := range m.IDenticalMotionIDs {
+	case "all_derived_motion_ids":
+		r := make([]string, len(m.AllDerivedMotionIDs))
+		for i, id := range m.AllDerivedMotionIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "all_origin_ids":
+		r := make([]string, len(m.AllOriginIDs))
+		for i, id := range m.AllOriginIDs {
 			r[i] = "motion/" + strconv.Itoa(id)
 		}
 		return r
@@ -882,10 +889,55 @@ func (m *Motion) GetFqids(field string) []string {
 		}
 		return r
 
-	case "projection_ids":
-		r := make([]string, len(m.ProjectionIDs))
-		for i, id := range m.ProjectionIDs {
-			r[i] = "projection/" + strconv.Itoa(id)
+	case "attachment_meeting_mediafile_ids":
+		r := make([]string, len(m.AttachmentMeetingMediafileIDs))
+		for i, id := range m.AttachmentMeetingMediafileIDs {
+			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "block_id":
+		if m.BlockID != nil {
+			return []string{"motion_block/" + strconv.Itoa(*m.BlockID)}
+		}
+
+	case "category_id":
+		if m.CategoryID != nil {
+			return []string{"motion_category/" + strconv.Itoa(*m.CategoryID)}
+		}
+
+	case "change_recommendation_ids":
+		r := make([]string, len(m.ChangeRecommendationIDs))
+		for i, id := range m.ChangeRecommendationIDs {
+			r[i] = "motion_change_recommendation/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "comment_ids":
+		r := make([]string, len(m.CommentIDs))
+		for i, id := range m.CommentIDs {
+			r[i] = "motion_comment/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "derived_motion_ids":
+		r := make([]string, len(m.DerivedMotionIDs))
+		for i, id := range m.DerivedMotionIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "editor_ids":
+		r := make([]string, len(m.EditorIDs))
+		for i, id := range m.EditorIDs {
+			r[i] = "motion_editor/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "identical_motion_ids":
+		r := make([]string, len(m.IDenticalMotionIDs))
+		for i, id := range m.IDenticalMotionIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
 		}
 		return r
 
@@ -897,100 +949,32 @@ func (m *Motion) GetFqids(field string) []string {
 	case "list_of_speakers_id":
 		return []string{"list_of_speakers/" + strconv.Itoa(m.ListOfSpeakersID)}
 
-	case "personal_note_ids":
-		r := make([]string, len(m.PersonalNoteIDs))
-		for i, id := range m.PersonalNoteIDs {
-			r[i] = "personal_note/" + strconv.Itoa(id)
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
+
+	case "option_ids":
+		r := make([]string, len(m.OptionIDs))
+		for i, id := range m.OptionIDs {
+			r[i] = "option/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "all_derived_motion_ids":
-		r := make([]string, len(m.AllDerivedMotionIDs))
-		for i, id := range m.AllDerivedMotionIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "state_id":
-		return []string{"motion_state/" + strconv.Itoa(m.StateID)}
 
 	case "origin_id":
 		if m.OriginID != nil {
 			return []string{"motion/" + strconv.Itoa(*m.OriginID)}
 		}
 
-	case "referenced_in_motion_state_extension_ids":
-		r := make([]string, len(m.ReferencedInMotionStateExtensionIDs))
-		for i, id := range m.ReferencedInMotionStateExtensionIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
+	case "origin_meeting_id":
+		if m.OriginMeetingID != nil {
+			return []string{"meeting/" + strconv.Itoa(*m.OriginMeetingID)}
+		}
+
+	case "personal_note_ids":
+		r := make([]string, len(m.PersonalNoteIDs))
+		for i, id := range m.PersonalNoteIDs {
+			r[i] = "personal_note/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "supporter_meeting_user_ids":
-		r := make([]string, len(m.SupporterMeetingUserIDs))
-		for i, id := range m.SupporterMeetingUserIDs {
-			r[i] = "meeting_user/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "working_group_speaker_ids":
-		r := make([]string, len(m.WorkingGroupSpeakerIDs))
-		for i, id := range m.WorkingGroupSpeakerIDs {
-			r[i] = "motion_working_group_speaker/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "attachment_meeting_mediafile_ids":
-		r := make([]string, len(m.AttachmentMeetingMediafileIDs))
-		for i, id := range m.AttachmentMeetingMediafileIDs {
-			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "comment_ids":
-		r := make([]string, len(m.CommentIDs))
-		for i, id := range m.CommentIDs {
-			r[i] = "motion_comment/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "sort_child_ids":
-		r := make([]string, len(m.SortChildIDs))
-		for i, id := range m.SortChildIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "change_recommendation_ids":
-		r := make([]string, len(m.ChangeRecommendationIDs))
-		for i, id := range m.ChangeRecommendationIDs {
-			r[i] = "motion_change_recommendation/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "category_id":
-		if m.CategoryID != nil {
-			return []string{"motion_category/" + strconv.Itoa(*m.CategoryID)}
-		}
-
-	case "editor_ids":
-		r := make([]string, len(m.EditorIDs))
-		for i, id := range m.EditorIDs {
-			r[i] = "motion_editor/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "all_origin_ids":
-		r := make([]string, len(m.AllOriginIDs))
-		for i, id := range m.AllOriginIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
-		}
-		return r
-
-	case "block_id":
-		if m.BlockID != nil {
-			return []string{"motion_block/" + strconv.Itoa(*m.BlockID)}
-		}
 
 	case "poll_ids":
 		r := make([]string, len(m.PollIDs))
@@ -999,25 +983,12 @@ func (m *Motion) GetFqids(field string) []string {
 		}
 		return r
 
-	case "agenda_item_id":
-		if m.AgendaItemID != nil {
-			return []string{"agenda_item/" + strconv.Itoa(*m.AgendaItemID)}
-		}
-
-	case "tag_ids":
-		r := make([]string, len(m.TagIDs))
-		for i, id := range m.TagIDs {
-			r[i] = "tag/" + strconv.Itoa(id)
+	case "projection_ids":
+		r := make([]string, len(m.ProjectionIDs))
+		for i, id := range m.ProjectionIDs {
+			r[i] = "projection/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "sort_parent_id":
-		if m.SortParentID != nil {
-			return []string{"motion/" + strconv.Itoa(*m.SortParentID)}
-		}
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
 	case "recommendation_id":
 		if m.RecommendationID != nil {
@@ -1031,6 +1002,28 @@ func (m *Motion) GetFqids(field string) []string {
 		}
 		return r
 
+	case "referenced_in_motion_state_extension_ids":
+		r := make([]string, len(m.ReferencedInMotionStateExtensionIDs))
+		for i, id := range m.ReferencedInMotionStateExtensionIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "sort_child_ids":
+		r := make([]string, len(m.SortChildIDs))
+		for i, id := range m.SortChildIDs {
+			r[i] = "motion/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "sort_parent_id":
+		if m.SortParentID != nil {
+			return []string{"motion/" + strconv.Itoa(*m.SortParentID)}
+		}
+
+	case "state_id":
+		return []string{"motion_state/" + strconv.Itoa(m.StateID)}
+
 	case "submitter_ids":
 		r := make([]string, len(m.SubmitterIDs))
 		for i, id := range m.SubmitterIDs {
@@ -1038,17 +1031,24 @@ func (m *Motion) GetFqids(field string) []string {
 		}
 		return r
 
-	case "derived_motion_ids":
-		r := make([]string, len(m.DerivedMotionIDs))
-		for i, id := range m.DerivedMotionIDs {
-			r[i] = "motion/" + strconv.Itoa(id)
+	case "supporter_meeting_user_ids":
+		r := make([]string, len(m.SupporterMeetingUserIDs))
+		for i, id := range m.SupporterMeetingUserIDs {
+			r[i] = "meeting_user/" + strconv.Itoa(id)
 		}
 		return r
 
-	case "option_ids":
-		r := make([]string, len(m.OptionIDs))
-		for i, id := range m.OptionIDs {
-			r[i] = "option/" + strconv.Itoa(id)
+	case "tag_ids":
+		r := make([]string, len(m.TagIDs))
+		for i, id := range m.TagIDs {
+			r[i] = "tag/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "working_group_speaker_ids":
+		r := make([]string, len(m.WorkingGroupSpeakerIDs))
+		for i, id := range m.WorkingGroupSpeakerIDs {
+			r[i] = "motion_working_group_speaker/" + strconv.Itoa(id)
 		}
 		return r
 	}

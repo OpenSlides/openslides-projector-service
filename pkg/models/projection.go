@@ -22,8 +22,8 @@ type Projection struct {
 	Weight             *int            `json:"weight"`
 	loadedRelations    map[string]struct{}
 	currentProjector   *Projector
-	meeting            *Meeting
 	historyProjector   *Projector
+	meeting            *Meeting
 	previewProjector   *Projector
 }
 
@@ -39,20 +39,20 @@ func (m *Projection) CurrentProjector() *Projector {
 	return m.currentProjector
 }
 
-func (m *Projection) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of Projection which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
 func (m *Projection) HistoryProjector() *Projector {
 	if _, ok := m.loadedRelations["history_projector_id"]; !ok {
 		log.Panic().Msg("Tried to access HistoryProjector relation of Projection which was not loaded.")
 	}
 
 	return m.historyProjector
+}
+
+func (m *Projection) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of Projection which was not loaded.")
+	}
+
+	return *m.meeting
 }
 
 func (m *Projection) PreviewProjector() *Projector {
@@ -68,10 +68,10 @@ func (m *Projection) SetRelated(field string, content interface{}) {
 		switch field {
 		case "current_projector_id":
 			m.currentProjector = content.(*Projector)
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
 		case "history_projector_id":
 			m.historyProjector = content.(*Projector)
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
 		case "preview_projector_id":
 			m.previewProjector = content.(*Projector)
 		default:
@@ -98,16 +98,6 @@ func (m *Projection) SetRelatedJSON(field string, content []byte) (*RelatedModel
 		m.currentProjector = &entry
 
 		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
 	case "history_projector_id":
 		var entry Projector
 		err := json.Unmarshal(content, &entry)
@@ -116,6 +106,16 @@ func (m *Projection) SetRelatedJSON(field string, content []byte) (*RelatedModel
 		}
 
 		m.historyProjector = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "preview_projector_id":
@@ -175,13 +175,13 @@ func (m *Projection) GetFqids(field string) []string {
 			return []string{"projector/" + strconv.Itoa(*m.CurrentProjectorID)}
 		}
 
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
-
 	case "history_projector_id":
 		if m.HistoryProjectorID != nil {
 			return []string{"projector/" + strconv.Itoa(*m.HistoryProjectorID)}
 		}
+
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
 	case "preview_projector_id":
 		if m.PreviewProjectorID != nil {

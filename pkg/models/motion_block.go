@@ -19,23 +19,15 @@ type MotionBlock struct {
 	SequentialNumber int    `json:"sequential_number"`
 	Title            string `json:"title"`
 	loadedRelations  map[string]struct{}
-	projections      []*Projection
 	agendaItem       *AgendaItem
 	listOfSpeakers   *ListOfSpeakers
 	meeting          *Meeting
 	motions          []*Motion
+	projections      []*Projection
 }
 
 func (m *MotionBlock) CollectionName() string {
 	return "motion_block"
-}
-
-func (m *MotionBlock) Projections() []*Projection {
-	if _, ok := m.loadedRelations["projection_ids"]; !ok {
-		log.Panic().Msg("Tried to access Projections relation of MotionBlock which was not loaded.")
-	}
-
-	return m.projections
 }
 
 func (m *MotionBlock) AgendaItem() *AgendaItem {
@@ -70,11 +62,17 @@ func (m *MotionBlock) Motions() []*Motion {
 	return m.motions
 }
 
+func (m *MotionBlock) Projections() []*Projection {
+	if _, ok := m.loadedRelations["projection_ids"]; !ok {
+		log.Panic().Msg("Tried to access Projections relation of MotionBlock which was not loaded.")
+	}
+
+	return m.projections
+}
+
 func (m *MotionBlock) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
-		case "projection_ids":
-			m.projections = content.([]*Projection)
 		case "agenda_item_id":
 			m.agendaItem = content.(*AgendaItem)
 		case "list_of_speakers_id":
@@ -83,6 +81,8 @@ func (m *MotionBlock) SetRelated(field string, content interface{}) {
 			m.meeting = content.(*Meeting)
 		case "motion_ids":
 			m.motions = content.([]*Motion)
+		case "projection_ids":
+			m.projections = content.([]*Projection)
 		default:
 			return
 		}
@@ -97,16 +97,6 @@ func (m *MotionBlock) SetRelated(field string, content interface{}) {
 func (m *MotionBlock) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
-	case "projection_ids":
-		var entry Projection
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.projections = append(m.projections, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
 	case "agenda_item_id":
 		var entry AgendaItem
 		err := json.Unmarshal(content, &entry)
@@ -147,6 +137,16 @@ func (m *MotionBlock) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		m.motions = append(m.motions, &entry)
 
 		result = entry.GetRelatedModelsAccessor()
+	case "projection_ids":
+		var entry Projection
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.projections = append(m.projections, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
 	default:
 		return nil, fmt.Errorf("set related field json on not existing field")
 	}
@@ -185,13 +185,6 @@ func (m *MotionBlock) Get(field string) interface{} {
 
 func (m *MotionBlock) GetFqids(field string) []string {
 	switch field {
-	case "projection_ids":
-		r := make([]string, len(m.ProjectionIDs))
-		for i, id := range m.ProjectionIDs {
-			r[i] = "projection/" + strconv.Itoa(id)
-		}
-		return r
-
 	case "agenda_item_id":
 		if m.AgendaItemID != nil {
 			return []string{"agenda_item/" + strconv.Itoa(*m.AgendaItemID)}
@@ -207,6 +200,13 @@ func (m *MotionBlock) GetFqids(field string) []string {
 		r := make([]string, len(m.MotionIDs))
 		for i, id := range m.MotionIDs {
 			r[i] = "motion/" + strconv.Itoa(id)
+		}
+		return r
+
+	case "projection_ids":
+		r := make([]string, len(m.ProjectionIDs))
+		for i, id := range m.ProjectionIDs {
+			r[i] = "projection/" + strconv.Itoa(id)
 		}
 		return r
 	}

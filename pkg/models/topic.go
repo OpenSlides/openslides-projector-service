@@ -20,16 +20,24 @@ type Topic struct {
 	Text                          *string `json:"text"`
 	Title                         string  `json:"title"`
 	loadedRelations               map[string]struct{}
+	agendaItem                    *AgendaItem
 	attachmentMeetingMediafiles   []*MeetingMediafile
+	listOfSpeakers                *ListOfSpeakers
+	meeting                       *Meeting
 	polls                         []*Poll
 	projections                   []*Projection
-	meeting                       *Meeting
-	agendaItem                    *AgendaItem
-	listOfSpeakers                *ListOfSpeakers
 }
 
 func (m *Topic) CollectionName() string {
 	return "topic"
+}
+
+func (m *Topic) AgendaItem() AgendaItem {
+	if _, ok := m.loadedRelations["agenda_item_id"]; !ok {
+		log.Panic().Msg("Tried to access AgendaItem relation of Topic which was not loaded.")
+	}
+
+	return *m.agendaItem
 }
 
 func (m *Topic) AttachmentMeetingMediafiles() []*MeetingMediafile {
@@ -38,6 +46,22 @@ func (m *Topic) AttachmentMeetingMediafiles() []*MeetingMediafile {
 	}
 
 	return m.attachmentMeetingMediafiles
+}
+
+func (m *Topic) ListOfSpeakers() ListOfSpeakers {
+	if _, ok := m.loadedRelations["list_of_speakers_id"]; !ok {
+		log.Panic().Msg("Tried to access ListOfSpeakers relation of Topic which was not loaded.")
+	}
+
+	return *m.listOfSpeakers
+}
+
+func (m *Topic) Meeting() Meeting {
+	if _, ok := m.loadedRelations["meeting_id"]; !ok {
+		log.Panic().Msg("Tried to access Meeting relation of Topic which was not loaded.")
+	}
+
+	return *m.meeting
 }
 
 func (m *Topic) Polls() []*Poll {
@@ -56,45 +80,21 @@ func (m *Topic) Projections() []*Projection {
 	return m.projections
 }
 
-func (m *Topic) Meeting() Meeting {
-	if _, ok := m.loadedRelations["meeting_id"]; !ok {
-		log.Panic().Msg("Tried to access Meeting relation of Topic which was not loaded.")
-	}
-
-	return *m.meeting
-}
-
-func (m *Topic) AgendaItem() AgendaItem {
-	if _, ok := m.loadedRelations["agenda_item_id"]; !ok {
-		log.Panic().Msg("Tried to access AgendaItem relation of Topic which was not loaded.")
-	}
-
-	return *m.agendaItem
-}
-
-func (m *Topic) ListOfSpeakers() ListOfSpeakers {
-	if _, ok := m.loadedRelations["list_of_speakers_id"]; !ok {
-		log.Panic().Msg("Tried to access ListOfSpeakers relation of Topic which was not loaded.")
-	}
-
-	return *m.listOfSpeakers
-}
-
 func (m *Topic) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "agenda_item_id":
+			m.agendaItem = content.(*AgendaItem)
 		case "attachment_meeting_mediafile_ids":
 			m.attachmentMeetingMediafiles = content.([]*MeetingMediafile)
+		case "list_of_speakers_id":
+			m.listOfSpeakers = content.(*ListOfSpeakers)
+		case "meeting_id":
+			m.meeting = content.(*Meeting)
 		case "poll_ids":
 			m.polls = content.([]*Poll)
 		case "projection_ids":
 			m.projections = content.([]*Projection)
-		case "meeting_id":
-			m.meeting = content.(*Meeting)
-		case "agenda_item_id":
-			m.agendaItem = content.(*AgendaItem)
-		case "list_of_speakers_id":
-			m.listOfSpeakers = content.(*ListOfSpeakers)
 		default:
 			return
 		}
@@ -109,6 +109,16 @@ func (m *Topic) SetRelated(field string, content interface{}) {
 func (m *Topic) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "agenda_item_id":
+		var entry AgendaItem
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.agendaItem = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "attachment_meeting_mediafile_ids":
 		var entry MeetingMediafile
 		err := json.Unmarshal(content, &entry)
@@ -117,6 +127,26 @@ func (m *Topic) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		}
 
 		m.attachmentMeetingMediafiles = append(m.attachmentMeetingMediafiles, &entry)
+
+		result = entry.GetRelatedModelsAccessor()
+	case "list_of_speakers_id":
+		var entry ListOfSpeakers
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.listOfSpeakers = &entry
+
+		result = entry.GetRelatedModelsAccessor()
+	case "meeting_id":
+		var entry Meeting
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.meeting = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	case "poll_ids":
@@ -137,36 +167,6 @@ func (m *Topic) SetRelatedJSON(field string, content []byte) (*RelatedModelsAcce
 		}
 
 		m.projections = append(m.projections, &entry)
-
-		result = entry.GetRelatedModelsAccessor()
-	case "meeting_id":
-		var entry Meeting
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.meeting = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "agenda_item_id":
-		var entry AgendaItem
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.agendaItem = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "list_of_speakers_id":
-		var entry ListOfSpeakers
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.listOfSpeakers = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -209,12 +209,21 @@ func (m *Topic) Get(field string) interface{} {
 
 func (m *Topic) GetFqids(field string) []string {
 	switch field {
+	case "agenda_item_id":
+		return []string{"agenda_item/" + strconv.Itoa(m.AgendaItemID)}
+
 	case "attachment_meeting_mediafile_ids":
 		r := make([]string, len(m.AttachmentMeetingMediafileIDs))
 		for i, id := range m.AttachmentMeetingMediafileIDs {
 			r[i] = "meeting_mediafile/" + strconv.Itoa(id)
 		}
 		return r
+
+	case "list_of_speakers_id":
+		return []string{"list_of_speakers/" + strconv.Itoa(m.ListOfSpeakersID)}
+
+	case "meeting_id":
+		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
 	case "poll_ids":
 		r := make([]string, len(m.PollIDs))
@@ -229,15 +238,6 @@ func (m *Topic) GetFqids(field string) []string {
 			r[i] = "projection/" + strconv.Itoa(id)
 		}
 		return r
-
-	case "meeting_id":
-		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
-
-	case "agenda_item_id":
-		return []string{"agenda_item/" + strconv.Itoa(m.AgendaItemID)}
-
-	case "list_of_speakers_id":
-		return []string{"list_of_speakers/" + strconv.Itoa(m.ListOfSpeakersID)}
 	}
 	return []string{}
 }

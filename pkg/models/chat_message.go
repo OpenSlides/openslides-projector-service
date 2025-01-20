@@ -16,13 +16,21 @@ type ChatMessage struct {
 	MeetingID       int    `json:"meeting_id"`
 	MeetingUserID   *int   `json:"meeting_user_id"`
 	loadedRelations map[string]struct{}
+	chatGroup       *ChatGroup
 	meeting         *Meeting
 	meetingUser     *MeetingUser
-	chatGroup       *ChatGroup
 }
 
 func (m *ChatMessage) CollectionName() string {
 	return "chat_message"
+}
+
+func (m *ChatMessage) ChatGroup() ChatGroup {
+	if _, ok := m.loadedRelations["chat_group_id"]; !ok {
+		log.Panic().Msg("Tried to access ChatGroup relation of ChatMessage which was not loaded.")
+	}
+
+	return *m.chatGroup
 }
 
 func (m *ChatMessage) Meeting() Meeting {
@@ -41,23 +49,15 @@ func (m *ChatMessage) MeetingUser() *MeetingUser {
 	return m.meetingUser
 }
 
-func (m *ChatMessage) ChatGroup() ChatGroup {
-	if _, ok := m.loadedRelations["chat_group_id"]; !ok {
-		log.Panic().Msg("Tried to access ChatGroup relation of ChatMessage which was not loaded.")
-	}
-
-	return *m.chatGroup
-}
-
 func (m *ChatMessage) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "chat_group_id":
+			m.chatGroup = content.(*ChatGroup)
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "meeting_user_id":
 			m.meetingUser = content.(*MeetingUser)
-		case "chat_group_id":
-			m.chatGroup = content.(*ChatGroup)
 		default:
 			return
 		}
@@ -72,6 +72,16 @@ func (m *ChatMessage) SetRelated(field string, content interface{}) {
 func (m *ChatMessage) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "chat_group_id":
+		var entry ChatGroup
+		err := json.Unmarshal(content, &entry)
+		if err != nil {
+			return nil, err
+		}
+
+		m.chatGroup = &entry
+
+		result = entry.GetRelatedModelsAccessor()
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -90,16 +100,6 @@ func (m *ChatMessage) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		}
 
 		m.meetingUser = &entry
-
-		result = entry.GetRelatedModelsAccessor()
-	case "chat_group_id":
-		var entry ChatGroup
-		err := json.Unmarshal(content, &entry)
-		if err != nil {
-			return nil, err
-		}
-
-		m.chatGroup = &entry
 
 		result = entry.GetRelatedModelsAccessor()
 	default:
@@ -134,6 +134,9 @@ func (m *ChatMessage) Get(field string) interface{} {
 
 func (m *ChatMessage) GetFqids(field string) []string {
 	switch field {
+	case "chat_group_id":
+		return []string{"chat_group/" + strconv.Itoa(m.ChatGroupID)}
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 
@@ -141,9 +144,6 @@ func (m *ChatMessage) GetFqids(field string) []string {
 		if m.MeetingUserID != nil {
 			return []string{"meeting_user/" + strconv.Itoa(*m.MeetingUserID)}
 		}
-
-	case "chat_group_id":
-		return []string{"chat_group/" + strconv.Itoa(m.ChatGroupID)}
 	}
 	return []string{}
 }
