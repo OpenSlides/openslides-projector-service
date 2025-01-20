@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,6 +22,7 @@ type Option struct {
 	Weight                     *int    `json:"weight"`
 	Yes                        *string `json:"yes"`
 	loadedRelations            map[string]struct{}
+	contentObject              IBaseModel
 	meeting                    *Meeting
 	poll                       *Poll
 	usedAsGlobalOptionInPoll   *Poll
@@ -29,6 +31,14 @@ type Option struct {
 
 func (m *Option) CollectionName() string {
 	return "option"
+}
+
+func (m *Option) ContentObject() IBaseModel {
+	if _, ok := m.loadedRelations["content_object_id"]; !ok {
+		log.Panic().Msg("Tried to access ContentObject relation of Option which was not loaded.")
+	}
+
+	return m.contentObject
 }
 
 func (m *Option) Meeting() Meeting {
@@ -66,6 +76,8 @@ func (m *Option) Votes() []*Vote {
 func (m *Option) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "content_object_id":
+			panic("not implemented")
 		case "meeting_id":
 			m.meeting = content.(*Meeting)
 		case "poll_id":
@@ -88,6 +100,44 @@ func (m *Option) SetRelated(field string, content interface{}) {
 func (m *Option) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "content_object_id":
+		if m.ContentObjectID == nil {
+			return nil, fmt.Errorf("cannot fill relation for ContentObjectID while id field is empty")
+		}
+		parts := strings.Split(*m.ContentObjectID, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] {
+		case "motion":
+			var entry Motion
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "poll_candidate_list":
+			var entry PollCandidateList
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "user":
+			var entry User
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+		}
+
 	case "meeting_id":
 		var entry Meeting
 		err := json.Unmarshal(content, &entry)
@@ -170,6 +220,11 @@ func (m *Option) Get(field string) interface{} {
 
 func (m *Option) GetFqids(field string) []string {
 	switch field {
+	case "content_object_id":
+		if m.ContentObjectID != nil {
+			return []string{*m.ContentObjectID}
+		}
+
 	case "meeting_id":
 		return []string{"meeting/" + strconv.Itoa(m.MeetingID)}
 

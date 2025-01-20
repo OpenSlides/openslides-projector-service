@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,6 +22,7 @@ type Projection struct {
 	Type               *string         `json:"type"`
 	Weight             *int            `json:"weight"`
 	loadedRelations    map[string]struct{}
+	contentObject      IBaseModel
 	currentProjector   *Projector
 	historyProjector   *Projector
 	meeting            *Meeting
@@ -29,6 +31,14 @@ type Projection struct {
 
 func (m *Projection) CollectionName() string {
 	return "projection"
+}
+
+func (m *Projection) ContentObject() IBaseModel {
+	if _, ok := m.loadedRelations["content_object_id"]; !ok {
+		log.Panic().Msg("Tried to access ContentObject relation of Projection which was not loaded.")
+	}
+
+	return m.contentObject
 }
 
 func (m *Projection) CurrentProjector() *Projector {
@@ -66,6 +76,8 @@ func (m *Projection) PreviewProjector() *Projector {
 func (m *Projection) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "content_object_id":
+			panic("not implemented")
 		case "current_projector_id":
 			m.currentProjector = content.(*Projector)
 		case "history_projector_id":
@@ -88,6 +100,113 @@ func (m *Projection) SetRelated(field string, content interface{}) {
 func (m *Projection) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "content_object_id":
+		parts := strings.Split(m.ContentObjectID, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] {
+		case "agenda_item":
+			var entry AgendaItem
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "assignment":
+			var entry Assignment
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "list_of_speakers":
+			var entry ListOfSpeakers
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "meeting":
+			var entry Meeting
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "meeting_mediafile":
+			var entry MeetingMediafile
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "motion":
+			var entry Motion
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "motion_block":
+			var entry MotionBlock
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "poll":
+			var entry Poll
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "projector_countdown":
+			var entry ProjectorCountdown
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "projector_message":
+			var entry ProjectorMessage
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "topic":
+			var entry Topic
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+		}
+
 	case "current_projector_id":
 		var entry Projector
 		err := json.Unmarshal(content, &entry)
@@ -170,6 +289,9 @@ func (m *Projection) Get(field string) interface{} {
 
 func (m *Projection) GetFqids(field string) []string {
 	switch field {
+	case "content_object_id":
+		return []string{m.ContentObjectID}
+
 	case "current_projector_id":
 		if m.CurrentProjectorID != nil {
 			return []string{"projector/" + strconv.Itoa(*m.CurrentProjectorID)}

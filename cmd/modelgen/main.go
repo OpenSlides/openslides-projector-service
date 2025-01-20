@@ -128,14 +128,39 @@ func parse(r io.Reader) ([]collection, error) {
 					Required:       modelField.Required,
 					List:           modelField.Type == "relation-list",
 				})
+			}
 
-				sort.Slice(relations, func(i, j int) bool {
-					return relations[i].PropName < relations[j].PropName
+			if modelField.Type == "generic-relation" {
+				propName := goName(strings.Replace(fieldName+"$", "_id$", "", 1))
+				propNameLc := []rune(propName)
+				propNameLc[0] = unicode.ToLower(propNameLc[0])
+
+				toCollections := map[string]string{}
+				for _, c := range modelField.Relation().ToCollections() {
+					toCollections[c.Collection] = goName(c.Collection)
+				}
+
+				relations = append(relations, relation{
+					GoName:         goName(collectionName),
+					PropName:       propName,
+					PropNameLc:     string(propNameLc),
+					RelCollection:  "IBaseModel",
+					CollectionName: "IBaseModel",
+					IdField:        fieldName,
+					IdFieldGo:      goName(fieldName),
+					Required:       modelField.Required,
+					List:           false,
+					Generic:        true,
+					ToCollections:  toCollections,
 				})
 			}
 
 			fields = append(fields, f)
 		}
+
+		sort.Slice(relations, func(i, j int) bool {
+			return relations[i].PropName < relations[j].PropName
+		})
 
 		sort.Slice(fields, func(i, j int) bool {
 			return fields[i].GoName < fields[j].GoName
@@ -177,10 +202,12 @@ type relation struct {
 	PropNameLc     string
 	RelCollection  string
 	CollectionName string
+	ToCollections  map[string]string
 	IdField        string
 	IdFieldGo      string
 	Required       bool
 	List           bool
+	Generic        bool
 }
 
 func goName(name string) string {

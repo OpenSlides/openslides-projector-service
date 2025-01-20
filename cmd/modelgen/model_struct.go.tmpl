@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -11,27 +12,28 @@ import (
 type {{.GoName}} struct { {{range .Fields}}
 	{{.GoName}} {{.ValueType}} `json:"{{.FieldName}}"`{{end}}
 	{{if .HasRelations}}loadedRelations map[string]struct{}{{range .Relations}}
-	{{.PropNameLc}} {{if .List}}[]{{end}}*{{.CollectionName}}{{end}}{{end}}
+	{{.PropNameLc}} {{if .List}}[]{{end}}{{if not .Generic}}*{{end}}{{.CollectionName}}{{end}}{{end}}
 }
 
 func (m *{{.GoName}}) CollectionName() string {
 	return "{{.CollectionName}}"
 }
 
-{{range .Relations}}func (m *{{.GoName}}) {{.PropName}}() {{if .List}}[]*{{else}}{{if not .Required}}*{{end}}{{end}}{{.CollectionName}} {
+{{range .Relations}}func (m *{{.GoName}}) {{.PropName}}() {{if .List}}[]*{{else}}{{if not .Generic}}{{if not .Required}}*{{end}}{{end}}{{end}}{{.CollectionName}} {
 	if _, ok := m.loadedRelations["{{.IdField}}"]; !ok {
 		log.Panic().Msg("Tried to access {{.PropName}} relation of {{.GoName}} which was not loaded.")
 	}
 
-	return {{if not .List}}{{if .Required}}*{{end}}{{end}}m.{{.PropNameLc}}
+	return {{if not .List}}{{if not .Generic}}{{if .Required}}*{{end}}{{end}}{{end}}m.{{.PropNameLc}}
 }
 
 {{end}}
 func (m *{{.GoName}}) SetRelated(field string, content interface{}) { {{if .HasRelations}}
 	if content != nil {
 		switch field { {{range .Relations}}
-		case "{{.IdField}}":
-	  	m.{{.PropNameLc}} = content.({{if .List}}[]{{end}}*{{.CollectionName}}){{end}}
+		case "{{.IdField}}":{{if .Generic}}
+			panic("not implemented"){{else}}
+	  	m.{{.PropNameLc}} = content.({{if .List}}[]{{end}}*{{.CollectionName}}){{end}}{{end}}
 		default:
 			return
 		}
@@ -45,8 +47,27 @@ func (m *{{.GoName}}) SetRelated(field string, content interface{}) { {{if .HasR
 
 func (m *{{.GoName}}) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) { {{if .HasRelations}}
 	var result *RelatedModelsAccessor
-	switch field { {{range .Relations}}
-	case "{{.IdField}}":
+	switch field { {{range $i, $r := .Relations}}
+	case "{{.IdField}}":{{if .Generic}}{{if not .Required}}
+		if m.{{.IdFieldGo}} == nil {
+			return nil, fmt.Errorf("cannot fill relation for {{.IdFieldGo}} while id field is empty")
+		}{{end}}
+		parts := strings.Split({{if not .Required}}*{{end}}m.{{.IdFieldGo}}, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] { {{range $key, $value := .ToCollections}}
+		case "{{$key}}":
+			var entry {{$value}}
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.{{$r.PropNameLc}} = &entry
+			result = entry.GetRelatedModelsAccessor()
+		{{end}} }
+		{{else}}
 		var entry {{.CollectionName}}
 		err := json.Unmarshal(content, &entry)
 		if err != nil {
@@ -57,7 +78,7 @@ func (m *{{.GoName}}) SetRelatedJSON(field string, content []byte) (*RelatedMode
 		{{else}}
 		m.{{.PropNameLc}} = &entry
 		{{end}}
-		result = entry.GetRelatedModelsAccessor() {{end}}
+		result = entry.GetRelatedModelsAccessor() {{end}}{{end}}
 	default:
 		return nil, fmt.Errorf("set related field json on not existing field")
 	}
@@ -87,11 +108,13 @@ func (m *{{.GoName}}) GetFqids(field string) []string { {{if .HasRelations}}
 			r[i] = "{{.RelCollection}}/" + strconv.Itoa(id)
 		}
 		return r
-		{{else if .Required}}
-		return []string{"{{.RelCollection}}/" + strconv.Itoa(m.{{.IdFieldGo}})}
+		{{else if .Required}}{{if .Generic}}
+		return []string{m.{{.IdFieldGo}}}{{else}}
+		return []string{"{{.RelCollection}}/" + strconv.Itoa(m.{{.IdFieldGo}})}{{end}}
 		{{else}}
-		if m.{{.IdFieldGo}} != nil {
-			return []string{"{{.RelCollection}}/" + strconv.Itoa(*m.{{.IdFieldGo}})}
+		if m.{{.IdFieldGo}} != nil { {{if .Generic}}
+			return []string{*m.{{.IdFieldGo}}}{{else}}
+			return []string{"{{.RelCollection}}/" + strconv.Itoa(*m.{{.IdFieldGo}})}{{end}}
 		}
 	{{end}}{{end}} } {{end}}
 	return []string{}
