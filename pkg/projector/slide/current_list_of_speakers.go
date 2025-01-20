@@ -5,6 +5,9 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
@@ -28,6 +31,20 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 		return nil, fmt.Errorf("failed to subscribe reference projector: %w", err)
 	}
 
+	projectionsQ := projectorQ.GetSubquery("current_projection_ids")
+	projectionsQ.With("content_object_id", nil)
+
+	var los models.ListOfSpeakers
+	losQ := datastore.Collection(req.DB, &models.ListOfSpeakers{}).With("speaker_ids", nil)
+	losSub, err := losQ.SubscribeOne(&los)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe list of speakers: %w", err)
+	}
+
+	speakersQ := losQ.GetSubquery("speaker_ids")
+	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
+	meetingUsersQ.With("user_id", nil)
+
 	stable := false
 	if projection.Stable != nil {
 		stable = *projection.Stable
@@ -44,37 +61,33 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 					}
 				}
 			case <-projectorSub.Channel:
-				for _, projection := range projector.CurrentProjections() {
-					if projection.ContentObjectID == "" {
-						continue;
+				for _, p := range projector.CurrentProjections() {
+					if p.ContentObjectID == "" {
+						continue
 					}
 
-					println(projection.ContentObjectID, stable)
+					losId := p.ContentObject().Get("list_of_speakers_id")
+					if losId != nil {
+						v := reflect.ValueOf(losId)
+						if v.Kind() == reflect.Ptr {
+							v = v.Elem()
+						}
+
+						losQ.SetIds(int(v.Int()))
+						if err := losSub.Reload(); err != nil {
+							log.Err(err).Msg("Reference projector load failed")
+						}
+						break
+					}
+				}
+			case <-losSub.Channel:
+				if los.ID != 0 {
+					println("send new", len(los.SpeakerIDs))
+					content <- getCurrentListOfSpeakersSlideContent(&los, stable)
 				}
 			}
 		}
 	}()
-
-	/*
-	var projector models.Projector
-	q := datastore.Collection(req.DB, &models.Projector{}).With("current_projection_ids", nil).SetIds(referenceProjectorId)
-	// speakersQ := q.GetSubquery("speaker_ids")
-	// meetingUsersQ := speakersQ.With("meeting_user_id", nil)
-	// meetingUsersQ.With("user_id", nil)
-
-	losSub, err := q.SubscribeOne(&meeting)
-	if err != nil {
-		return nil, fmt.Errorf("CurrentListOfSpeakersSlideHandler: %w", err)
-	}
-
-	go func() {
-		content <- getCurrentListOfSpeakersSlideContent(&meeting, stable)
-
-		for range <-losSub.Channel {
-			content <- getCurrentListOfSpeakersSlideContent(&meeting, stable)
-		}
-	}()
-	*/
 
 	return content, nil
 }
@@ -88,12 +101,23 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 
 	type speakerListItem struct {
 		Number int
-		Name string
+		Name   string
 	}
 	speakers := []speakerListItem{}
 	for i, speaker := range los.Speakers() {
-		username := speaker.MeetingUser().User().Username
-		speakers = append(speakers, speakerListItem{ Number: i + 1, Name: username })
+		nameParts := []string{}
+		if firstName := speaker.MeetingUser().User().FirstName; firstName != nil {
+			nameParts = append(nameParts, *firstName)
+		}
+		if lastName := speaker.MeetingUser().User().LastName; lastName != nil {
+			nameParts = append(nameParts, *lastName)
+		}
+
+		if len(nameParts) == 0 {
+			nameParts = append(nameParts, "User "+strconv.Itoa(speaker.MeetingUser().User().ID))
+		}
+
+		speakers = append([]speakerListItem{{Number: len(los.SpeakerIDs) - i, Name: strings.Join(nameParts, " ")}}, speakers...)
 	}
 
 	var content bytes.Buffer
