@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 )
@@ -42,6 +43,7 @@ type Poll struct {
 	Votesinvalid          *string         `json:"votesinvalid"`
 	Votesvalid            *string         `json:"votesvalid"`
 	loadedRelations       map[string]struct{}
+	contentObject         IBaseModel
 	entitledGroups        []*Group
 	globalOption          *Option
 	meeting               *Meeting
@@ -52,6 +54,14 @@ type Poll struct {
 
 func (m *Poll) CollectionName() string {
 	return "poll"
+}
+
+func (m *Poll) ContentObject() IBaseModel {
+	if _, ok := m.loadedRelations["content_object_id"]; !ok {
+		log.Panic().Msg("Tried to access ContentObject relation of Poll which was not loaded.")
+	}
+
+	return m.contentObject
 }
 
 func (m *Poll) EntitledGroups() []*Group {
@@ -105,6 +115,8 @@ func (m *Poll) Voteds() []*User {
 func (m *Poll) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
+		case "content_object_id":
+			panic("not implemented")
 		case "entitled_group_ids":
 			m.entitledGroups = content.([]*Group)
 		case "global_option_id":
@@ -131,6 +143,41 @@ func (m *Poll) SetRelated(field string, content interface{}) {
 func (m *Poll) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
 	var result *RelatedModelsAccessor
 	switch field {
+	case "content_object_id":
+		parts := strings.Split(m.ContentObjectID, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("could not parse id field")
+		}
+
+		switch parts[0] {
+		case "assignment":
+			var entry Assignment
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "motion":
+			var entry Motion
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+
+		case "topic":
+			var entry Topic
+			err := json.Unmarshal(content, &entry)
+			if err != nil {
+				return nil, err
+			}
+			m.contentObject = &entry
+			result = entry.GetRelatedModelsAccessor()
+		}
+
 	case "entitled_group_ids":
 		var entry Group
 		err := json.Unmarshal(content, &entry)
@@ -275,6 +322,9 @@ func (m *Poll) Get(field string) interface{} {
 
 func (m *Poll) GetFqids(field string) []string {
 	switch field {
+	case "content_object_id":
+		return []string{m.ContentObjectID}
+
 	case "entitled_group_ids":
 		r := make([]string, len(m.EntitledGroupIDs))
 		for i, id := range m.EntitledGroupIDs {
