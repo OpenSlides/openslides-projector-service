@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -102,9 +103,10 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 	type speakerListItem struct {
 		Number int
 		Name   string
+		Weight int
 	}
 	speakers := []speakerListItem{}
-	for i, speaker := range los.Speakers() {
+	for _, speaker := range los.Speakers() {
 		nameParts := []string{}
 		if firstName := speaker.MeetingUser().User().FirstName; firstName != nil {
 			nameParts = append(nameParts, *firstName)
@@ -117,8 +119,21 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 			nameParts = append(nameParts, "User "+strconv.Itoa(speaker.MeetingUser().User().ID))
 		}
 
-		speakers = append([]speakerListItem{{Number: len(los.SpeakerIDs) - i, Name: strings.Join(nameParts, " ")}}, speakers...)
+		weight := 0
+		if speaker.Weight != nil {
+			weight = *speaker.Weight
+		}
+
+		speakers = append([]speakerListItem{{
+			Number: weight + 1,
+			Name:   strings.Join(nameParts, " "),
+			Weight: weight,
+		}}, speakers...)
 	}
+
+	sort.Slice(speakers, func(i, j int) bool {
+		return speakers[i].Weight < speakers[j].Weight
+	})
 
 	var content bytes.Buffer
 	err = tmpl.Execute(&content, map[string]interface{}{
