@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -160,6 +161,85 @@ func (m *MeetingUser) VoteDelegationsFroms() []*MeetingUser {
 	}
 
 	return m.voteDelegationsFroms
+}
+
+func (m *MeetingUser) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "assignment_candidate_ids":
+		for _, r := range m.assignmentCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "chat_message_ids":
+		for _, r := range m.chatMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "group_ids":
+		for _, r := range m.groups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_editor_ids":
+		for _, r := range m.motionEditors {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_submitter_ids":
+		for _, r := range m.motionSubmitters {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_working_group_speaker_ids":
+		for _, r := range m.motionWorkingGroupSpeakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "personal_note_ids":
+		for _, r := range m.personalNotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "speaker_ids":
+		for _, r := range m.speakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_ids":
+		for _, r := range m.structureLevels {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "supported_motion_ids":
+		for _, r := range m.supportedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "user_id":
+		return m.user.GetRelatedModelsAccessor()
+	case "vote_delegated_to_id":
+		return m.voteDelegatedTo.GetRelatedModelsAccessor()
+	case "vote_delegations_from_ids":
+		for _, r := range m.voteDelegationsFroms {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *MeetingUser) SetRelated(field string, content interface{}) {
@@ -511,12 +591,24 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["assignment_candidate_ids"]; ok {
+			m.assignmentCandidates = slices.DeleteFunc(m.assignmentCandidates, func(r *AssignmentCandidate) bool {
+				return !slices.Contains(m.AssignmentCandidateIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["chat_message_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.ChatMessageIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["chat_message_ids"]; ok {
+			m.chatMessages = slices.DeleteFunc(m.chatMessages, func(r *ChatMessage) bool {
+				return !slices.Contains(m.ChatMessageIDs, r.ID)
+			})
 		}
 	}
 
@@ -531,6 +623,12 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.GroupIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["group_ids"]; ok {
+			m.groups = slices.DeleteFunc(m.groups, func(r *Group) bool {
+				return !slices.Contains(m.GroupIDs, r.ID)
+			})
 		}
 	}
 
@@ -560,6 +658,12 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["motion_editor_ids"]; ok {
+			m.motionEditors = slices.DeleteFunc(m.motionEditors, func(r *MotionEditor) bool {
+				return !slices.Contains(m.MotionEditorIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["motion_submitter_ids"]; ok {
@@ -567,12 +671,24 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["motion_submitter_ids"]; ok {
+			m.motionSubmitters = slices.DeleteFunc(m.motionSubmitters, func(r *MotionSubmitter) bool {
+				return !slices.Contains(m.MotionSubmitterIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["motion_working_group_speaker_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.MotionWorkingGroupSpeakerIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["motion_working_group_speaker_ids"]; ok {
+			m.motionWorkingGroupSpeakers = slices.DeleteFunc(m.motionWorkingGroupSpeakers, func(r *MotionWorkingGroupSpeaker) bool {
+				return !slices.Contains(m.MotionWorkingGroupSpeakerIDs, r.ID)
+			})
 		}
 	}
 
@@ -588,12 +704,24 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["personal_note_ids"]; ok {
+			m.personalNotes = slices.DeleteFunc(m.personalNotes, func(r *PersonalNote) bool {
+				return !slices.Contains(m.PersonalNoteIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["speaker_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.SpeakerIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["speaker_ids"]; ok {
+			m.speakers = slices.DeleteFunc(m.speakers, func(r *Speaker) bool {
+				return !slices.Contains(m.SpeakerIDs, r.ID)
+			})
 		}
 	}
 
@@ -602,12 +730,24 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["structure_level_ids"]; ok {
+			m.structureLevels = slices.DeleteFunc(m.structureLevels, func(r *StructureLevel) bool {
+				return !slices.Contains(m.StructureLevelIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["supported_motion_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.SupportedMotionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["supported_motion_ids"]; ok {
+			m.supportedMotions = slices.DeleteFunc(m.supportedMotions, func(r *Motion) bool {
+				return !slices.Contains(m.SupportedMotionIDs, r.ID)
+			})
 		}
 	}
 
@@ -630,6 +770,12 @@ func (m *MeetingUser) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["vote_delegations_from_ids"]; ok {
+			m.voteDelegationsFroms = slices.DeleteFunc(m.voteDelegationsFroms, func(r *MeetingUser) bool {
+				return !slices.Contains(m.VoteDelegationsFromIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["vote_weight"]; ok {
@@ -645,7 +791,9 @@ func (m *MeetingUser) Update(data map[string]string) error {
 func (m *MeetingUser) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

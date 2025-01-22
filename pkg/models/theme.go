@@ -84,6 +84,17 @@ func (m *Theme) ThemeForOrganization() *Organization {
 	return m.themeForOrganization
 }
 
+func (m *Theme) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	case "theme_for_organization_id":
+		return m.themeForOrganization.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *Theme) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -613,7 +624,9 @@ func (m *Theme) Update(data map[string]string) error {
 func (m *Theme) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

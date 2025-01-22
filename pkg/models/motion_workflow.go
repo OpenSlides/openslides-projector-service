@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -67,6 +68,27 @@ func (m *MotionWorkflow) States() []*MotionState {
 	}
 
 	return m.states
+}
+
+func (m *MotionWorkflow) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "default_amendment_workflow_meeting_id":
+		return m.defaultAmendmentWorkflowMeeting.GetRelatedModelsAccessor()
+	case "default_workflow_meeting_id":
+		return m.defaultWorkflowMeeting.GetRelatedModelsAccessor()
+	case "first_state_id":
+		return m.firstState.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "state_ids":
+		for _, r := range m.states {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *MotionWorkflow) SetRelated(field string, content interface{}) {
@@ -263,6 +285,12 @@ func (m *MotionWorkflow) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["state_ids"]; ok {
+			m.states = slices.DeleteFunc(m.states, func(r *MotionState) bool {
+				return !slices.Contains(m.StateIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -271,7 +299,9 @@ func (m *MotionWorkflow) Update(data map[string]string) error {
 func (m *MotionWorkflow) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

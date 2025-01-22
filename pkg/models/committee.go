@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -108,6 +109,55 @@ func (m *Committee) Users() []*User {
 	}
 
 	return m.users
+}
+
+func (m *Committee) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "default_meeting_id":
+		return m.defaultMeeting.GetRelatedModelsAccessor()
+	case "forward_to_committee_ids":
+		for _, r := range m.forwardToCommittees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "forwarding_user_id":
+		return m.forwardingUser.GetRelatedModelsAccessor()
+	case "manager_ids":
+		for _, r := range m.managers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_ids":
+		for _, r := range m.meetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	case "organization_tag_ids":
+		for _, r := range m.organizationTags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "receive_forwardings_from_committee_ids":
+		for _, r := range m.receiveForwardingsFromCommittees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "user_ids":
+		for _, r := range m.users {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *Committee) SetRelated(field string, content interface{}) {
@@ -366,6 +416,12 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["forward_to_committee_ids"]; ok {
+			m.forwardToCommittees = slices.DeleteFunc(m.forwardToCommittees, func(r *Committee) bool {
+				return !slices.Contains(m.ForwardToCommitteeIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["forwarding_user_id"]; ok {
@@ -387,12 +443,24 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["manager_ids"]; ok {
+			m.managers = slices.DeleteFunc(m.managers, func(r *User) bool {
+				return !slices.Contains(m.ManagerIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["meeting_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.MeetingIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["meeting_ids"]; ok {
+			m.meetings = slices.DeleteFunc(m.meetings, func(r *Meeting) bool {
+				return !slices.Contains(m.MeetingIDs, r.ID)
+			})
 		}
 	}
 
@@ -415,6 +483,12 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["organization_tag_ids"]; ok {
+			m.organizationTags = slices.DeleteFunc(m.organizationTags, func(r *OrganizationTag) bool {
+				return !slices.Contains(m.OrganizationTagIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["receive_forwardings_from_committee_ids"]; ok {
@@ -422,12 +496,24 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["receive_forwardings_from_committee_ids"]; ok {
+			m.receiveForwardingsFromCommittees = slices.DeleteFunc(m.receiveForwardingsFromCommittees, func(r *Committee) bool {
+				return !slices.Contains(m.ReceiveForwardingsFromCommitteeIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["user_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.UserIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["user_ids"]; ok {
+			m.users = slices.DeleteFunc(m.users, func(r *User) bool {
+				return !slices.Contains(m.UserIDs, r.ID)
+			})
 		}
 	}
 
@@ -437,7 +523,9 @@ func (m *Committee) Update(data map[string]string) error {
 func (m *Committee) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -36,6 +37,21 @@ func (m *Gender) Users() []*User {
 	}
 
 	return m.users
+}
+
+func (m *Gender) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	case "user_ids":
+		for _, r := range m.users {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *Gender) SetRelated(field string, content interface{}) {
@@ -147,6 +163,12 @@ func (m *Gender) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["user_ids"]; ok {
+			m.users = slices.DeleteFunc(m.users, func(r *User) bool {
+				return !slices.Contains(m.UserIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -155,7 +177,9 @@ func (m *Gender) Update(data map[string]string) error {
 func (m *Gender) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

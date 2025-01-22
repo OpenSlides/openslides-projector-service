@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -57,6 +58,33 @@ func (m *ChatGroup) WriteGroups() []*Group {
 	}
 
 	return m.writeGroups
+}
+
+func (m *ChatGroup) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "chat_message_ids":
+		for _, r := range m.chatMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "read_group_ids":
+		for _, r := range m.readGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "write_group_ids":
+		for _, r := range m.writeGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *ChatGroup) SetRelated(field string, content interface{}) {
@@ -191,6 +219,12 @@ func (m *ChatGroup) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["chat_message_ids"]; ok {
+			m.chatMessages = slices.DeleteFunc(m.chatMessages, func(r *ChatMessage) bool {
+				return !slices.Contains(m.ChatMessageIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["id"]; ok {
@@ -219,6 +253,12 @@ func (m *ChatGroup) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["read_group_ids"]; ok {
+			m.readGroups = slices.DeleteFunc(m.readGroups, func(r *Group) bool {
+				return !slices.Contains(m.ReadGroupIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["weight"]; ok {
@@ -233,6 +273,12 @@ func (m *ChatGroup) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["write_group_ids"]; ok {
+			m.writeGroups = slices.DeleteFunc(m.writeGroups, func(r *Group) bool {
+				return !slices.Contains(m.WriteGroupIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -241,7 +287,9 @@ func (m *ChatGroup) Update(data map[string]string) error {
 func (m *ChatGroup) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

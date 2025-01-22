@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -120,6 +121,51 @@ func (m *MotionState) Workflow() MotionWorkflow {
 	}
 
 	return *m.workflow
+}
+
+func (m *MotionState) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "first_state_of_workflow_id":
+		return m.firstStateOfWorkflow.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_recommendation_ids":
+		for _, r := range m.motionRecommendations {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_ids":
+		for _, r := range m.motions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "next_state_ids":
+		for _, r := range m.nextStates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "previous_state_ids":
+		for _, r := range m.previousStates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "submitter_withdraw_back_ids":
+		for _, r := range m.submitterWithdrawBacks {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "submitter_withdraw_state_id":
+		return m.submitterWithdrawState.GetRelatedModelsAccessor()
+	case "workflow_id":
+		return m.workflow.GetRelatedModelsAccessor()
+	}
+
+	return nil
 }
 
 func (m *MotionState) SetRelated(field string, content interface{}) {
@@ -447,12 +493,24 @@ func (m *MotionState) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["motion_ids"]; ok {
+			m.motions = slices.DeleteFunc(m.motions, func(r *Motion) bool {
+				return !slices.Contains(m.MotionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["motion_recommendation_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.MotionRecommendationIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["motion_recommendation_ids"]; ok {
+			m.motionRecommendations = slices.DeleteFunc(m.motionRecommendations, func(r *Motion) bool {
+				return !slices.Contains(m.MotionRecommendationIDs, r.ID)
+			})
 		}
 	}
 
@@ -468,12 +526,24 @@ func (m *MotionState) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["next_state_ids"]; ok {
+			m.nextStates = slices.DeleteFunc(m.nextStates, func(r *MotionState) bool {
+				return !slices.Contains(m.NextStateIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["previous_state_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.PreviousStateIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["previous_state_ids"]; ok {
+			m.previousStates = slices.DeleteFunc(m.previousStates, func(r *MotionState) bool {
+				return !slices.Contains(m.PreviousStateIDs, r.ID)
+			})
 		}
 	}
 
@@ -524,6 +594,12 @@ func (m *MotionState) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["submitter_withdraw_back_ids"]; ok {
+			m.submitterWithdrawBacks = slices.DeleteFunc(m.submitterWithdrawBacks, func(r *MotionState) bool {
+				return !slices.Contains(m.SubmitterWithdrawBackIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["submitter_withdraw_state_id"]; ok {
@@ -553,7 +629,9 @@ func (m *MotionState) Update(data map[string]string) error {
 func (m *MotionState) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -237,6 +238,69 @@ func (m *MeetingMediafile) UsedAsLogoWebHeaderInMeeting() *Meeting {
 	}
 
 	return m.usedAsLogoWebHeaderInMeeting
+}
+
+func (m *MeetingMediafile) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "access_group_ids":
+		for _, r := range m.accessGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "inherited_access_group_ids":
+		for _, r := range m.inheritedAccessGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "mediafile_id":
+		return m.mediafile.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "used_as_font_bold_in_meeting_id":
+		return m.usedAsFontBoldInMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_bold_italic_in_meeting_id":
+		return m.usedAsFontBoldItalicInMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_chyron_speaker_name_in_meeting_id":
+		return m.usedAsFontChyronSpeakerNameInMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_italic_in_meeting_id":
+		return m.usedAsFontItalicInMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_monospace_in_meeting_id":
+		return m.usedAsFontMonospaceInMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_projector_h1_in_meeting_id":
+		return m.usedAsFontProjectorH1InMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_projector_h2_in_meeting_id":
+		return m.usedAsFontProjectorH2InMeeting.GetRelatedModelsAccessor()
+	case "used_as_font_regular_in_meeting_id":
+		return m.usedAsFontRegularInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_ballot_paper_in_meeting_id":
+		return m.usedAsLogoPdfBallotPaperInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_footer_l_in_meeting_id":
+		return m.usedAsLogoPdfFooterLInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_footer_r_in_meeting_id":
+		return m.usedAsLogoPdfFooterRInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_header_l_in_meeting_id":
+		return m.usedAsLogoPdfHeaderLInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_pdf_header_r_in_meeting_id":
+		return m.usedAsLogoPdfHeaderRInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_projector_header_in_meeting_id":
+		return m.usedAsLogoProjectorHeaderInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_projector_main_in_meeting_id":
+		return m.usedAsLogoProjectorMainInMeeting.GetRelatedModelsAccessor()
+	case "used_as_logo_web_header_in_meeting_id":
+		return m.usedAsLogoWebHeaderInMeeting.GetRelatedModelsAccessor()
+	}
+
+	return nil
 }
 
 func (m *MeetingMediafile) SetRelated(field string, content interface{}) {
@@ -711,6 +775,12 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["access_group_ids"]; ok {
+			m.accessGroups = slices.DeleteFunc(m.accessGroups, func(r *Group) bool {
+				return !slices.Contains(m.AccessGroupIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["attachment_ids"]; ok {
@@ -731,6 +801,12 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.InheritedAccessGroupIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["inherited_access_group_ids"]; ok {
+			m.inheritedAccessGroups = slices.DeleteFunc(m.inheritedAccessGroups, func(r *Group) bool {
+				return !slices.Contains(m.InheritedAccessGroupIDs, r.ID)
+			})
 		}
 	}
 
@@ -766,6 +842,12 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -887,7 +969,9 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 func (m *MeetingMediafile) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

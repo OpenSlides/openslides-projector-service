@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -28,6 +29,19 @@ func (m *{{.GoName}}) CollectionName() string {
 }
 
 {{end}}
+func (m *{{.GoName}}) GetRelated(field string, id int) *RelatedModelsAccessor { {{if .HasRelations}}
+	switch field { {{range .Relations}}
+	case "{{.IdField}}":{{if .List}}
+		for _, r := range m.{{.PropNameLc}} {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}{{else}}
+	  return m.{{.PropNameLc}}.GetRelatedModelsAccessor(){{end}}{{end}}
+	}
+	{{end}}
+	return nil}
+
 func (m *{{.GoName}}) SetRelated(field string, content interface{}) { {{if .HasRelations}}
 	if content != nil {
 		switch field { {{range .Relations}}
@@ -126,7 +140,13 @@ func (m *{{.GoName}}) Update(data map[string]string) error { {{range .Fields}}
 		if err != nil {
 			return err
 		}
-	}
+		{{if .Relation}}{{if .Relation.List}}
+		if _, ok := m.loadedRelations["{{ .Relation.IdField }}"]; ok {
+			m.{{ .Relation.PropNameLc }} = slices.DeleteFunc(m.{{ .Relation.PropNameLc }}, func (r *{{ .Relation.CollectionName }}) bool {
+				return !slices.Contains(m.{{ .Relation.IdFieldGo }}, r.ID)
+			})
+		}
+	{{end}}{{end}} }
 	{{end}}
 
 	return nil
@@ -135,7 +155,9 @@ func (m *{{.GoName}}) Update(data map[string]string) error { {{range .Fields}}
 func (m *{{.GoName}}) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

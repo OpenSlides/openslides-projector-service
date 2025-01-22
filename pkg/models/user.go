@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -154,6 +155,77 @@ func (m *User) Votes() []*Vote {
 	}
 
 	return m.votes
+}
+
+func (m *User) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "committee_management_ids":
+		for _, r := range m.committeeManagements {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "committee_ids":
+		for _, r := range m.committees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "delegated_vote_ids":
+		for _, r := range m.delegatedVotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "forwarding_committee_ids":
+		for _, r := range m.forwardingCommittees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "gender_id":
+		return m.gender.GetRelatedModelsAccessor()
+	case "is_present_in_meeting_ids":
+		for _, r := range m.isPresentInMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_user_ids":
+		for _, r := range m.meetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	case "poll_candidate_ids":
+		for _, r := range m.pollCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_voted_ids":
+		for _, r := range m.pollVoteds {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "vote_ids":
+		for _, r := range m.votes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *User) SetRelated(field string, content interface{}) {
@@ -495,12 +567,24 @@ func (m *User) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["committee_ids"]; ok {
+			m.committees = slices.DeleteFunc(m.committees, func(r *Committee) bool {
+				return !slices.Contains(m.CommitteeIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["committee_management_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.CommitteeManagementIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["committee_management_ids"]; ok {
+			m.committeeManagements = slices.DeleteFunc(m.committeeManagements, func(r *Committee) bool {
+				return !slices.Contains(m.CommitteeManagementIDs, r.ID)
+			})
 		}
 	}
 
@@ -523,6 +607,12 @@ func (m *User) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["delegated_vote_ids"]; ok {
+			m.delegatedVotes = slices.DeleteFunc(m.delegatedVotes, func(r *Vote) bool {
+				return !slices.Contains(m.DelegatedVoteIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["email"]; ok {
@@ -543,6 +633,12 @@ func (m *User) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.ForwardingCommitteeIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["forwarding_committee_ids"]; ok {
+			m.forwardingCommittees = slices.DeleteFunc(m.forwardingCommittees, func(r *Committee) bool {
+				return !slices.Contains(m.ForwardingCommitteeIDs, r.ID)
+			})
 		}
 	}
 
@@ -586,6 +682,12 @@ func (m *User) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["is_present_in_meeting_ids"]; ok {
+			m.isPresentInMeetings = slices.DeleteFunc(m.isPresentInMeetings, func(r *Meeting) bool {
+				return !slices.Contains(m.IsPresentInMeetingIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["last_email_sent"]; ok {
@@ -621,6 +723,12 @@ func (m *User) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["meeting_user_ids"]; ok {
+			m.meetingUsers = slices.DeleteFunc(m.meetingUsers, func(r *MeetingUser) bool {
+				return !slices.Contains(m.MeetingUserIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["member_number"]; ok {
@@ -634,6 +742,12 @@ func (m *User) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.OptionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["option_ids"]; ok {
+			m.options = slices.DeleteFunc(m.options, func(r *Option) bool {
+				return !slices.Contains(m.OptionIDs, r.ID)
+			})
 		}
 	}
 
@@ -663,12 +777,24 @@ func (m *User) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["poll_candidate_ids"]; ok {
+			m.pollCandidates = slices.DeleteFunc(m.pollCandidates, func(r *PollCandidate) bool {
+				return !slices.Contains(m.PollCandidateIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["poll_voted_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.PollVotedIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["poll_voted_ids"]; ok {
+			m.pollVoteds = slices.DeleteFunc(m.pollVoteds, func(r *Poll) bool {
+				return !slices.Contains(m.PollVotedIDs, r.ID)
+			})
 		}
 	}
 
@@ -705,6 +831,12 @@ func (m *User) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["vote_ids"]; ok {
+			m.votes = slices.DeleteFunc(m.votes, func(r *Vote) bool {
+				return !slices.Contains(m.VoteIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -713,7 +845,9 @@ func (m *User) Update(data map[string]string) error {
 func (m *User) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

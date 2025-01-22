@@ -49,6 +49,19 @@ func (m *ChatMessage) MeetingUser() *MeetingUser {
 	return m.meetingUser
 }
 
+func (m *ChatMessage) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "chat_group_id":
+		return m.chatGroup.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "meeting_user_id":
+		return m.meetingUser.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *ChatMessage) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -197,7 +210,9 @@ func (m *ChatMessage) Update(data map[string]string) error {
 func (m *ChatMessage) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

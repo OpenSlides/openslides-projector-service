@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -78,6 +79,37 @@ func (m *Topic) Projections() []*Projection {
 	}
 
 	return m.projections
+}
+
+func (m *Topic) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "agenda_item_id":
+		return m.agendaItem.GetRelatedModelsAccessor()
+	case "attachment_meeting_mediafile_ids":
+		for _, r := range m.attachmentMeetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *Topic) SetRelated(field string, content interface{}) {
@@ -255,6 +287,12 @@ func (m *Topic) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["attachment_meeting_mediafile_ids"]; ok {
+			m.attachmentMeetingMediafiles = slices.DeleteFunc(m.attachmentMeetingMediafiles, func(r *MeetingMediafile) bool {
+				return !slices.Contains(m.AttachmentMeetingMediafileIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["id"]; ok {
@@ -283,12 +321,24 @@ func (m *Topic) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["poll_ids"]; ok {
+			m.polls = slices.DeleteFunc(m.polls, func(r *Poll) bool {
+				return !slices.Contains(m.PollIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["projection_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -319,7 +369,9 @@ func (m *Topic) Update(data map[string]string) error {
 func (m *Topic) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

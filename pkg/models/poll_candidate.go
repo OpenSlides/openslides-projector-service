@@ -48,6 +48,19 @@ func (m *PollCandidate) User() *User {
 	return m.user
 }
 
+func (m *PollCandidate) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "poll_candidate_list_id":
+		return m.pollCandidateList.GetRelatedModelsAccessor()
+	case "user_id":
+		return m.user.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *PollCandidate) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -187,7 +200,9 @@ func (m *PollCandidate) Update(data map[string]string) error {
 func (m *PollCandidate) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

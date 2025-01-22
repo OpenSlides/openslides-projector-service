@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -45,6 +46,23 @@ func (m *PollCandidateList) PollCandidates() []*PollCandidate {
 	}
 
 	return m.pollCandidates
+}
+
+func (m *PollCandidateList) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "option_id":
+		return m.option.GetRelatedModelsAccessor()
+	case "poll_candidate_ids":
+		for _, r := range m.pollCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *PollCandidateList) SetRelated(field string, content interface{}) {
@@ -171,6 +189,12 @@ func (m *PollCandidateList) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["poll_candidate_ids"]; ok {
+			m.pollCandidates = slices.DeleteFunc(m.pollCandidates, func(r *PollCandidate) bool {
+				return !slices.Contains(m.PollCandidateIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -179,7 +203,9 @@ func (m *PollCandidateList) Update(data map[string]string) error {
 func (m *PollCandidateList) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

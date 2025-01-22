@@ -60,6 +60,21 @@ func (m *Vote) User() *User {
 	return m.user
 }
 
+func (m *Vote) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "delegated_user_id":
+		return m.delegatedUser.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "option_id":
+		return m.option.GetRelatedModelsAccessor()
+	case "user_id":
+		return m.user.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *Vote) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -243,7 +258,9 @@ func (m *Vote) Update(data map[string]string) error {
 func (m *Vote) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

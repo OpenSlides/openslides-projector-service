@@ -6,7 +6,10 @@ import (
 	"maps"
 	"reflect"
 	"slices"
+	"strconv"
+	"strings"
 
+	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/rs/zerolog/log"
 )
 
@@ -70,10 +73,18 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 		fields:  q.Fields,
 		channel: updateChannel,
 	}
+	if len(q.subquerys) != 0 {
+		listener.fqids = []string{}
+	}
+
 	q.datastore.change.AddListener <- &listener
 
 	load := func() error {
-		listener.fqids = q.fqids
+		if len(q.subquerys) != 0 {
+			listener.fqids = []string{}
+		} else {
+			listener.fqids = q.fqids
+		}
 
 		data, err := q.GetOne()
 		if err != nil {
@@ -98,6 +109,7 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 				continue
 			}
 
+			updatedAny := false
 			if obj, ok := update[q.fqids[0]]; ok {
 				if obj == nil {
 					close(notifyChannel)
@@ -107,7 +119,22 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 				if err := model.Update(obj); err != nil {
 					log.Error().Err(err).Msg("updating subscribed model failed")
 				}
-				notifyChannel <- slices.Collect(maps.Keys(obj))
+
+				updatedAny = true
+			}
+
+			for field, subQuery := range q.subquerys {
+				println(field)
+				update, err := q.recursiveUpdateSubqueries(model.GetRelatedModelsAccessor(), field, subQuery, update)
+				updatedAny = updatedAny || update
+				if err != nil {
+					log.Err(err).Msg("Could not update subscribed subqueries")
+					continue
+				}
+			}
+
+			if updatedAny {
+				notifyChannel <- slices.Collect(maps.Keys(update[q.fqids[0]]))
 			}
 		}
 
@@ -117,6 +144,69 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 	return &subscription[<-chan []string]{q.datastore, updateChannel, load, notifyChannel, func() {
 		close(notifyChannel)
 	}}, nil
+}
+
+func (q *query[T, PT]) recursiveUpdateSubqueries(el *models.RelatedModelsAccessor, field string, subQuery *recursiveSubqueryList, update map[string]map[string]string) (bool, error) {
+	subQuery.fqids = slices.DeleteFunc(subQuery.fqids, func(fqid string) bool {
+		return !slices.Contains(el.GetFqids(field), fqid)
+	})
+
+	added := []string{}
+	updatedAny := false
+	for _, fqid := range el.GetFqids(field) {
+		if !slices.Contains(subQuery.fqids, fqid) {
+			added = append(added, fqid)
+		} else {
+			p := strings.Split(fqid, "/")
+			id, err := strconv.Atoi(p[1])
+			if err != nil {
+				return false, err
+			}
+
+			model := el.GetRelated(field, id)
+			if model != nil {
+				if obj, ok := update[fqid]; ok {
+					updatedAny = true
+					err := model.Update(obj)
+					if err != nil {
+						return false, err
+					}
+				}
+
+				for sField, nextSubQuery := range subQuery.subquerys {
+					updated, err := q.recursiveUpdateSubqueries(model, sField, nextSubQuery, update)
+					updatedAny = updated || updatedAny
+					if err != nil {
+						return false, err
+					}
+				}
+			}
+		}
+	}
+
+	subDsResult, err := q.datastore.getFull(added)
+	if err != nil {
+		return false, err
+	}
+
+	if len(subDsResult) != 0 {
+		updatedAny = true
+		for _, dsResult := range subDsResult {
+			model, err := el.SetRelatedJSON(field, dsResult)
+			if err != nil {
+				log.Err(err).Msgf("Failed to parse JSON (%s)", string(dsResult))
+			} else if model != nil {
+				for sField, nextSubQuery := range subQuery.subquerys {
+					err := q.recursiveLoadSubqueries(model, sField, nextSubQuery)
+					if err != nil {
+						return false, err
+					}
+				}
+			}
+		}
+	}
+
+	return len(subDsResult) != 0 || updatedAny, nil
 }
 
 func (q *query[T, PT]) SubscribeField(field interface{}) (*subscription[<-chan struct{}], error) {

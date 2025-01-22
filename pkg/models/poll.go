@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -110,6 +111,43 @@ func (m *Poll) Voteds() []*User {
 	}
 
 	return m.voteds
+}
+
+func (m *Poll) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "entitled_group_ids":
+		for _, r := range m.entitledGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "global_option_id":
+		return m.globalOption.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "voted_ids":
+		for _, r := range m.voteds {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *Poll) SetRelated(field string, content interface{}) {
@@ -405,6 +443,12 @@ func (m *Poll) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["entitled_group_ids"]; ok {
+			m.entitledGroups = slices.DeleteFunc(m.entitledGroups, func(r *Group) bool {
+				return !slices.Contains(m.EntitledGroupIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["entitled_users_at_stop"]; ok {
@@ -496,6 +540,12 @@ func (m *Poll) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["option_ids"]; ok {
+			m.options = slices.DeleteFunc(m.options, func(r *Option) bool {
+				return !slices.Contains(m.OptionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["pollmethod"]; ok {
@@ -509,6 +559,12 @@ func (m *Poll) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -551,6 +607,12 @@ func (m *Poll) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.VotedIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["voted_ids"]; ok {
+			m.voteds = slices.DeleteFunc(m.voteds, func(r *User) bool {
+				return !slices.Contains(m.VotedIDs, r.ID)
+			})
 		}
 	}
 
@@ -595,7 +657,9 @@ func (m *Poll) Update(data map[string]string) error {
 func (m *Poll) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

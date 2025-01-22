@@ -76,6 +76,23 @@ func (m *Speaker) StructureLevelListOfSpeakers() *StructureLevelListOfSpeakers {
 	return m.structureLevelListOfSpeakers
 }
 
+func (m *Speaker) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "meeting_user_id":
+		return m.meetingUser.GetRelatedModelsAccessor()
+	case "point_of_order_category_id":
+		return m.pointOfOrderCategory.GetRelatedModelsAccessor()
+	case "structure_level_list_of_speakers_id":
+		return m.structureLevelListOfSpeakers.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *Speaker) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -339,7 +356,9 @@ func (m *Speaker) Update(data map[string]string) error {
 func (m *Speaker) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

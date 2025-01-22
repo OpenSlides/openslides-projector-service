@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -226,6 +227,63 @@ func (m *Projector) UsedAsReferenceProjectorMeeting() *Meeting {
 	}
 
 	return m.usedAsReferenceProjectorMeeting
+}
+
+func (m *Projector) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "current_projection_ids":
+		for _, r := range m.currentProjections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "history_projection_ids":
+		for _, r := range m.historyProjections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "preview_projection_ids":
+		for _, r := range m.previewProjections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "used_as_default_projector_for_agenda_item_list_in_meeting_id":
+		return m.usedAsDefaultProjectorForAgendaItemListInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_amendment_in_meeting_id":
+		return m.usedAsDefaultProjectorForAmendmentInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_assignment_in_meeting_id":
+		return m.usedAsDefaultProjectorForAssignmentInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_assignment_poll_in_meeting_id":
+		return m.usedAsDefaultProjectorForAssignmentPollInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_countdown_in_meeting_id":
+		return m.usedAsDefaultProjectorForCountdownInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_current_list_of_speakers_in_meeting_id":
+		return m.usedAsDefaultProjectorForCurrentListOfSpeakersInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_list_of_speakers_in_meeting_id":
+		return m.usedAsDefaultProjectorForListOfSpeakersInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_mediafile_in_meeting_id":
+		return m.usedAsDefaultProjectorForMediafileInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_message_in_meeting_id":
+		return m.usedAsDefaultProjectorForMessageInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_motion_block_in_meeting_id":
+		return m.usedAsDefaultProjectorForMotionBlockInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_motion_in_meeting_id":
+		return m.usedAsDefaultProjectorForMotionInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_motion_poll_in_meeting_id":
+		return m.usedAsDefaultProjectorForMotionPollInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_poll_in_meeting_id":
+		return m.usedAsDefaultProjectorForPollInMeeting.GetRelatedModelsAccessor()
+	case "used_as_default_projector_for_topic_in_meeting_id":
+		return m.usedAsDefaultProjectorForTopicInMeeting.GetRelatedModelsAccessor()
+	case "used_as_reference_projector_meeting_id":
+		return m.usedAsReferenceProjectorMeeting.GetRelatedModelsAccessor()
+	}
+
+	return nil
 }
 
 func (m *Projector) SetRelated(field string, content interface{}) {
@@ -739,6 +797,12 @@ func (m *Projector) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["current_projection_ids"]; ok {
+			m.currentProjections = slices.DeleteFunc(m.currentProjections, func(r *Projection) bool {
+				return !slices.Contains(m.CurrentProjectionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["header_background_color"]; ok {
@@ -766,6 +830,12 @@ func (m *Projector) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.HistoryProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["history_projection_ids"]; ok {
+			m.historyProjections = slices.DeleteFunc(m.historyProjections, func(r *Projection) bool {
+				return !slices.Contains(m.HistoryProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -801,6 +871,12 @@ func (m *Projector) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.PreviewProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["preview_projection_ids"]; ok {
+			m.previewProjections = slices.DeleteFunc(m.previewProjections, func(r *Projection) bool {
+				return !slices.Contains(m.PreviewProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -971,7 +1047,9 @@ func (m *Projector) Update(data map[string]string) error {
 func (m *Projector) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

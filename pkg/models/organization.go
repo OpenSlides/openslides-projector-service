@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -150,6 +151,75 @@ func (m *Organization) Users() []*User {
 	}
 
 	return m.users
+}
+
+func (m *Organization) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "active_meeting_ids":
+		for _, r := range m.activeMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "archived_meeting_ids":
+		for _, r := range m.archivedMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "committee_ids":
+		for _, r := range m.committees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "gender_ids":
+		for _, r := range m.genders {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "mediafile_ids":
+		for _, r := range m.mediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_tag_ids":
+		for _, r := range m.organizationTags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "published_mediafile_ids":
+		for _, r := range m.publishedMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "template_meeting_ids":
+		for _, r := range m.templateMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "theme_id":
+		return m.theme.GetRelatedModelsAccessor()
+	case "theme_ids":
+		for _, r := range m.themes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "user_ids":
+		for _, r := range m.users {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *Organization) SetRelated(field string, content interface{}) {
@@ -477,6 +547,12 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["active_meeting_ids"]; ok {
+			m.activeMeetings = slices.DeleteFunc(m.activeMeetings, func(r *Meeting) bool {
+				return !slices.Contains(m.ActiveMeetingIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["archived_meeting_ids"]; ok {
@@ -484,12 +560,24 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["archived_meeting_ids"]; ok {
+			m.archivedMeetings = slices.DeleteFunc(m.archivedMeetings, func(r *Meeting) bool {
+				return !slices.Contains(m.ArchivedMeetingIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["committee_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.CommitteeIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["committee_ids"]; ok {
+			m.committees = slices.DeleteFunc(m.committees, func(r *Committee) bool {
+				return !slices.Contains(m.CommitteeIDs, r.ID)
+			})
 		}
 	}
 
@@ -533,6 +621,12 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["gender_ids"]; ok {
+			m.genders = slices.DeleteFunc(m.genders, func(r *Gender) bool {
+				return !slices.Contains(m.GenderIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["id"]; ok {
@@ -575,6 +669,12 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["mediafile_ids"]; ok {
+			m.mediafiles = slices.DeleteFunc(m.mediafiles, func(r *Mediafile) bool {
+				return !slices.Contains(m.MediafileIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["name"]; ok {
@@ -589,6 +689,12 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["organization_tag_ids"]; ok {
+			m.organizationTags = slices.DeleteFunc(m.organizationTags, func(r *OrganizationTag) bool {
+				return !slices.Contains(m.OrganizationTagIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["privacy_policy"]; ok {
@@ -602,6 +708,12 @@ func (m *Organization) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.PublishedMediafileIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["published_mediafile_ids"]; ok {
+			m.publishedMediafiles = slices.DeleteFunc(m.publishedMediafiles, func(r *Mediafile) bool {
+				return !slices.Contains(m.PublishedMediafileIDs, r.ID)
+			})
 		}
 	}
 
@@ -666,6 +778,12 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["template_meeting_ids"]; ok {
+			m.templateMeetings = slices.DeleteFunc(m.templateMeetings, func(r *Meeting) bool {
+				return !slices.Contains(m.TemplateMeetingIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["theme_id"]; ok {
@@ -680,6 +798,12 @@ func (m *Organization) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["theme_ids"]; ok {
+			m.themes = slices.DeleteFunc(m.themes, func(r *Theme) bool {
+				return !slices.Contains(m.ThemeIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["url"]; ok {
@@ -693,6 +817,12 @@ func (m *Organization) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.UserIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["user_ids"]; ok {
+			m.users = slices.DeleteFunc(m.users, func(r *User) bool {
+				return !slices.Contains(m.UserIDs, r.ID)
+			})
 		}
 	}
 
@@ -737,7 +867,9 @@ func (m *Organization) Update(data map[string]string) error {
 func (m *Organization) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

@@ -48,6 +48,19 @@ func (m *MotionWorkingGroupSpeaker) Motion() Motion {
 	return *m.motion
 }
 
+func (m *MotionWorkingGroupSpeaker) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "meeting_user_id":
+		return m.meetingUser.GetRelatedModelsAccessor()
+	case "motion_id":
+		return m.motion.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *MotionWorkingGroupSpeaker) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -185,7 +198,9 @@ func (m *MotionWorkingGroupSpeaker) Update(data map[string]string) error {
 func (m *MotionWorkingGroupSpeaker) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

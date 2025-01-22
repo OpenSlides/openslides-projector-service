@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -346,6 +347,155 @@ func (m *Motion) WorkingGroupSpeakers() []*MotionWorkingGroupSpeaker {
 	}
 
 	return m.workingGroupSpeakers
+}
+
+func (m *Motion) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "agenda_item_id":
+		return m.agendaItem.GetRelatedModelsAccessor()
+	case "all_derived_motion_ids":
+		for _, r := range m.allDerivedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "all_origin_ids":
+		for _, r := range m.allOrigins {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "amendment_ids":
+		for _, r := range m.amendments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "attachment_meeting_mediafile_ids":
+		for _, r := range m.attachmentMeetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "block_id":
+		return m.block.GetRelatedModelsAccessor()
+	case "category_id":
+		return m.category.GetRelatedModelsAccessor()
+	case "change_recommendation_ids":
+		for _, r := range m.changeRecommendations {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "comment_ids":
+		for _, r := range m.comments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "derived_motion_ids":
+		for _, r := range m.derivedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "editor_ids":
+		for _, r := range m.editors {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "identical_motion_ids":
+		for _, r := range m.iDenticalMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "lead_motion_id":
+		return m.leadMotion.GetRelatedModelsAccessor()
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "origin_id":
+		return m.origin.GetRelatedModelsAccessor()
+	case "origin_meeting_id":
+		return m.originMeeting.GetRelatedModelsAccessor()
+	case "personal_note_ids":
+		for _, r := range m.personalNotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "recommendation_id":
+		return m.recommendation.GetRelatedModelsAccessor()
+	case "referenced_in_motion_recommendation_extension_ids":
+		for _, r := range m.referencedInMotionRecommendationExtensions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "referenced_in_motion_state_extension_ids":
+		for _, r := range m.referencedInMotionStateExtensions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "sort_child_ids":
+		for _, r := range m.sortChilds {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "sort_parent_id":
+		return m.sortParent.GetRelatedModelsAccessor()
+	case "state_id":
+		return m.state.GetRelatedModelsAccessor()
+	case "submitter_ids":
+		for _, r := range m.submitters {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "supporter_meeting_user_ids":
+		for _, r := range m.supporterMeetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "tag_ids":
+		for _, r := range m.tags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "working_group_speaker_ids":
+		for _, r := range m.workingGroupSpeakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *Motion) SetRelated(field string, content interface{}) {
@@ -1075,6 +1225,12 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["all_derived_motion_ids"]; ok {
+			m.allDerivedMotions = slices.DeleteFunc(m.allDerivedMotions, func(r *Motion) bool {
+				return !slices.Contains(m.AllDerivedMotionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["all_origin_ids"]; ok {
@@ -1082,12 +1238,24 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["all_origin_ids"]; ok {
+			m.allOrigins = slices.DeleteFunc(m.allOrigins, func(r *Motion) bool {
+				return !slices.Contains(m.AllOriginIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["amendment_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.AmendmentIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["amendment_ids"]; ok {
+			m.amendments = slices.DeleteFunc(m.amendments, func(r *Motion) bool {
+				return !slices.Contains(m.AmendmentIDs, r.ID)
+			})
 		}
 	}
 
@@ -1102,6 +1270,12 @@ func (m *Motion) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.AttachmentMeetingMediafileIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["attachment_meeting_mediafile_ids"]; ok {
+			m.attachmentMeetingMediafiles = slices.DeleteFunc(m.attachmentMeetingMediafiles, func(r *MeetingMediafile) bool {
+				return !slices.Contains(m.AttachmentMeetingMediafileIDs, r.ID)
+			})
 		}
 	}
 
@@ -1131,12 +1305,24 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["change_recommendation_ids"]; ok {
+			m.changeRecommendations = slices.DeleteFunc(m.changeRecommendations, func(r *MotionChangeRecommendation) bool {
+				return !slices.Contains(m.ChangeRecommendationIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["comment_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.CommentIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["comment_ids"]; ok {
+			m.comments = slices.DeleteFunc(m.comments, func(r *MotionComment) bool {
+				return !slices.Contains(m.CommentIDs, r.ID)
+			})
 		}
 	}
 
@@ -1152,12 +1338,24 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["derived_motion_ids"]; ok {
+			m.derivedMotions = slices.DeleteFunc(m.derivedMotions, func(r *Motion) bool {
+				return !slices.Contains(m.DerivedMotionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["editor_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.EditorIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["editor_ids"]; ok {
+			m.editors = slices.DeleteFunc(m.editors, func(r *MotionEditor) bool {
+				return !slices.Contains(m.EditorIDs, r.ID)
+			})
 		}
 	}
 
@@ -1179,6 +1377,12 @@ func (m *Motion) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.IDenticalMotionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["identical_motion_ids"]; ok {
+			m.iDenticalMotions = slices.DeleteFunc(m.iDenticalMotions, func(r *Motion) bool {
+				return !slices.Contains(m.IDenticalMotionIDs, r.ID)
+			})
 		}
 	}
 
@@ -1236,6 +1440,12 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["option_ids"]; ok {
+			m.options = slices.DeleteFunc(m.options, func(r *Option) bool {
+				return !slices.Contains(m.OptionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["origin_id"]; ok {
@@ -1257,6 +1467,12 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["personal_note_ids"]; ok {
+			m.personalNotes = slices.DeleteFunc(m.personalNotes, func(r *PersonalNote) bool {
+				return !slices.Contains(m.PersonalNoteIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["poll_ids"]; ok {
@@ -1264,12 +1480,24 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["poll_ids"]; ok {
+			m.polls = slices.DeleteFunc(m.polls, func(r *Poll) bool {
+				return !slices.Contains(m.PollIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["projection_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -1306,12 +1534,24 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["referenced_in_motion_recommendation_extension_ids"]; ok {
+			m.referencedInMotionRecommendationExtensions = slices.DeleteFunc(m.referencedInMotionRecommendationExtensions, func(r *Motion) bool {
+				return !slices.Contains(m.ReferencedInMotionRecommendationExtensionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["referenced_in_motion_state_extension_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.ReferencedInMotionStateExtensionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["referenced_in_motion_state_extension_ids"]; ok {
+			m.referencedInMotionStateExtensions = slices.DeleteFunc(m.referencedInMotionStateExtensions, func(r *Motion) bool {
+				return !slices.Contains(m.ReferencedInMotionStateExtensionIDs, r.ID)
+			})
 		}
 	}
 
@@ -1326,6 +1566,12 @@ func (m *Motion) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.SortChildIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["sort_child_ids"]; ok {
+			m.sortChilds = slices.DeleteFunc(m.sortChilds, func(r *Motion) bool {
+				return !slices.Contains(m.SortChildIDs, r.ID)
+			})
 		}
 	}
 
@@ -1376,6 +1622,12 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["submitter_ids"]; ok {
+			m.submitters = slices.DeleteFunc(m.submitters, func(r *MotionSubmitter) bool {
+				return !slices.Contains(m.SubmitterIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["supporter_meeting_user_ids"]; ok {
@@ -1383,12 +1635,24 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["supporter_meeting_user_ids"]; ok {
+			m.supporterMeetingUsers = slices.DeleteFunc(m.supporterMeetingUsers, func(r *MeetingUser) bool {
+				return !slices.Contains(m.SupporterMeetingUserIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["tag_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.TagIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["tag_ids"]; ok {
+			m.tags = slices.DeleteFunc(m.tags, func(r *Tag) bool {
+				return !slices.Contains(m.TagIDs, r.ID)
+			})
 		}
 	}
 
@@ -1425,6 +1689,12 @@ func (m *Motion) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["working_group_speaker_ids"]; ok {
+			m.workingGroupSpeakers = slices.DeleteFunc(m.workingGroupSpeakers, func(r *MotionWorkingGroupSpeaker) bool {
+				return !slices.Contains(m.WorkingGroupSpeakerIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -1433,7 +1703,9 @@ func (m *Motion) Update(data map[string]string) error {
 func (m *Motion) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

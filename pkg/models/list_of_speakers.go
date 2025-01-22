@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -69,6 +70,35 @@ func (m *ListOfSpeakers) StructureLevelListOfSpeakerss() []*StructureLevelListOf
 	}
 
 	return m.structureLevelListOfSpeakerss
+}
+
+func (m *ListOfSpeakers) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "speaker_ids":
+		for _, r := range m.speakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_list_of_speakers_ids":
+		for _, r := range m.structureLevelListOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *ListOfSpeakers) SetRelated(field string, content interface{}) {
@@ -300,6 +330,12 @@ func (m *ListOfSpeakers) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["sequential_number"]; ok {
@@ -314,12 +350,24 @@ func (m *ListOfSpeakers) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["speaker_ids"]; ok {
+			m.speakers = slices.DeleteFunc(m.speakers, func(r *Speaker) bool {
+				return !slices.Contains(m.SpeakerIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["structure_level_list_of_speakers_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.StructureLevelListOfSpeakersIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["structure_level_list_of_speakers_ids"]; ok {
+			m.structureLevelListOfSpeakerss = slices.DeleteFunc(m.structureLevelListOfSpeakerss, func(r *StructureLevelListOfSpeakers) bool {
+				return !slices.Contains(m.StructureLevelListOfSpeakersIDs, r.ID)
+			})
 		}
 	}
 
@@ -329,7 +377,9 @@ func (m *ListOfSpeakers) Update(data map[string]string) error {
 func (m *ListOfSpeakers) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

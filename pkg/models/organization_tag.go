@@ -30,6 +30,15 @@ func (m *OrganizationTag) Organization() Organization {
 	return *m.organization
 }
 
+func (m *OrganizationTag) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *OrganizationTag) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -137,7 +146,9 @@ func (m *OrganizationTag) Update(data map[string]string) error {
 func (m *OrganizationTag) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

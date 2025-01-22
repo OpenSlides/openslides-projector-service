@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -60,6 +61,29 @@ func (m *MotionCategory) Parent() *MotionCategory {
 	}
 
 	return m.parent
+}
+
+func (m *MotionCategory) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "child_ids":
+		for _, r := range m.childs {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_ids":
+		for _, r := range m.motions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "parent_id":
+		return m.parent.GetRelatedModelsAccessor()
+	}
+
+	return nil
 }
 
 func (m *MotionCategory) SetRelated(field string, content interface{}) {
@@ -198,6 +222,12 @@ func (m *MotionCategory) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["child_ids"]; ok {
+			m.childs = slices.DeleteFunc(m.childs, func(r *MotionCategory) bool {
+				return !slices.Contains(m.ChildIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["id"]; ok {
@@ -225,6 +255,12 @@ func (m *MotionCategory) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.MotionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["motion_ids"]; ok {
+			m.motions = slices.DeleteFunc(m.motions, func(r *Motion) bool {
+				return !slices.Contains(m.MotionIDs, r.ID)
+			})
 		}
 	}
 
@@ -269,7 +305,9 @@ func (m *MotionCategory) Update(data map[string]string) error {
 func (m *MotionCategory) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

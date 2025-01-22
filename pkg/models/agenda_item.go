@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -85,6 +86,37 @@ func (m *AgendaItem) Tags() []*Tag {
 	}
 
 	return m.tags
+}
+
+func (m *AgendaItem) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "child_ids":
+		for _, r := range m.childs {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "parent_id":
+		return m.parent.GetRelatedModelsAccessor()
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "tag_ids":
+		for _, r := range m.tags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *AgendaItem) SetRelated(field string, content interface{}) {
@@ -303,6 +335,12 @@ func (m *AgendaItem) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["child_ids"]; ok {
+			m.childs = slices.DeleteFunc(m.childs, func(r *AgendaItem) bool {
+				return !slices.Contains(m.ChildIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["closed"]; ok {
@@ -387,12 +425,24 @@ func (m *AgendaItem) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["tag_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.TagIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["tag_ids"]; ok {
+			m.tags = slices.DeleteFunc(m.tags, func(r *Tag) bool {
+				return !slices.Contains(m.TagIDs, r.ID)
+			})
 		}
 	}
 
@@ -416,7 +466,9 @@ func (m *AgendaItem) Update(data map[string]string) error {
 func (m *AgendaItem) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

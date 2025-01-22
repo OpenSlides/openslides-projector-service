@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -48,6 +49,27 @@ func (m *StructureLevel) StructureLevelListOfSpeakerss() []*StructureLevelListOf
 	}
 
 	return m.structureLevelListOfSpeakerss
+}
+
+func (m *StructureLevel) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "meeting_user_ids":
+		for _, r := range m.meetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_list_of_speakers_ids":
+		for _, r := range m.structureLevelListOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (m *StructureLevel) SetRelated(field string, content interface{}) {
@@ -191,6 +213,12 @@ func (m *StructureLevel) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["meeting_user_ids"]; ok {
+			m.meetingUsers = slices.DeleteFunc(m.meetingUsers, func(r *MeetingUser) bool {
+				return !slices.Contains(m.MeetingUserIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["name"]; ok {
@@ -205,6 +233,12 @@ func (m *StructureLevel) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["structure_level_list_of_speakers_ids"]; ok {
+			m.structureLevelListOfSpeakerss = slices.DeleteFunc(m.structureLevelListOfSpeakerss, func(r *StructureLevelListOfSpeakers) bool {
+				return !slices.Contains(m.StructureLevelListOfSpeakersIDs, r.ID)
+			})
+		}
 	}
 
 	return nil
@@ -213,7 +247,9 @@ func (m *StructureLevel) Update(data map[string]string) error {
 func (m *StructureLevel) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }
