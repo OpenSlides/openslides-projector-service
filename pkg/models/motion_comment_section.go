@@ -62,6 +62,33 @@ func (m *MotionCommentSection) WriteGroups() []*Group {
 	return m.writeGroups
 }
 
+func (m *MotionCommentSection) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "comment_ids":
+		for _, r := range m.comments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "read_group_ids":
+		for _, r := range m.readGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "write_group_ids":
+		for _, r := range m.writeGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *MotionCommentSection) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -280,7 +307,9 @@ func (m *MotionCommentSection) Update(data map[string]string) error {
 func (m *MotionCommentSection) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

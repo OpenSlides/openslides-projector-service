@@ -18,6 +18,10 @@ func (m *ActionWorker) CollectionName() string {
 	return "action_worker"
 }
 
+func (m *ActionWorker) GetRelated(field string, id int) *RelatedModelsAccessor {
+	return nil
+}
+
 func (m *ActionWorker) SetRelated(field string, content interface{}) {}
 
 func (m *ActionWorker) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
@@ -105,7 +109,9 @@ func (m *ActionWorker) Update(data map[string]string) error {
 func (m *ActionWorker) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

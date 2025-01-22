@@ -16,6 +16,10 @@ func (m *ImportPreview) CollectionName() string {
 	return "import_preview"
 }
 
+func (m *ImportPreview) GetRelated(field string, id int) *RelatedModelsAccessor {
+	return nil
+}
+
 func (m *ImportPreview) SetRelated(field string, content interface{}) {}
 
 func (m *ImportPreview) SetRelatedJSON(field string, content []byte) (*RelatedModelsAccessor, error) {
@@ -85,7 +89,9 @@ func (m *ImportPreview) Update(data map[string]string) error {
 func (m *ImportPreview) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

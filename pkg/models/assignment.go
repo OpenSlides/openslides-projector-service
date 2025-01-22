@@ -105,6 +105,49 @@ func (m *Assignment) Tags() []*Tag {
 	return m.tags
 }
 
+func (m *Assignment) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "agenda_item_id":
+		return m.agendaItem.GetRelatedModelsAccessor()
+	case "attachment_meeting_mediafile_ids":
+		for _, r := range m.attachmentMeetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "candidate_ids":
+		for _, r := range m.candidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "tag_ids":
+		for _, r := range m.tags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Assignment) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -468,7 +511,9 @@ func (m *Assignment) Update(data map[string]string) error {
 func (m *Assignment) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

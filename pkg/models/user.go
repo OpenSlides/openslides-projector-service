@@ -157,6 +157,77 @@ func (m *User) Votes() []*Vote {
 	return m.votes
 }
 
+func (m *User) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "committee_management_ids":
+		for _, r := range m.committeeManagements {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "committee_ids":
+		for _, r := range m.committees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "delegated_vote_ids":
+		for _, r := range m.delegatedVotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "forwarding_committee_ids":
+		for _, r := range m.forwardingCommittees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "gender_id":
+		return m.gender.GetRelatedModelsAccessor()
+	case "is_present_in_meeting_ids":
+		for _, r := range m.isPresentInMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_user_ids":
+		for _, r := range m.meetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	case "poll_candidate_ids":
+		for _, r := range m.pollCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_voted_ids":
+		for _, r := range m.pollVoteds {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "vote_ids":
+		for _, r := range m.votes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *User) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -774,7 +845,9 @@ func (m *User) Update(data map[string]string) error {
 func (m *User) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

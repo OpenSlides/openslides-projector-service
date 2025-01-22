@@ -123,6 +123,51 @@ func (m *MotionState) Workflow() MotionWorkflow {
 	return *m.workflow
 }
 
+func (m *MotionState) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "first_state_of_workflow_id":
+		return m.firstStateOfWorkflow.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_recommendation_ids":
+		for _, r := range m.motionRecommendations {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_ids":
+		for _, r := range m.motions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "next_state_ids":
+		for _, r := range m.nextStates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "previous_state_ids":
+		for _, r := range m.previousStates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "submitter_withdraw_back_ids":
+		for _, r := range m.submitterWithdrawBacks {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "submitter_withdraw_state_id":
+		return m.submitterWithdrawState.GetRelatedModelsAccessor()
+	case "workflow_id":
+		return m.workflow.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *MotionState) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -584,7 +629,9 @@ func (m *MotionState) Update(data map[string]string) error {
 func (m *MotionState) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

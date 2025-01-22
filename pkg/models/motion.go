@@ -349,6 +349,155 @@ func (m *Motion) WorkingGroupSpeakers() []*MotionWorkingGroupSpeaker {
 	return m.workingGroupSpeakers
 }
 
+func (m *Motion) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "agenda_item_id":
+		return m.agendaItem.GetRelatedModelsAccessor()
+	case "all_derived_motion_ids":
+		for _, r := range m.allDerivedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "all_origin_ids":
+		for _, r := range m.allOrigins {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "amendment_ids":
+		for _, r := range m.amendments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "attachment_meeting_mediafile_ids":
+		for _, r := range m.attachmentMeetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "block_id":
+		return m.block.GetRelatedModelsAccessor()
+	case "category_id":
+		return m.category.GetRelatedModelsAccessor()
+	case "change_recommendation_ids":
+		for _, r := range m.changeRecommendations {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "comment_ids":
+		for _, r := range m.comments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "derived_motion_ids":
+		for _, r := range m.derivedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "editor_ids":
+		for _, r := range m.editors {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "identical_motion_ids":
+		for _, r := range m.iDenticalMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "lead_motion_id":
+		return m.leadMotion.GetRelatedModelsAccessor()
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "origin_id":
+		return m.origin.GetRelatedModelsAccessor()
+	case "origin_meeting_id":
+		return m.originMeeting.GetRelatedModelsAccessor()
+	case "personal_note_ids":
+		for _, r := range m.personalNotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "recommendation_id":
+		return m.recommendation.GetRelatedModelsAccessor()
+	case "referenced_in_motion_recommendation_extension_ids":
+		for _, r := range m.referencedInMotionRecommendationExtensions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "referenced_in_motion_state_extension_ids":
+		for _, r := range m.referencedInMotionStateExtensions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "sort_child_ids":
+		for _, r := range m.sortChilds {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "sort_parent_id":
+		return m.sortParent.GetRelatedModelsAccessor()
+	case "state_id":
+		return m.state.GetRelatedModelsAccessor()
+	case "submitter_ids":
+		for _, r := range m.submitters {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "supporter_meeting_user_ids":
+		for _, r := range m.supporterMeetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "tag_ids":
+		for _, r := range m.tags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "working_group_speaker_ids":
+		for _, r := range m.workingGroupSpeakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Motion) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -1554,7 +1703,9 @@ func (m *Motion) Update(data map[string]string) error {
 func (m *Motion) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

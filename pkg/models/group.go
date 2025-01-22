@@ -182,6 +182,77 @@ func (m *Group) WriteCommentSections() []*MotionCommentSection {
 	return m.writeCommentSections
 }
 
+func (m *Group) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "admin_group_for_meeting_id":
+		return m.adminGroupForMeeting.GetRelatedModelsAccessor()
+	case "anonymous_group_for_meeting_id":
+		return m.anonymousGroupForMeeting.GetRelatedModelsAccessor()
+	case "default_group_for_meeting_id":
+		return m.defaultGroupForMeeting.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "meeting_mediafile_access_group_ids":
+		for _, r := range m.meetingMediafileAccessGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_mediafile_inherited_access_group_ids":
+		for _, r := range m.meetingMediafileInheritedAccessGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_user_ids":
+		for _, r := range m.meetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "read_chat_group_ids":
+		for _, r := range m.readChatGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "read_comment_section_ids":
+		for _, r := range m.readCommentSections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "used_as_assignment_poll_default_id":
+		return m.usedAsAssignmentPollDefault.GetRelatedModelsAccessor()
+	case "used_as_motion_poll_default_id":
+		return m.usedAsMotionPollDefault.GetRelatedModelsAccessor()
+	case "used_as_poll_default_id":
+		return m.usedAsPollDefault.GetRelatedModelsAccessor()
+	case "used_as_topic_poll_default_id":
+		return m.usedAsTopicPollDefault.GetRelatedModelsAccessor()
+	case "write_chat_group_ids":
+		for _, r := range m.writeChatGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "write_comment_section_ids":
+		for _, r := range m.writeCommentSections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Group) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -752,7 +823,9 @@ func (m *Group) Update(data map[string]string) error {
 func (m *Group) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

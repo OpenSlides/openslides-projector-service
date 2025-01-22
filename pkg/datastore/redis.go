@@ -61,11 +61,16 @@ func (ds *Datastore) setupRedisListener() {
 
 			for _, listener := range listeners {
 				listenerChanged := map[string]map[string]string{}
-				for _, fqid := range listener.fqids {
-					if val, ok := changeMap[fqid]; ok {
-						listenerChanged[fqid] = val
+				if len(listener.fqids) != 0 {
+					for _, fqid := range listener.fqids {
+						if val, ok := changeMap[fqid]; ok {
+							listenerChanged[fqid] = val
+						}
 					}
+				} else {
+					listenerChanged = changeMap
 				}
+
 				if len(listenerChanged) > 0 {
 					listener.channel <- listenerChanged
 				}

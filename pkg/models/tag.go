@@ -29,6 +29,15 @@ func (m *Tag) Meeting() Meeting {
 	return *m.meeting
 }
 
+func (m *Tag) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *Tag) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -127,7 +136,9 @@ func (m *Tag) Update(data map[string]string) error {
 func (m *Tag) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

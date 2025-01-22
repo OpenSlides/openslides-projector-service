@@ -39,6 +39,21 @@ func (m *ProjectorMessage) Projections() []*Projection {
 	return m.projections
 }
 
+func (m *ProjectorMessage) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *ProjectorMessage) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -162,7 +177,9 @@ func (m *ProjectorMessage) Update(data map[string]string) error {
 func (m *ProjectorMessage) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

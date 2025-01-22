@@ -71,6 +71,31 @@ func (m *MotionBlock) Projections() []*Projection {
 	return m.projections
 }
 
+func (m *MotionBlock) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "agenda_item_id":
+		return m.agendaItem.GetRelatedModelsAccessor()
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_ids":
+		for _, r := range m.motions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *MotionBlock) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -296,7 +321,9 @@ func (m *MotionBlock) Update(data map[string]string) error {
 func (m *MotionBlock) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

@@ -113,6 +113,43 @@ func (m *Poll) Voteds() []*User {
 	return m.voteds
 }
 
+func (m *Poll) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "entitled_group_ids":
+		for _, r := range m.entitledGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "global_option_id":
+		return m.globalOption.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "voted_ids":
+		for _, r := range m.voteds {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Poll) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -620,7 +657,9 @@ func (m *Poll) Update(data map[string]string) error {
 func (m *Poll) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

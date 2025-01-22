@@ -63,6 +63,25 @@ func (m *ProjectorCountdown) UsedAsPollCountdownMeeting() *Meeting {
 	return m.usedAsPollCountdownMeeting
 }
 
+func (m *ProjectorCountdown) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "used_as_list_of_speakers_countdown_meeting_id":
+		return m.usedAsListOfSpeakersCountdownMeeting.GetRelatedModelsAccessor()
+	case "used_as_poll_countdown_meeting_id":
+		return m.usedAsPollCountdownMeeting.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *ProjectorCountdown) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -274,7 +293,9 @@ func (m *ProjectorCountdown) Update(data map[string]string) error {
 func (m *ProjectorCountdown) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

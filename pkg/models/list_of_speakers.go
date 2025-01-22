@@ -72,6 +72,35 @@ func (m *ListOfSpeakers) StructureLevelListOfSpeakerss() []*StructureLevelListOf
 	return m.structureLevelListOfSpeakerss
 }
 
+func (m *ListOfSpeakers) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "speaker_ids":
+		for _, r := range m.speakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_list_of_speakers_ids":
+		for _, r := range m.structureLevelListOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *ListOfSpeakers) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -348,7 +377,9 @@ func (m *ListOfSpeakers) Update(data map[string]string) error {
 func (m *ListOfSpeakers) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

@@ -81,6 +81,37 @@ func (m *Topic) Projections() []*Projection {
 	return m.projections
 }
 
+func (m *Topic) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "agenda_item_id":
+		return m.agendaItem.GetRelatedModelsAccessor()
+	case "attachment_meeting_mediafile_ids":
+		for _, r := range m.attachmentMeetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "list_of_speakers_id":
+		return m.listOfSpeakers.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Topic) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -338,7 +369,9 @@ func (m *Topic) Update(data map[string]string) error {
 func (m *Topic) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

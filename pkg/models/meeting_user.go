@@ -163,6 +163,85 @@ func (m *MeetingUser) VoteDelegationsFroms() []*MeetingUser {
 	return m.voteDelegationsFroms
 }
 
+func (m *MeetingUser) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "assignment_candidate_ids":
+		for _, r := range m.assignmentCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "chat_message_ids":
+		for _, r := range m.chatMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "group_ids":
+		for _, r := range m.groups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_editor_ids":
+		for _, r := range m.motionEditors {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_submitter_ids":
+		for _, r := range m.motionSubmitters {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_working_group_speaker_ids":
+		for _, r := range m.motionWorkingGroupSpeakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "personal_note_ids":
+		for _, r := range m.personalNotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "speaker_ids":
+		for _, r := range m.speakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_ids":
+		for _, r := range m.structureLevels {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "supported_motion_ids":
+		for _, r := range m.supportedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "user_id":
+		return m.user.GetRelatedModelsAccessor()
+	case "vote_delegated_to_id":
+		return m.voteDelegatedTo.GetRelatedModelsAccessor()
+	case "vote_delegations_from_ids":
+		for _, r := range m.voteDelegationsFroms {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *MeetingUser) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -712,7 +791,9 @@ func (m *MeetingUser) Update(data map[string]string) error {
 func (m *MeetingUser) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

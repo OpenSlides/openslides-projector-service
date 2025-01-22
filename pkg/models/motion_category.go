@@ -63,6 +63,29 @@ func (m *MotionCategory) Parent() *MotionCategory {
 	return m.parent
 }
 
+func (m *MotionCategory) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "child_ids":
+		for _, r := range m.childs {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_ids":
+		for _, r := range m.motions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "parent_id":
+		return m.parent.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *MotionCategory) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -282,7 +305,9 @@ func (m *MotionCategory) Update(data map[string]string) error {
 func (m *MotionCategory) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

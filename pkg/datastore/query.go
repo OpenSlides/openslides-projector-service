@@ -18,6 +18,7 @@ type baseModelPtr[T any] interface {
 type recursiveSubqueryList struct {
 	subquerys map[string]*recursiveSubqueryList
 	Fields    []string
+	fqids     []string
 }
 
 func (q *recursiveSubqueryList) With(idField string, fields []string) *recursiveSubqueryList {
@@ -165,7 +166,8 @@ func (q *query[T, PT]) resultStructs() (map[string]PT, error) {
 }
 
 func (q *query[T, PT]) recursiveLoadSubqueries(el *models.RelatedModelsAccessor, field string, subQuery *recursiveSubqueryList) error {
-	subDsResult, err := q.datastore.getFull(el.GetFqids(field))
+	subQuery.fqids = el.GetFqids(field)
+	subDsResult, err := q.datastore.getFull(subQuery.fqids)
 	if err != nil {
 		return err
 	}

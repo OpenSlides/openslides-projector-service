@@ -77,6 +77,31 @@ func (m *Mediafile) PublishedToMeetingsInOrganization() *Organization {
 	return m.publishedToMeetingsInOrganization
 }
 
+func (m *Mediafile) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "child_ids":
+		for _, r := range m.childs {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_mediafile_ids":
+		for _, r := range m.meetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "owner_id":
+		return m.owner.GetRelatedModelsAccessor()
+	case "parent_id":
+		return m.parent.GetRelatedModelsAccessor()
+	case "published_to_meetings_in_organization_id":
+		return m.publishedToMeetingsInOrganization.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *Mediafile) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -365,7 +390,9 @@ func (m *Mediafile) Update(data map[string]string) error {
 func (m *Mediafile) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

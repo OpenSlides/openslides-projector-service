@@ -111,6 +111,55 @@ func (m *Committee) Users() []*User {
 	return m.users
 }
 
+func (m *Committee) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "default_meeting_id":
+		return m.defaultMeeting.GetRelatedModelsAccessor()
+	case "forward_to_committee_ids":
+		for _, r := range m.forwardToCommittees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "forwarding_user_id":
+		return m.forwardingUser.GetRelatedModelsAccessor()
+	case "manager_ids":
+		for _, r := range m.managers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_ids":
+		for _, r := range m.meetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_id":
+		return m.organization.GetRelatedModelsAccessor()
+	case "organization_tag_ids":
+		for _, r := range m.organizationTags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "receive_forwardings_from_committee_ids":
+		for _, r := range m.receiveForwardingsFromCommittees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "user_ids":
+		for _, r := range m.users {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Committee) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -474,7 +523,9 @@ func (m *Committee) Update(data map[string]string) error {
 func (m *Committee) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

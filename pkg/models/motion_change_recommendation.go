@@ -45,6 +45,17 @@ func (m *MotionChangeRecommendation) Motion() Motion {
 	return *m.motion
 }
 
+func (m *MotionChangeRecommendation) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "motion_id":
+		return m.motion.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *MotionChangeRecommendation) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -221,7 +232,9 @@ func (m *MotionChangeRecommendation) Update(data map[string]string) error {
 func (m *MotionChangeRecommendation) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

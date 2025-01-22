@@ -12,6 +12,8 @@ type IBaseModel interface {
 
 type RelatedModelsAccessor struct {
 	GetFqids       func(field string) []string
+	GetRelated     func(string, int) *RelatedModelsAccessor
 	SetRelated     func(string, interface{})
 	SetRelatedJSON func(string, []byte) (*RelatedModelsAccessor, error)
+	Update         func(data map[string]string) error
 }

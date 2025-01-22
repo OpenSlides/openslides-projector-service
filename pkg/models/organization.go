@@ -153,6 +153,75 @@ func (m *Organization) Users() []*User {
 	return m.users
 }
 
+func (m *Organization) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "active_meeting_ids":
+		for _, r := range m.activeMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "archived_meeting_ids":
+		for _, r := range m.archivedMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "committee_ids":
+		for _, r := range m.committees {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "gender_ids":
+		for _, r := range m.genders {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "mediafile_ids":
+		for _, r := range m.mediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_tag_ids":
+		for _, r := range m.organizationTags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "published_mediafile_ids":
+		for _, r := range m.publishedMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "template_meeting_ids":
+		for _, r := range m.templateMeetings {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "theme_id":
+		return m.theme.GetRelatedModelsAccessor()
+	case "theme_ids":
+		for _, r := range m.themes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "user_ids":
+		for _, r := range m.users {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Organization) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -798,7 +867,9 @@ func (m *Organization) Update(data map[string]string) error {
 func (m *Organization) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

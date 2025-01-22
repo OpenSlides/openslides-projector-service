@@ -50,6 +50,19 @@ func (m *PersonalNote) MeetingUser() MeetingUser {
 	return *m.meetingUser
 }
 
+func (m *PersonalNote) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "meeting_user_id":
+		return m.meetingUser.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *PersonalNote) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -208,7 +221,9 @@ func (m *PersonalNote) Update(data map[string]string) error {
 func (m *PersonalNote) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

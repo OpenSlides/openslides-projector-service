@@ -60,6 +60,33 @@ func (m *ChatGroup) WriteGroups() []*Group {
 	return m.writeGroups
 }
 
+func (m *ChatGroup) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "chat_message_ids":
+		for _, r := range m.chatMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "read_group_ids":
+		for _, r := range m.readGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "write_group_ids":
+		for _, r := range m.writeGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *ChatGroup) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -260,7 +287,9 @@ func (m *ChatGroup) Update(data map[string]string) error {
 func (m *ChatGroup) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

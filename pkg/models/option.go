@@ -74,6 +74,27 @@ func (m *Option) Votes() []*Vote {
 	return m.votes
 }
 
+func (m *Option) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "poll_id":
+		return m.poll.GetRelatedModelsAccessor()
+	case "used_as_global_option_in_poll_id":
+		return m.usedAsGlobalOptionInPoll.GetRelatedModelsAccessor()
+	case "vote_ids":
+		for _, r := range m.votes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Option) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -339,7 +360,9 @@ func (m *Option) Update(data map[string]string) error {
 func (m *Option) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

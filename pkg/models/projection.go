@@ -73,6 +73,23 @@ func (m *Projection) PreviewProjector() *Projector {
 	return m.previewProjector
 }
 
+func (m *Projection) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "content_object_id":
+		return m.contentObject.GetRelatedModelsAccessor()
+	case "current_projector_id":
+		return m.currentProjector.GetRelatedModelsAccessor()
+	case "history_projector_id":
+		return m.historyProjector.GetRelatedModelsAccessor()
+	case "meeting_id":
+		return m.meeting.GetRelatedModelsAccessor()
+	case "preview_projector_id":
+		return m.previewProjector.GetRelatedModelsAccessor()
+	}
+
+	return nil
+}
+
 func (m *Projection) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -397,7 +414,9 @@ func (m *Projection) Update(data map[string]string) error {
 func (m *Projection) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }

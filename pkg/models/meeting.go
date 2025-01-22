@@ -1044,6 +1044,425 @@ func (m *Meeting) Votes() []*Vote {
 	return m.votes
 }
 
+func (m *Meeting) GetRelated(field string, id int) *RelatedModelsAccessor {
+	switch field {
+	case "admin_group_id":
+		return m.adminGroup.GetRelatedModelsAccessor()
+	case "agenda_item_ids":
+		for _, r := range m.agendaItems {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "all_projection_ids":
+		for _, r := range m.allProjections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "anonymous_group_id":
+		return m.anonymousGroup.GetRelatedModelsAccessor()
+	case "assignment_candidate_ids":
+		for _, r := range m.assignmentCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "assignment_poll_default_group_ids":
+		for _, r := range m.assignmentPollDefaultGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "assignment_ids":
+		for _, r := range m.assignments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "chat_group_ids":
+		for _, r := range m.chatGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "chat_message_ids":
+		for _, r := range m.chatMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "committee_id":
+		return m.committee.GetRelatedModelsAccessor()
+	case "default_group_id":
+		return m.defaultGroup.GetRelatedModelsAccessor()
+	case "default_meeting_for_committee_id":
+		return m.defaultMeetingForCommittee.GetRelatedModelsAccessor()
+	case "default_projector_agenda_item_list_ids":
+		for _, r := range m.defaultProjectorAgendaItemLists {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_amendment_ids":
+		for _, r := range m.defaultProjectorAmendments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_assignment_poll_ids":
+		for _, r := range m.defaultProjectorAssignmentPolls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_assignment_ids":
+		for _, r := range m.defaultProjectorAssignments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_countdown_ids":
+		for _, r := range m.defaultProjectorCountdowns {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_current_list_of_speakers_ids":
+		for _, r := range m.defaultProjectorCurrentListOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_list_of_speakers_ids":
+		for _, r := range m.defaultProjectorListOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_mediafile_ids":
+		for _, r := range m.defaultProjectorMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_message_ids":
+		for _, r := range m.defaultProjectorMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_motion_block_ids":
+		for _, r := range m.defaultProjectorMotionBlocks {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_motion_poll_ids":
+		for _, r := range m.defaultProjectorMotionPolls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_motion_ids":
+		for _, r := range m.defaultProjectorMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_poll_ids":
+		for _, r := range m.defaultProjectorPolls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "default_projector_topic_ids":
+		for _, r := range m.defaultProjectorTopics {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "font_bold_id":
+		return m.fontBold.GetRelatedModelsAccessor()
+	case "font_bold_italic_id":
+		return m.fontBoldItalic.GetRelatedModelsAccessor()
+	case "font_chyron_speaker_name_id":
+		return m.fontChyronSpeakerName.GetRelatedModelsAccessor()
+	case "font_italic_id":
+		return m.fontItalic.GetRelatedModelsAccessor()
+	case "font_monospace_id":
+		return m.fontMonospace.GetRelatedModelsAccessor()
+	case "font_projector_h1_id":
+		return m.fontProjectorH1.GetRelatedModelsAccessor()
+	case "font_projector_h2_id":
+		return m.fontProjectorH2.GetRelatedModelsAccessor()
+	case "font_regular_id":
+		return m.fontRegular.GetRelatedModelsAccessor()
+	case "forwarded_motion_ids":
+		for _, r := range m.forwardedMotions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "group_ids":
+		for _, r := range m.groups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "is_active_in_organization_id":
+		return m.isActiveInOrganization.GetRelatedModelsAccessor()
+	case "is_archived_in_organization_id":
+		return m.isArchivedInOrganization.GetRelatedModelsAccessor()
+	case "list_of_speakers_countdown_id":
+		return m.listOfSpeakersCountdown.GetRelatedModelsAccessor()
+	case "list_of_speakers_ids":
+		for _, r := range m.listOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "logo_pdf_ballot_paper_id":
+		return m.logoPdfBallotPaper.GetRelatedModelsAccessor()
+	case "logo_pdf_footer_l_id":
+		return m.logoPdfFooterL.GetRelatedModelsAccessor()
+	case "logo_pdf_footer_r_id":
+		return m.logoPdfFooterR.GetRelatedModelsAccessor()
+	case "logo_pdf_header_l_id":
+		return m.logoPdfHeaderL.GetRelatedModelsAccessor()
+	case "logo_pdf_header_r_id":
+		return m.logoPdfHeaderR.GetRelatedModelsAccessor()
+	case "logo_projector_header_id":
+		return m.logoProjectorHeader.GetRelatedModelsAccessor()
+	case "logo_projector_main_id":
+		return m.logoProjectorMain.GetRelatedModelsAccessor()
+	case "logo_web_header_id":
+		return m.logoWebHeader.GetRelatedModelsAccessor()
+	case "mediafile_ids":
+		for _, r := range m.mediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_mediafile_ids":
+		for _, r := range m.meetingMediafiles {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "meeting_user_ids":
+		for _, r := range m.meetingUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_block_ids":
+		for _, r := range m.motionBlocks {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_category_ids":
+		for _, r := range m.motionCategorys {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_change_recommendation_ids":
+		for _, r := range m.motionChangeRecommendations {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_comment_section_ids":
+		for _, r := range m.motionCommentSections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_comment_ids":
+		for _, r := range m.motionComments {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_editor_ids":
+		for _, r := range m.motionEditors {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_poll_default_group_ids":
+		for _, r := range m.motionPollDefaultGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_state_ids":
+		for _, r := range m.motionStates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_submitter_ids":
+		for _, r := range m.motionSubmitters {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_workflow_ids":
+		for _, r := range m.motionWorkflows {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_working_group_speaker_ids":
+		for _, r := range m.motionWorkingGroupSpeakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motion_ids":
+		for _, r := range m.motions {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "motions_default_amendment_workflow_id":
+		return m.motionsDefaultAmendmentWorkflow.GetRelatedModelsAccessor()
+	case "motions_default_workflow_id":
+		return m.motionsDefaultWorkflow.GetRelatedModelsAccessor()
+	case "option_ids":
+		for _, r := range m.options {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "organization_tag_ids":
+		for _, r := range m.organizationTags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "personal_note_ids":
+		for _, r := range m.personalNotes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "point_of_order_category_ids":
+		for _, r := range m.pointOfOrderCategorys {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_candidate_list_ids":
+		for _, r := range m.pollCandidateLists {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_candidate_ids":
+		for _, r := range m.pollCandidates {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_countdown_id":
+		return m.pollCountdown.GetRelatedModelsAccessor()
+	case "poll_default_group_ids":
+		for _, r := range m.pollDefaultGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "poll_ids":
+		for _, r := range m.polls {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "present_user_ids":
+		for _, r := range m.presentUsers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projection_ids":
+		for _, r := range m.projections {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projector_countdown_ids":
+		for _, r := range m.projectorCountdowns {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projector_message_ids":
+		for _, r := range m.projectorMessages {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "projector_ids":
+		for _, r := range m.projectors {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "reference_projector_id":
+		return m.referenceProjector.GetRelatedModelsAccessor()
+	case "speaker_ids":
+		for _, r := range m.speakers {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_list_of_speakers_ids":
+		for _, r := range m.structureLevelListOfSpeakerss {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "structure_level_ids":
+		for _, r := range m.structureLevels {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "tag_ids":
+		for _, r := range m.tags {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "template_for_organization_id":
+		return m.templateForOrganization.GetRelatedModelsAccessor()
+	case "topic_poll_default_group_ids":
+		for _, r := range m.topicPollDefaultGroups {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "topic_ids":
+		for _, r := range m.topics {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	case "vote_ids":
+		for _, r := range m.votes {
+			if r.ID == id {
+				return r.GetRelatedModelsAccessor()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *Meeting) SetRelated(field string, content interface{}) {
 	if content != nil {
 		switch field {
@@ -5164,7 +5583,9 @@ func (m *Meeting) Update(data map[string]string) error {
 func (m *Meeting) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 	return &RelatedModelsAccessor{
 		m.GetFqids,
+		m.GetRelated,
 		m.SetRelated,
 		m.SetRelatedJSON,
+		m.Update,
 	}
 }
