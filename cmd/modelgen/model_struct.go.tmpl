@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -126,7 +127,13 @@ func (m *{{.GoName}}) Update(data map[string]string) error { {{range .Fields}}
 		if err != nil {
 			return err
 		}
-	}
+		{{if .Relation}}{{if .Relation.List}}
+		if _, ok := m.loadedRelations["{{ .Relation.IdField }}"]; ok {
+			m.{{ .Relation.PropNameLc }} = slices.DeleteFunc(m.{{ .Relation.PropNameLc }}, func (r *{{ .Relation.CollectionName }}) bool {
+				return !slices.Contains(m.{{ .Relation.IdFieldGo }}, r.ID)
+			})
+		}
+	{{end}}{{end}} }
 	{{end}}
 
 	return nil

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -303,6 +304,12 @@ func (m *AgendaItem) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["child_ids"]; ok {
+			m.childs = slices.DeleteFunc(m.childs, func(r *AgendaItem) bool {
+				return !slices.Contains(m.ChildIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["closed"]; ok {
@@ -387,12 +394,24 @@ func (m *AgendaItem) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["tag_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.TagIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["tag_ids"]; ok {
+			m.tags = slices.DeleteFunc(m.tags, func(r *Tag) bool {
+				return !slices.Contains(m.TagIDs, r.ID)
+			})
 		}
 	}
 

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -230,6 +231,12 @@ func (m *ProjectorCountdown) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 

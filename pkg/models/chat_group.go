@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -191,6 +192,12 @@ func (m *ChatGroup) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["chat_message_ids"]; ok {
+			m.chatMessages = slices.DeleteFunc(m.chatMessages, func(r *ChatMessage) bool {
+				return !slices.Contains(m.ChatMessageIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["id"]; ok {
@@ -219,6 +226,12 @@ func (m *ChatGroup) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["read_group_ids"]; ok {
+			m.readGroups = slices.DeleteFunc(m.readGroups, func(r *Group) bool {
+				return !slices.Contains(m.ReadGroupIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["weight"]; ok {
@@ -232,6 +245,12 @@ func (m *ChatGroup) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.WriteGroupIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["write_group_ids"]; ok {
+			m.writeGroups = slices.DeleteFunc(m.writeGroups, func(r *Group) bool {
+				return !slices.Contains(m.WriteGroupIDs, r.ID)
+			})
 		}
 	}
 

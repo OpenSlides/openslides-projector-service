@@ -117,7 +117,7 @@ func parse(r io.Reader) ([]collection, error) {
 
 				relCollection := strings.Split(modelField.To, "/")[0]
 				relCollectionName := goName(relCollection)
-				relations = append(relations, relation{
+				rel := relation{
 					GoName:         goName(collectionName),
 					PropName:       propName,
 					PropNameLc:     string(propNameLc),
@@ -127,7 +127,9 @@ func parse(r io.Reader) ([]collection, error) {
 					IdFieldGo:      goName(fieldName),
 					Required:       modelField.Required,
 					List:           modelField.Type == "relation-list",
-				})
+				}
+				f.Relation = &rel
+				relations = append(relations, rel)
 			}
 
 			if modelField.Type == "generic-relation" {
@@ -140,7 +142,7 @@ func parse(r io.Reader) ([]collection, error) {
 					toCollections[c.Collection] = goName(c.Collection)
 				}
 
-				relations = append(relations, relation{
+				rel := relation{
 					GoName:         goName(collectionName),
 					PropName:       propName,
 					PropNameLc:     string(propNameLc),
@@ -152,7 +154,9 @@ func parse(r io.Reader) ([]collection, error) {
 					List:           false,
 					Generic:        true,
 					ToCollections:  toCollections,
-				})
+				}
+				f.Relation = &rel
+				relations = append(relations, rel)
 			}
 
 			fields = append(fields, f)
@@ -194,6 +198,7 @@ type field struct {
 	FieldName      string
 	Required       bool
 	SingleRelation bool
+	Relation       *relation
 }
 
 type relation struct {

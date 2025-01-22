@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -253,6 +254,12 @@ func (m *Mediafile) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["child_ids"]; ok {
+			m.childs = slices.DeleteFunc(m.childs, func(r *Mediafile) bool {
+				return !slices.Contains(m.ChildIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["create_timestamp"]; ok {
@@ -294,6 +301,12 @@ func (m *Mediafile) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.MeetingMediafileIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["meeting_mediafile_ids"]; ok {
+			m.meetingMediafiles = slices.DeleteFunc(m.meetingMediafiles, func(r *MeetingMediafile) bool {
+				return !slices.Contains(m.MeetingMediafileIDs, r.ID)
+			})
 		}
 	}
 

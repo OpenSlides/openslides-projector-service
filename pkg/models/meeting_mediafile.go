@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -711,6 +712,12 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["access_group_ids"]; ok {
+			m.accessGroups = slices.DeleteFunc(m.accessGroups, func(r *Group) bool {
+				return !slices.Contains(m.AccessGroupIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["attachment_ids"]; ok {
@@ -731,6 +738,12 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.InheritedAccessGroupIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["inherited_access_group_ids"]; ok {
+			m.inheritedAccessGroups = slices.DeleteFunc(m.inheritedAccessGroups, func(r *Group) bool {
+				return !slices.Contains(m.InheritedAccessGroupIDs, r.ID)
+			})
 		}
 	}
 
@@ -766,6 +779,12 @@ func (m *MeetingMediafile) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 

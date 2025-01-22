@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -262,6 +263,12 @@ func (m *MotionWorkflow) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.StateIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["state_ids"]; ok {
+			m.states = slices.DeleteFunc(m.states, func(r *MotionState) bool {
+				return !slices.Contains(m.StateIDs, r.ID)
+			})
 		}
 	}
 

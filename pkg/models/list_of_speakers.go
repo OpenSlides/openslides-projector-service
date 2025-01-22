@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -300,6 +301,12 @@ func (m *ListOfSpeakers) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["sequential_number"]; ok {
@@ -314,12 +321,24 @@ func (m *ListOfSpeakers) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["speaker_ids"]; ok {
+			m.speakers = slices.DeleteFunc(m.speakers, func(r *Speaker) bool {
+				return !slices.Contains(m.SpeakerIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["structure_level_list_of_speakers_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.StructureLevelListOfSpeakersIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["structure_level_list_of_speakers_ids"]; ok {
+			m.structureLevelListOfSpeakerss = slices.DeleteFunc(m.structureLevelListOfSpeakerss, func(r *StructureLevelListOfSpeakers) bool {
+				return !slices.Contains(m.StructureLevelListOfSpeakersIDs, r.ID)
+			})
 		}
 	}
 

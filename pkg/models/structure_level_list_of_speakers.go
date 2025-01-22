@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -237,6 +238,12 @@ func (m *StructureLevelListOfSpeakers) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.SpeakerIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["speaker_ids"]; ok {
+			m.speakers = slices.DeleteFunc(m.speakers, func(r *Speaker) bool {
+				return !slices.Contains(m.SpeakerIDs, r.ID)
+			})
 		}
 	}
 

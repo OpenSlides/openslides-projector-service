@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -447,12 +448,24 @@ func (m *MotionState) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["motion_ids"]; ok {
+			m.motions = slices.DeleteFunc(m.motions, func(r *Motion) bool {
+				return !slices.Contains(m.MotionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["motion_recommendation_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.MotionRecommendationIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["motion_recommendation_ids"]; ok {
+			m.motionRecommendations = slices.DeleteFunc(m.motionRecommendations, func(r *Motion) bool {
+				return !slices.Contains(m.MotionRecommendationIDs, r.ID)
+			})
 		}
 	}
 
@@ -468,12 +481,24 @@ func (m *MotionState) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["next_state_ids"]; ok {
+			m.nextStates = slices.DeleteFunc(m.nextStates, func(r *MotionState) bool {
+				return !slices.Contains(m.NextStateIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["previous_state_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.PreviousStateIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["previous_state_ids"]; ok {
+			m.previousStates = slices.DeleteFunc(m.previousStates, func(r *MotionState) bool {
+				return !slices.Contains(m.PreviousStateIDs, r.ID)
+			})
 		}
 	}
 
@@ -523,6 +548,12 @@ func (m *MotionState) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.SubmitterWithdrawBackIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["submitter_withdraw_back_ids"]; ok {
+			m.submitterWithdrawBacks = slices.DeleteFunc(m.submitterWithdrawBacks, func(r *MotionState) bool {
+				return !slices.Contains(m.SubmitterWithdrawBackIDs, r.ID)
+			})
 		}
 	}
 

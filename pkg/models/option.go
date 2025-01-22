@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -309,6 +310,12 @@ func (m *Option) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.VoteIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["vote_ids"]; ok {
+			m.votes = slices.DeleteFunc(m.votes, func(r *Vote) bool {
+				return !slices.Contains(m.VoteIDs, r.ID)
+			})
 		}
 	}
 

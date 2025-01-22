@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -146,6 +147,12 @@ func (m *Gender) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.UserIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["user_ids"]; ok {
+			m.users = slices.DeleteFunc(m.users, func(r *User) bool {
+				return !slices.Contains(m.UserIDs, r.ID)
+			})
 		}
 	}
 

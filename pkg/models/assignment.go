@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -331,12 +332,24 @@ func (m *Assignment) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["attachment_meeting_mediafile_ids"]; ok {
+			m.attachmentMeetingMediafiles = slices.DeleteFunc(m.attachmentMeetingMediafiles, func(r *MeetingMediafile) bool {
+				return !slices.Contains(m.AttachmentMeetingMediafileIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["candidate_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.CandidateIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["candidate_ids"]; ok {
+			m.candidates = slices.DeleteFunc(m.candidates, func(r *AssignmentCandidate) bool {
+				return !slices.Contains(m.CandidateIDs, r.ID)
+			})
 		}
 	}
 
@@ -401,12 +414,24 @@ func (m *Assignment) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["poll_ids"]; ok {
+			m.polls = slices.DeleteFunc(m.polls, func(r *Poll) bool {
+				return !slices.Contains(m.PollIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["projection_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.ProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["projection_ids"]; ok {
+			m.projections = slices.DeleteFunc(m.projections, func(r *Projection) bool {
+				return !slices.Contains(m.ProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -421,6 +446,12 @@ func (m *Assignment) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.TagIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["tag_ids"]; ok {
+			m.tags = slices.DeleteFunc(m.tags, func(r *Tag) bool {
+				return !slices.Contains(m.TagIDs, r.ID)
+			})
 		}
 	}
 

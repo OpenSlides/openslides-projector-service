@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -198,6 +199,12 @@ func (m *MotionCategory) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["child_ids"]; ok {
+			m.childs = slices.DeleteFunc(m.childs, func(r *MotionCategory) bool {
+				return !slices.Contains(m.ChildIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["id"]; ok {
@@ -225,6 +232,12 @@ func (m *MotionCategory) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.MotionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["motion_ids"]; ok {
+			m.motions = slices.DeleteFunc(m.motions, func(r *Motion) bool {
+				return !slices.Contains(m.MotionIDs, r.ID)
+			})
 		}
 	}
 

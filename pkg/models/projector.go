@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -739,6 +740,12 @@ func (m *Projector) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["current_projection_ids"]; ok {
+			m.currentProjections = slices.DeleteFunc(m.currentProjections, func(r *Projection) bool {
+				return !slices.Contains(m.CurrentProjectionIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["header_background_color"]; ok {
@@ -766,6 +773,12 @@ func (m *Projector) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.HistoryProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["history_projection_ids"]; ok {
+			m.historyProjections = slices.DeleteFunc(m.historyProjections, func(r *Projection) bool {
+				return !slices.Contains(m.HistoryProjectionIDs, r.ID)
+			})
 		}
 	}
 
@@ -801,6 +814,12 @@ func (m *Projector) Update(data map[string]string) error {
 		err := json.Unmarshal([]byte(val), &m.PreviewProjectionIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["preview_projection_ids"]; ok {
+			m.previewProjections = slices.DeleteFunc(m.previewProjections, func(r *Projection) bool {
+				return !slices.Contains(m.PreviewProjectionIDs, r.ID)
+			})
 		}
 	}
 

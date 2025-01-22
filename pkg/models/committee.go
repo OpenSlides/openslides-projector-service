@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/rs/zerolog/log"
@@ -366,6 +367,12 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["forward_to_committee_ids"]; ok {
+			m.forwardToCommittees = slices.DeleteFunc(m.forwardToCommittees, func(r *Committee) bool {
+				return !slices.Contains(m.ForwardToCommitteeIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["forwarding_user_id"]; ok {
@@ -387,12 +394,24 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["manager_ids"]; ok {
+			m.managers = slices.DeleteFunc(m.managers, func(r *User) bool {
+				return !slices.Contains(m.ManagerIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["meeting_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.MeetingIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["meeting_ids"]; ok {
+			m.meetings = slices.DeleteFunc(m.meetings, func(r *Meeting) bool {
+				return !slices.Contains(m.MeetingIDs, r.ID)
+			})
 		}
 	}
 
@@ -415,6 +434,12 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["organization_tag_ids"]; ok {
+			m.organizationTags = slices.DeleteFunc(m.organizationTags, func(r *OrganizationTag) bool {
+				return !slices.Contains(m.OrganizationTagIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["receive_forwardings_from_committee_ids"]; ok {
@@ -422,12 +447,24 @@ func (m *Committee) Update(data map[string]string) error {
 		if err != nil {
 			return err
 		}
+
+		if _, ok := m.loadedRelations["receive_forwardings_from_committee_ids"]; ok {
+			m.receiveForwardingsFromCommittees = slices.DeleteFunc(m.receiveForwardingsFromCommittees, func(r *Committee) bool {
+				return !slices.Contains(m.ReceiveForwardingsFromCommitteeIDs, r.ID)
+			})
+		}
 	}
 
 	if val, ok := data["user_ids"]; ok {
 		err := json.Unmarshal([]byte(val), &m.UserIDs)
 		if err != nil {
 			return err
+		}
+
+		if _, ok := m.loadedRelations["user_ids"]; ok {
+			m.users = slices.DeleteFunc(m.users, func(r *User) bool {
+				return !slices.Contains(m.UserIDs, r.ID)
+			})
 		}
 	}
 
