@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" href="../static/slide/projector_current_list_of_speakers.css" />
+
 <div class="content{{if .Overlay}} overlay{{end}}">
     {{if .Overlay}}
     <h3>
@@ -9,10 +11,17 @@
     </h1>
     {{end}}
     <div class="detail-view-text">
-        {{range $index, $element := .Speakers}}
-            <div class="speaker">
-                {{ $element.Number }}. {{ $element.Name }}
+        {{if .CurrentSpeaker}}
+            <div class="speaker current">
+                {{ .CurrentSpeaker.Name }}
             </div>
         {{end}}
+        <ol class="next-speakers">
+        {{range .Speakers}}
+            <li class="speaker">
+                {{ .Name }}
+            </li>
+        {{end}}
+        </ol>
     </div>
 </div>

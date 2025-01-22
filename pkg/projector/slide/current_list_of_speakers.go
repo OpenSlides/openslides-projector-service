@@ -37,14 +37,14 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 
 	var los models.ListOfSpeakers
 	losQ := datastore.Collection(req.DB, &models.ListOfSpeakers{}).With("speaker_ids", nil)
+	speakersQ := losQ.GetSubquery("speaker_ids")
+	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
+	meetingUsersQ.With("user_id", nil)
+
 	losSub, err := losQ.SubscribeOne(&los)
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe list of speakers: %w", err)
 	}
-
-	speakersQ := losQ.GetSubquery("speaker_ids")
-	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
-	meetingUsersQ.With("user_id", nil)
 
 	stable := false
 	if projection.Stable != nil {
@@ -83,7 +83,6 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 				}
 			case <-losSub.Channel:
 				if los.ID != 0 {
-					println("send new", len(los.SpeakerIDs))
 					content <- getCurrentListOfSpeakersSlideContent(&los, stable)
 				}
 			}
@@ -101,11 +100,11 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 	}
 
 	type speakerListItem struct {
-		Number int
 		Name   string
 		Weight int
 	}
-	speakers := []speakerListItem{}
+	waitingSpeakers := []speakerListItem{}
+	var currentSpeaker *speakerListItem
 	for _, speaker := range los.Speakers() {
 		nameParts := []string{}
 		if firstName := speaker.MeetingUser().User().FirstName; firstName != nil {
@@ -124,21 +123,33 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 			weight = *speaker.Weight
 		}
 
-		speakers = append([]speakerListItem{{
-			Number: weight + 1,
-			Name:   strings.Join(nameParts, " "),
-			Weight: weight,
-		}}, speakers...)
+		speechState := ""
+		if speaker.SpeechState != nil {
+			speechState = *speaker.SpeechState
+		}
+
+		if (speaker.BeginTime == nil || speechState == "interposed_question") && speaker.EndTime == nil {
+			waitingSpeakers = append([]speakerListItem{{
+				Name:   strings.Join(nameParts, " "),
+				Weight: weight,
+			}}, waitingSpeakers...)
+		} else if speaker.EndTime == nil || *speaker.EndTime == 0 {
+			currentSpeaker = &speakerListItem{
+				Name:   strings.Join(nameParts, " "),
+				Weight: weight,
+			}
+		}
 	}
 
-	sort.Slice(speakers, func(i, j int) bool {
-		return speakers[i].Weight < speakers[j].Weight
+	sort.Slice(waitingSpeakers, func(i, j int) bool {
+		return waitingSpeakers[i].Weight < waitingSpeakers[j].Weight
 	})
 
 	var content bytes.Buffer
 	err = tmpl.Execute(&content, map[string]interface{}{
 		"ListOfSpeakers": los,
-		"Speakers":       speakers,
+		"CurrentSpeaker": currentSpeaker,
+		"Speakers":       waitingSpeakers,
 		"Overlay":        overlay,
 	})
 	if err != nil {

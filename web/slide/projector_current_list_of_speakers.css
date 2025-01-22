@@ -1,0 +1,14 @@
+.speaker.current {
+  font-weight: 600;
+  margin: 20px 0 0;
+}
+
+.next-speakers {
+  margin: 20px 0 10px 0;
+  padding-left: 6px;
+}
+
+.next-speakers li {
+  list-style-position: inside;
+  line-height: 150%;
+}
