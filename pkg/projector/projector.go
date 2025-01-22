@@ -63,9 +63,13 @@ func newProjector(id int, db *datastore.Datastore) (*projector, error) {
 	if len(p.projector.CurrentProjectionIDs) > 0 {
 		initListener := make(chan *ProjectorUpdateEvent)
 		p.AddListener <- initListener
+		updateCnt := 0
 		for event := range initListener {
 			if event.Event == "projection-updated" {
-				break
+				updateCnt++
+				if updateCnt >= len(p.projector.CurrentProjectionIDs) {
+					break
+				}
 			}
 		}
 		p.RemoveListener <- initListener
