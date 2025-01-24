@@ -6,8 +6,8 @@ import (
 )
 
 func (m *User) Name() string {
-  nameParts := []string{}
-  if firstName := m.FirstName; firstName != nil {
+	nameParts := []string{}
+	if firstName := m.FirstName; firstName != nil {
 		nameParts = append(nameParts, *firstName)
 	}
 
@@ -15,19 +15,19 @@ func (m *User) Name() string {
 		nameParts = append(nameParts, *lastName)
 	}
 
-  if len(nameParts) == 0 {
-    return fmt.Sprintf("User %d", m.ID)
-  }
+	if len(nameParts) == 0 {
+		return fmt.Sprintf("User %d", m.ID)
+	}
 
-  return strings.Join(nameParts, " ")
+	return strings.Join(nameParts, " ")
 }
 
 func (m *User) ShortName() string {
-  nameParts := []string{}
-  if title := m.Title; title != nil {
+	nameParts := []string{}
+	if title := m.Title; title != nil {
 		nameParts = append(nameParts, *title)
 	}
 
 	nameParts = append(nameParts, m.Name())
-  return strings.Join(nameParts, " ")
+	return strings.Join(nameParts, " ")
 }
