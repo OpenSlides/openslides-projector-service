@@ -1,15 +1,3 @@
-package models
-
-import (
-	"encoding/json"
-	"fmt"
-	"slices"
-	"strconv"
-	"strings"
-
-	"github.com/rs/zerolog/log"
-)
-
 type {{.GoName}} struct { {{range .Fields}}
 	{{.GoName}} {{.ValueType}} `json:"{{.FieldName}}"`{{end}}
 	{{if .HasRelations}}loadedRelations map[string]struct{}{{range .Relations}}
@@ -161,3 +149,4 @@ func (m *{{.GoName}}) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 		m.Update,
 	}
 }
+
