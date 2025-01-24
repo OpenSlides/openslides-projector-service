@@ -40,6 +40,7 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	speakersQ := losQ.GetSubquery("speaker_ids")
 	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
 	meetingUsersQ.With("user_id", nil)
+	meetingUsersQ.With("structure_level_ids", nil)
 
 	losSub, err := losQ.SubscribeOne(&los)
 	if err != nil {
@@ -104,14 +105,30 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 		Weight int
 	}
 	waitingSpeakers := []speakerListItem{}
+	interposedQuestions := []speakerListItem{}
 	var currentSpeaker *speakerListItem
+	var currentInterposedQuestion *speakerListItem
 	for _, speaker := range los.Speakers() {
 		nameParts := []string{}
-		if firstName := speaker.MeetingUser().User().FirstName; firstName != nil {
-			nameParts = append(nameParts, *firstName)
-		}
-		if lastName := speaker.MeetingUser().User().LastName; lastName != nil {
-			nameParts = append(nameParts, *lastName)
+		if speaker.MeetingUser() != nil {
+			if firstName := speaker.MeetingUser().User().FirstName; firstName != nil {
+				nameParts = append(nameParts, *firstName)
+			}
+
+			if lastName := speaker.MeetingUser().User().LastName; lastName != nil {
+				nameParts = append(nameParts, *lastName)
+			}
+
+			if len(speaker.MeetingUser().StructureLevels()) != 0 {
+				structureLevelNames := []string{}
+				for _, sl := range speaker.MeetingUser().StructureLevels() {
+					structureLevelNames = append(structureLevelNames, sl.Name)
+				}
+
+				nameParts = append(nameParts, fmt.Sprintf("(%s)", strings.Join(structureLevelNames, ", ")))
+			}
+		} else {
+			nameParts = append(nameParts, "")
 		}
 
 		if len(nameParts) == 0 {
@@ -128,15 +145,21 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 			speechState = *speaker.SpeechState
 		}
 
-		if (speaker.BeginTime == nil || speechState == "interposed_question") && speaker.EndTime == nil {
-			waitingSpeakers = append([]speakerListItem{{
-				Name:   strings.Join(nameParts, " "),
-				Weight: weight,
-			}}, waitingSpeakers...)
+		item := speakerListItem{
+			Name:   strings.Join(nameParts, " "),
+			Weight: weight,
+		}
+		if (speaker.BeginTime == nil) && speaker.EndTime == nil {
+			if speechState == "interposed_question" {
+				interposedQuestions = append(interposedQuestions, item)
+			} else {
+				waitingSpeakers = append(waitingSpeakers, item)
+			}
 		} else if speaker.EndTime == nil || *speaker.EndTime == 0 {
-			currentSpeaker = &speakerListItem{
-				Name:   strings.Join(nameParts, " "),
-				Weight: weight,
+			if speechState == "interposed_question" {
+				currentInterposedQuestion = &item
+			} else {
+				currentSpeaker = &item
 			}
 		}
 	}
@@ -145,12 +168,18 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 		return waitingSpeakers[i].Weight < waitingSpeakers[j].Weight
 	})
 
+	sort.Slice(interposedQuestions, func(i, j int) bool {
+		return interposedQuestions[i].Weight < interposedQuestions[j].Weight
+	})
+
 	var content bytes.Buffer
 	err = tmpl.Execute(&content, map[string]interface{}{
-		"ListOfSpeakers": los,
-		"CurrentSpeaker": currentSpeaker,
-		"Speakers":       waitingSpeakers,
-		"Overlay":        overlay,
+		"ListOfSpeakers":            los,
+		"CurrentSpeaker":            currentSpeaker,
+		"Speakers":                  waitingSpeakers,
+		"InterposedQuestions":       interposedQuestions,
+		"CurrentInterposedQuestion": currentInterposedQuestion,
+		"Overlay":                   overlay,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("could not execute current-list-of-speakers template")

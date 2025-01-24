@@ -1,3 +1,9 @@
+.speaker {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 .speaker.current {
   font-weight: 600;
   margin: 20px 0 0;
@@ -11,4 +17,13 @@
 .next-speakers li {
   list-style-position: inside;
   line-height: 150%;
+}
+
+.interposed-questions {
+  padding-left: 50px;
+}
+
+.interposed-questions .next-speakers {
+  list-style-type: none;
+  margin-top: 0;
 }
