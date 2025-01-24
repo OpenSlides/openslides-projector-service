@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+
 type ActionWorker struct {
 	Created   int             `json:"created"`
 	ID        int             `json:"id"`
@@ -23914,4 +23915,3 @@ func (m *Vote) GetRelatedModelsAccessor() *RelatedModelsAccessor {
 		m.Update,
 	}
 }
-
