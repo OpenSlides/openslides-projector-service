@@ -1,14 +1,3 @@
-package models
-
-import (
-	"encoding/json"
-	"fmt"
-	"slices"
-	"strconv"
-	"strings"
-
-	"github.com/rs/zerolog/log"
-)
 
 type {{.GoName}} struct { {{range .Fields}}
 	{{.GoName}} {{.ValueType}} `json:"{{.FieldName}}"`{{end}}
