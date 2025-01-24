@@ -24,16 +24,19 @@ import (
 
 //go:generate sh -c "go run main.go"
 
+//go:embed imports.go.tmpl
+var importsTmpl []byte
+
 //go:embed model_struct.go.tmpl
 var modelStructTmpl string
 
 func main() {
-	if err := run(os.Stdout); err != nil {
+	if err := run(); err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }
 
-func run(w io.Writer) error {
+func run() error {
 	if err := genStrutcts(); err != nil {
 		return fmt.Errorf("generate field methods: %w", err)
 	}
@@ -58,6 +61,11 @@ func genStrutcts() error {
 		return fmt.Errorf("parsing template: %w", err)
 	}
 
+	allModels := importsTmpl
+	sort.Slice(collections, func(i, j int) bool {
+		return collections[i].CollectionName < collections[j].CollectionName
+	})
+
 	for _, coll := range collections {
 		buf := new(bytes.Buffer)
 
@@ -70,9 +78,11 @@ func genStrutcts() error {
 			return fmt.Errorf("formating code: %w", err)
 		}
 
-		if err := os.WriteFile("../../pkg/models/"+coll.CollectionName+".go", formated, 0o644); err != nil {
-			return fmt.Errorf("writing output: %w", err)
-		}
+		allModels = append(allModels, formated...)
+	}
+
+	if err := os.WriteFile("../../pkg/models/gen_models.go", allModels, 0o644); err != nil {
+		return fmt.Errorf("writing output: %w", err)
 	}
 
 	return nil

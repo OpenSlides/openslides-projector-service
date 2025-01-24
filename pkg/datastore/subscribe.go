@@ -124,7 +124,6 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 			}
 
 			for field, subQuery := range q.subquerys {
-				println(field)
 				update, err := q.recursiveUpdateSubqueries(model.GetRelatedModelsAccessor(), field, subQuery, update)
 				updatedAny = updatedAny || update
 				if err != nil {
