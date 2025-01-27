@@ -43,28 +43,23 @@ func New(ctx context.Context, db *datastore.Datastore) *SlideRouter {
 
 func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjection <-chan int) <-chan *projectionUpdate {
 	updateChannel := make(chan *projectionUpdate)
-	closeChannels := make(map[int]chan struct{})
+	contextCancel := make(map[int]context.CancelFunc)
 
 	go func() {
 		for {
 			select {
 			case <-r.ctx.Done():
 				close(updateChannel)
-				for id := range closeChannels {
-					closeChannels[id] <- struct{}{}
-					close(closeChannels[id])
-				}
-
 				return
 			case id := <-addProjection:
-				if _, ok := closeChannels[id]; !ok {
-					closeChannels[id] = make(chan struct{})
-					go r.subscribeProjection(id, updateChannel, closeChannels[id])
+				if _, ok := contextCancel[id]; !ok {
+					ctx, cancel := context.WithCancel(r.ctx)
+					contextCancel[id] = cancel
+					go r.subscribeProjection(ctx, id, updateChannel)
 				}
 			case id := <-removeProjection:
-				closeChannels[id] <- struct{}{}
-				close(closeChannels[id])
-				delete(closeChannels, id)
+				contextCancel[id]()
+				delete(contextCancel, id)
 			}
 		}
 	}()
@@ -72,7 +67,7 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 	return updateChannel
 }
 
-func (r *SlideRouter) subscribeProjection(id int, updateChannel chan<- *projectionUpdate, closeSubscription <-chan struct{}) {
+func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
 	projection, err := datastore.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
 	if err != nil {
 		log.Error().Err(err).Msg("getting projection type and content object from db")
@@ -81,7 +76,7 @@ func (r *SlideRouter) subscribeProjection(id int, updateChannel chan<- *projecti
 
 	projectionType := getProjectionType(projection)
 	if handler, ok := r.Routes[projectionType]; ok {
-		projectionChan, err := handler(r.ctx, &projectionRequest{
+		projectionChan, err := handler(ctx, &projectionRequest{
 			Projection: projection,
 			DB:         r.db,
 		})
@@ -93,7 +88,7 @@ func (r *SlideRouter) subscribeProjection(id int, updateChannel chan<- *projecti
 
 		for {
 			select {
-			case <-closeSubscription:
+			case <-ctx.Done():
 				return
 			case projectionContent, ok := <-projectionChan:
 				if !ok {
