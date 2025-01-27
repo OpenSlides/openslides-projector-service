@@ -32,6 +32,7 @@ func New(ctx context.Context, db *datastore.Datastore) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
 	routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
+	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
@@ -107,6 +108,10 @@ func (r *SlideRouter) subscribeProjection(id int, updateChannel chan<- *projecti
 		}
 	} else {
 		log.Warn().Msgf("unknown projection type %s", projectionType)
+		updateChannel <- &projectionUpdate{
+			ID:      id,
+			Content: "",
+		}
 	}
 }
 
