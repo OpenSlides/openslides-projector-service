@@ -61,7 +61,7 @@ func (q *query[T, PT]) Subscribe() *subscription[<-chan map[string]map[string]in
 	}()
 
 	return &subscription[<-chan map[string]map[string]interface{}]{q.datastore, updateChannel, func() error { return nil }, notifyChannel, func() {
-		close(notifyChannel)
+		q.datastore.change.RemoveListener <- updateChannel
 	}}
 }
 
@@ -141,7 +141,7 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 	}()
 
 	return &subscription[<-chan []string]{q.datastore, updateChannel, load, notifyChannel, func() {
-		close(notifyChannel)
+		q.datastore.change.RemoveListener <- updateChannel
 	}}, nil
 }
 
