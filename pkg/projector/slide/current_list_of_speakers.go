@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
@@ -109,15 +108,10 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 	var currentSpeaker *speakerListItem
 	var currentInterposedQuestion *speakerListItem
 	for _, speaker := range los.Speakers() {
-		nameParts := []string{}
+		name := ""
 		if speaker.MeetingUser() != nil {
-			if firstName := speaker.MeetingUser().User().FirstName; firstName != nil {
-				nameParts = append(nameParts, *firstName)
-			}
-
-			if lastName := speaker.MeetingUser().User().LastName; lastName != nil {
-				nameParts = append(nameParts, *lastName)
-			}
+			u := speaker.MeetingUser().User()
+			name = u.ShortName()
 
 			if len(speaker.MeetingUser().StructureLevels()) != 0 {
 				structureLevelNames := []string{}
@@ -125,14 +119,8 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 					structureLevelNames = append(structureLevelNames, sl.Name)
 				}
 
-				nameParts = append(nameParts, fmt.Sprintf("(%s)", strings.Join(structureLevelNames, ", ")))
+				name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
 			}
-		} else {
-			nameParts = append(nameParts, "")
-		}
-
-		if len(nameParts) == 0 {
-			nameParts = append(nameParts, "User "+strconv.Itoa(speaker.MeetingUser().User().ID))
 		}
 
 		weight := 0
@@ -146,7 +134,7 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 		}
 
 		item := speakerListItem{
-			Name:   strings.Join(nameParts, " "),
+			Name:   name,
 			Weight: weight,
 		}
 		if (speaker.BeginTime == nil) && speaker.EndTime == nil {
