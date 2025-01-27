@@ -84,6 +84,8 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 			case <-losSub.Channel:
 				if los.ID != 0 {
 					content <- getCurrentListOfSpeakersSlideContent(&los, stable)
+				} else {
+					content <- ""
 				}
 			}
 		}

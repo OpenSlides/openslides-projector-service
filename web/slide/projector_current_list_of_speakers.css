@@ -27,3 +27,16 @@
   list-style-type: none;
   margin-top: 0;
 }
+
+#slides .slide > .content.overlay.list-of-speakers {
+  right: 50px;
+  bottom: 20px;
+  background-color: #d3d3d3;
+  width: 37%;
+  height: 210px;
+  border-radius: 7px;
+  border: 1px solid #999;
+  padding: 10px 10px 10px 25px;
+  box-shadow: 3px 3px 10px 1px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
