@@ -24,8 +24,15 @@ func AssignmentSlideHandler(ctx context.Context, req *projectionRequest) (<-chan
 	go func() {
 		content <- getAssignmentSlideContent(&assignment)
 
-		for range <-assignmentSub.Channel {
-			content <- getAssignmentSlideContent(&assignment)
+		for {
+			select {
+				case <-ctx.Done():
+					assignmentSub.Unsubscribe()
+					close(content)
+					return
+				case <-assignmentSub.Channel:
+				content <- getAssignmentSlideContent(&assignment)
+			}
 		}
 	}()
 
