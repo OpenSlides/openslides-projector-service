@@ -64,6 +64,12 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 	go func() {
 		for {
 			select {
+			case <-ctx.Done():
+				refProjectorSub.Unsubscribe()
+				projectorSub.Unsubscribe()
+				losSub.Unsubscribe()
+				close(content)
+				return
 			case <-refProjectorSub.Channel:
 				if referenceProjectorId > 0 {
 					projectorQ.SetIds(referenceProjectorId)

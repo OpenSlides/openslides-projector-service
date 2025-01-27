@@ -54,6 +54,12 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	go func() {
 		for {
 			select {
+			case <-ctx.Done():
+				refProjectorSub.Unsubscribe()
+				projectorSub.Unsubscribe()
+				losSub.Unsubscribe()
+				close(content)
+				return
 			case <-refProjectorSub.Channel:
 				if referenceProjectorId > 0 {
 					projectorQ.SetIds(referenceProjectorId)
