@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -46,12 +47,14 @@ func main() {
 }
 
 func run(cfg config) error {
+	ctx := context.Background()
+
 	ds, err := getDatabase(cfg)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
 	}
 
-	projectorPool := projector.NewProjectorPool(ds)
+	projectorPool := projector.NewProjectorPool(ctx, ds)
 
 	serverMux := http.NewServeMux()
 	projectorHandler := projectorHttp.ProjectorHttp{

@@ -32,7 +32,7 @@ type ProjectorUpdateEvent struct {
 	Data  string
 }
 
-func newProjector(id int, db *datastore.Datastore) (*projector, error) {
+func newProjector(parentCtx context.Context, id int, db *datastore.Datastore) (*projector, error) {
 	projectorQuery := datastore.Collection(db, &models.Projector{}).SetIds(id)
 	data, err := projectorQuery.GetOne()
 	if err != nil {
@@ -43,7 +43,7 @@ func newProjector(id int, db *datastore.Datastore) (*projector, error) {
 		return nil, fmt.Errorf("projector not found")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(parentCtx)
 	p := &projector{
 		ctxCancel:      cancel,
 		db:             db,
@@ -58,7 +58,7 @@ func newProjector(id int, db *datastore.Datastore) (*projector, error) {
 		return nil, fmt.Errorf("error generating projector content: %w", err)
 	}
 
-	go p.subscribeProjector()
+	go p.subscribeProjector(ctx)
 
 	if len(p.projector.CurrentProjectionIDs) > 0 {
 		initListener := make(chan *ProjectorUpdateEvent)
@@ -78,7 +78,7 @@ func newProjector(id int, db *datastore.Datastore) (*projector, error) {
 	return p, nil
 }
 
-func (p *projector) subscribeProjector() {
+func (p *projector) subscribeProjector(ctx context.Context) {
 	defer p.ctxCancel()
 	// TODO: Subscribe on projector settings updates
 	// Ignore e.g. projection defaults and [...]_projection_ids
@@ -89,14 +89,15 @@ func (p *projector) subscribeProjector() {
 	}
 	defer projectorSub.Unsubscribe()
 
-	projectionUpdate, projections, unsubscibeProjections, err := p.getProjectionSubscription()
+	projectionUpdate, projections, err := p.getProjectionSubscription(ctx)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not open projection subscription")
 	}
-	defer unsubscibeProjections()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case listener := <-p.AddListener:
 			p.listeners = append(p.listeners, listener)
 			listener <- &ProjectorUpdateEvent{
@@ -196,7 +197,7 @@ func (p *projector) updateFullContent() error {
 	return nil
 }
 
-func (p *projector) getProjectionSubscription() (<-chan []int, map[int]string, func(), error) {
+func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int, map[int]string, error) {
 	updateChannel := make(chan []int)
 	projections := make(map[int]string)
 	addProjection := make(chan int)
@@ -204,15 +205,20 @@ func (p *projector) getProjectionSubscription() (<-chan []int, map[int]string, f
 	var projectionIDs []int
 	sub, err := datastore.Collection(p.db, &models.Projector{}).SetIds(p.projector.ID).SetFields("current_projection_ids").SubscribeField(&projectionIDs)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to subscibe projection ids: %w", err)
+		return nil, nil, fmt.Errorf("failed to subscibe projection ids: %w", err)
 	}
 
 	go func() {
 		defer sub.Unsubscribe()
+		defer close(updateChannel)
+		defer close(addProjection)
+		defer close(removeProjection)
 
 		projectionChannel := p.slideRouter.SubscribeContent(addProjection, removeProjection)
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case <-sub.Channel:
 				updated := []int{}
 				for id := range projections {
@@ -239,7 +245,5 @@ func (p *projector) getProjectionSubscription() (<-chan []int, map[int]string, f
 		}
 	}()
 
-	return updateChannel, projections, func() {
-		// TODO: Unsubscribe
-	}, nil
+	return updateChannel, projections, nil
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func AssignmentSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
+	content := make(chan string, 1)
 	projection := req.Projection
 
 	var assignment models.Assignment
@@ -21,9 +21,8 @@ func AssignmentSlideHandler(ctx context.Context, req *projectionRequest) (<-chan
 		return nil, fmt.Errorf("AssignmentSlideHandler: %w", err)
 	}
 
+	content <- getAssignmentSlideContent(&assignment)
 	go func() {
-		content <- getAssignmentSlideContent(&assignment)
-
 		for {
 			select {
 				case <-ctx.Done():

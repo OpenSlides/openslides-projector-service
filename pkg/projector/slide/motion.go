@@ -12,7 +12,7 @@ import (
 )
 
 func MotionSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
+	content := make(chan string, 1)
 	projection := req.Projection
 
 	var motion models.Motion
@@ -21,9 +21,8 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (<-chan str
 		return nil, fmt.Errorf("MotionSlideHandler: %w", err)
 	}
 
+	content <- getMotionSlideContent(&motion)
 	go func() {
-		content <- getMotionSlideContent(&motion)
-
 		for {
 			select {
 				case <-ctx.Done():

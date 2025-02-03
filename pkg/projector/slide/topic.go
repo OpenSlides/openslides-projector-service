@@ -22,14 +22,14 @@ func TopicSlideHandler(ctx context.Context, req *projectionRequest) (<-chan stri
 	}
 
 	go func() {
-		content <- getTopicSlideContent(&topic)
+		defer topicSub.Unsubscribe()
+		defer close(content)
 
+		content <- getTopicSlideContent(&topic)
 
 		for {
 			select {
 				case <-ctx.Done():
-					topicSub.Unsubscribe()
-					close(content)
 					return
 				case <-topicSub.Channel:
 					content <- getTopicSlideContent(&topic)
