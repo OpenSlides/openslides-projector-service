@@ -3,10 +3,10 @@ package slide
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
@@ -14,7 +14,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
+type currentSpeakerChyronSlideOptions struct {
+	ChyronType string `json:"chyron_type"`
+	AgendaItem bool   `json:"agenda_item"`
+}
+
+func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
 	content := make(chan string)
 	projection := req.Projection
 
@@ -36,19 +41,24 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 
 	var los models.ListOfSpeakers
 	losQ := datastore.Collection(req.DB, &models.ListOfSpeakers{}).With("speaker_ids", nil)
+	losQ.With("meeting_id", []string{"list_of_speakers_default_structure_level_time"})
+	losContentObjectQ := losQ.With("content_object_id", nil)
+	losContentObjectQ.With("agenda_item_id", nil)
 	speakersQ := losQ.GetSubquery("speaker_ids")
+	sllosQ := speakersQ.With("structure_level_list_of_speakers_id", nil)
+	sllosQ.With("structure_level_id", []string{"name"})
 	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
 	meetingUsersQ.With("user_id", nil)
-	meetingUsersQ.With("structure_level_ids", nil)
+	meetingUsersQ.With("structure_level_ids", []string{"name"})
 
 	losSub, err := losQ.SubscribeOne(&los)
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe list of speakers: %w", err)
 	}
 
-	stable := false
-	if projection.Stable != nil {
-		stable = *projection.Stable
+	var options currentSpeakerChyronSlideOptions
+	if err := json.Unmarshal(projection.Options, &options); err != nil {
+		return nil, fmt.Errorf("could not parse slide options: %w", err)
 	}
 
 	go func() {
@@ -89,7 +99,7 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 				}
 			case <-losSub.Channel:
 				if los.ID != 0 {
-					content <- getCurrentListOfSpeakersSlideContent(&los, stable)
+					content <- getSpeakerChyronSlideContent(&los, options)
 				} else {
 					content <- ""
 				}
@@ -100,84 +110,72 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	return content, nil
 }
 
-func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bool) string {
-	tmpl, err := template.ParseFiles("templates/slides/current-list-of-speakers.html")
+func getSpeakerChyronSlideContent(los *models.ListOfSpeakers, options currentSpeakerChyronSlideOptions) string {
+	tmpl, err := template.ParseFiles("templates/slides/current-speaker-chyron.html")
 	if err != nil {
 		log.Error().Err(err).Msg("could not load current-list-of-speakers template")
 		return ""
 	}
 
-	type speakerListItem struct {
-		Name   string
-		Weight int
-	}
-	waitingSpeakers := []speakerListItem{}
-	interposedQuestions := []speakerListItem{}
-	var currentSpeaker *speakerListItem
-	var currentInterposedQuestion *speakerListItem
+	var currentSpeaker *models.Speaker
 	for _, speaker := range los.Speakers() {
-		name := ""
-		if speaker.MeetingUser() != nil {
-			u := speaker.MeetingUser().User()
-			name = u.ShortName()
-
-			if len(speaker.MeetingUser().StructureLevels()) != 0 {
-				structureLevelNames := []string{}
-				for _, sl := range speaker.MeetingUser().StructureLevels() {
-					structureLevelNames = append(structureLevelNames, sl.Name)
-				}
-
-				name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
+		if speaker.IsCurrent() {
+			speechState := ""
+			if speaker.SpeechState != nil {
+				speechState = *speaker.SpeechState
 			}
-		}
 
-		weight := 0
-		if speaker.Weight != nil {
-			weight = *speaker.Weight
-		}
-
-		speechState := ""
-		if speaker.SpeechState != nil {
-			speechState = *speaker.SpeechState
-		}
-
-		item := speakerListItem{
-			Name:   name,
-			Weight: weight,
-		}
-		if (speaker.BeginTime == nil) && speaker.EndTime == nil {
 			if speechState == "interposed_question" {
-				interposedQuestions = append(interposedQuestions, item)
+				currentSpeaker = speaker
+				break
 			} else {
-				waitingSpeakers = append(waitingSpeakers, item)
-			}
-		} else if speaker.EndTime == nil || *speaker.EndTime == 0 {
-			if speechState == "interposed_question" {
-				currentInterposedQuestion = &item
-			} else {
-				currentSpeaker = &item
+				currentSpeaker = speaker
 			}
 		}
 	}
 
-	sort.Slice(waitingSpeakers, func(i, j int) bool {
-		return waitingSpeakers[i].Weight < waitingSpeakers[j].Weight
-	})
+	speakerName := ""
+	structureLevel := ""
+	agendaItem := ""
+	if currentSpeaker != nil && currentSpeaker.MeetingUser() != nil {
+		u := currentSpeaker.MeetingUser().User()
+		speakerName = u.ShortName()
 
-	sort.Slice(interposedQuestions, func(i, j int) bool {
-		return interposedQuestions[i].Weight < interposedQuestions[j].Weight
-	})
+		structureLevelDefaultTime := los.Meeting().ListOfSpeakersDefaultStructureLevelTime
+		if structureLevelDefaultTime != nil && *structureLevelDefaultTime > 0 {
+			sllos := currentSpeaker.StructureLevelListOfSpeakers()
+			if sllos != nil {
+				structureLevel = sllos.StructureLevel().Name
+			}
+		} else {
+			structureLevelNames := []string{}
+			for _, sl := range currentSpeaker.MeetingUser().StructureLevels() {
+				structureLevelNames = append(structureLevelNames, sl.Name)
+			}
+
+			structureLevel = strings.Join(structureLevelNames, ", ")
+		}
+
+		if options.ChyronType == "new" && structureLevel != "" {
+			speakerName = fmt.Sprintf("%s, %s", speakerName, structureLevel)
+		}
+	}
+
+	// TODO: Also include agenda item number and number
+	coTitle := los.ContentObject().Get("title")
+	if coTitle != nil {
+		agendaItem = coTitle.(string)
+	}
+
+	slideData := map[string]interface{}{
+		"Options":        options,
+		"SpeakerName":    speakerName,
+		"StructureLevel": structureLevel,
+		"AgendaItem":     agendaItem,
+	}
 
 	var content bytes.Buffer
-	err = tmpl.Execute(&content, map[string]interface{}{
-		"ListOfSpeakers":            los,
-		"CurrentSpeaker":            currentSpeaker,
-		"Speakers":                  waitingSpeakers,
-		"InterposedQuestions":       interposedQuestions,
-		"CurrentInterposedQuestion": currentInterposedQuestion,
-		"Overlay":                   overlay,
-	})
-	if err != nil {
+	if err := tmpl.Execute(&content, slideData); err != nil {
 		log.Error().Err(err).Msg("could not execute current-list-of-speakers template")
 		return ""
 	}
