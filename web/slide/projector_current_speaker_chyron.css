@@ -1,0 +1,46 @@
+#slides .slide > .content.overlay.chyron {
+  left: 50px;
+  bottom: 20px;
+  right: 50px;
+  z-index: 10;
+}
+
+.chyron .inner {
+  display: table-cell;
+  vertical-align: middle;
+  padding-left: 18px;
+  padding-right: 18px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  height: 40px;
+}
+
+.chyron-speaker .inner {
+  background-color: var(--projector-chyron-background-color);
+  color: var(--projector-chyron-font-color);
+}
+
+.chyron-speaker .inner .level {
+  margin-top: 5px;
+  font-size: 70%;
+}
+
+.chyron-agenda-item .inner {
+  background-color: var(--projector-chyron-background-color2);
+  color: var(--projector-chyron-font-color2);
+}
+
+.chyron-agenda-item,
+.chyron-speaker {
+  font-size: 24px;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.chyron-agenda-item {
+  margin-bottom: -1px;
+}
+
+.chyron.new .chyron-agenda-item {
+  min-height: 80px;
+}
