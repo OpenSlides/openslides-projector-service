@@ -24,13 +24,13 @@ type ProjectorConfig struct {
 type projectorHttp struct {
 	ctx       context.Context
 	serverMux *http.ServeMux
-	DS        *datastore.Datastore
-	Projector *projector.ProjectorPool
+	ds        *datastore.Datastore
+	projector *projector.ProjectorPool
 	cfg       ProjectorConfig
 	auth      *auth.Auth
 }
 
-func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds *datastore.Datastore) projectorHttp {
+func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds *datastore.Datastore) {
 	projectorPool := projector.NewProjectorPool(ctx, ds)
 
 	lookup := new(environment.ForProduction)
@@ -47,13 +47,12 @@ func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds 
 	handler := projectorHttp{
 		ctx:       ctx,
 		serverMux: serverMux,
-		DS:        ds,
-		Projector: projectorPool,
+		ds:        ds,
+		projector: projectorPool,
 		auth:      authService,
 		cfg:       cfg,
 	}
 	handler.registerRoutes(cfg)
-	return handler
 }
 
 func (s *projectorHttp) registerRoutes(cfg ProjectorConfig) {
@@ -66,7 +65,8 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, err := auth.Authenticate(w, r)
 		if err != nil {
-			log.Err(err).Msg("authenticate request")
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, `{"error": true, "msg": "authenticate request failed"}`)
 			return
 		}
 
@@ -82,7 +82,7 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		restrictUrl := fmt.Sprintf("%s?user_id=%d&single=1", cfg.RestricterUrl, userID)
 		req, err := http.NewRequest("POST", restrictUrl, bytes.NewReader(body))
 		if err != nil {
-			log.Err(err).Msg("error on restricter request")
+			fmt.Fprintln(w, `{"error": true, "msg": "creating restriction request failed"}`)
 			return
 		}
 
@@ -93,18 +93,21 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		client := http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Err(err).Msg("error on restricter request")
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, `{"error": true, "msg": "restriction request failed"}`)
 			return
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			log.Err(err).Msg("error on restricter request")
+			w.WriteHeader(resp.StatusCode)
+			fmt.Fprintln(w, `{"error": true, "msg": "restriction request failed"}`)
 			return
 		}
 		defer resp.Body.Close()
 		b, err := io.ReadAll(resp.Body)
 		if err != nil || !strings.Contains(string(b), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
-			log.Err(err).Msg("could not access projector")
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, `{"error": true, "msg": "permissions denied"}`)
 			return
 		}
 

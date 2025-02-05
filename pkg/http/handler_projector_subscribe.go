@@ -17,7 +17,7 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 			return
 		}
 
-		content, err := s.Projector.SubscribeProjectorContent(r.Context(), id)
+		content, err := s.projector.SubscribeProjectorContent(r.Context(), id)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintln(w, `{"error": true, "msg": "Error reading projector content"}`)
