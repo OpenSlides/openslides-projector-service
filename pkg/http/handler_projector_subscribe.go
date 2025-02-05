@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (s *ProjectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
+func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Check if user can access projector
 

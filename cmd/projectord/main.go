@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
 	projectorHttp "github.com/OpenSlides/openslides-projector-service/pkg/http"
-	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
 )
 
 type config struct {
@@ -26,6 +26,7 @@ type config struct {
 	PostgresPasswordFile string `env:"DATABASE_PASSWORD_FILE" envDefault:"/run/secrets/postgres_password"`
 	MessageBusHost       string `env:"MESSAGE_BUS_HOST" envDetault:"localhost"`
 	MessageBusPort       string `env:"MESSAGE_BUS_PORT" envDetault:"6379"`
+	RestricterUrl        string `env:"RESTRICTER_URL" envDetault:"http://autoupdate:9012/internal/autoupdate"`
 }
 
 func main() {
@@ -54,22 +55,18 @@ func run(cfg config) error {
 		return fmt.Errorf("connecting to database: %w", err)
 	}
 
-	projectorPool := projector.NewProjectorPool(ctx, ds)
-
 	serverMux := http.NewServeMux()
-	projectorHandler := projectorHttp.ProjectorHttp{
-		ServerMux: serverMux,
-		DS:        ds,
-		Projector: projectorPool,
-	}
-	projectorHandler.RegisterRoutes()
+	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
+		RestricterUrl: cfg.RestricterUrl,
+	}, serverMux, ds)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)
 
 	log.Info().Msgf("Starting server on %s", cfg.Bind)
 	srv := &http.Server{
-		Addr:    cfg.Bind,
-		Handler: serverMux,
+		Addr:        cfg.Bind,
+		Handler:     serverMux,
+		BaseContext: func(net.Listener) context.Context { return ctx },
 	}
 
 	if err := srv.ListenAndServe(); err != nil {

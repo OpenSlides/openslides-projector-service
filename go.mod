@@ -13,6 +13,13 @@ require (
 )
 
 require (
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
+	github.com/gomodule/redigo v1.8.9 // indirect
+	github.com/ostcar/topic v0.4.1 // indirect
+)
+
+require (
+	github.com/OpenSlides/openslides-autoupdate-service v0.4.1-0.20230912062233-f037fa16c288
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

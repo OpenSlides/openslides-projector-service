@@ -6,10 +6,8 @@ import (
 	"strconv"
 )
 
-func (s *ProjectorHttp) ProjectorGetHandler() http.HandlerFunc {
+func (s *projectorHttp) ProjectorGetHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Check if user can access projector
-
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
