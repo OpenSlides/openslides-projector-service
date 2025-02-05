@@ -29,10 +29,10 @@ func TopicSlideHandler(ctx context.Context, req *projectionRequest) (<-chan stri
 
 		for {
 			select {
-				case <-ctx.Done():
-					return
-				case <-topicSub.Channel:
-					content <- getTopicSlideContent(&topic)
+			case <-ctx.Done():
+				return
+			case <-topicSub.Channel:
+				content <- getTopicSlideContent(&topic)
 			}
 		}
 	}()

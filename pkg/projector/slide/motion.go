@@ -25,12 +25,12 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (<-chan str
 	go func() {
 		for {
 			select {
-				case <-ctx.Done():
-					motionSub.Unsubscribe()
-					close(content)
-					return
-				case <-motionSub.Channel:
-					content <- getMotionSlideContent(&motion)
+			case <-ctx.Done():
+				motionSub.Unsubscribe()
+				close(content)
+				return
+			case <-motionSub.Channel:
+				content <- getMotionSlideContent(&motion)
 			}
 		}
 	}()
