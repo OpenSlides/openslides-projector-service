@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/OpenSlides/openslides-autoupdate-service/pkg/auth"
-	"github.com/OpenSlides/openslides-autoupdate-service/pkg/environment"
-	"github.com/OpenSlides/openslides-autoupdate-service/pkg/redis"
+	"github.com/OpenSlides/openslides-go/auth"
+	"github.com/OpenSlides/openslides-go/environment"
+	"github.com/OpenSlides/openslides-go/redis"
 	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
 	"github.com/rs/zerolog/log"
