@@ -178,7 +178,7 @@ func (p *projector) sendToAll(event *ProjectorUpdateEvent) {
 }
 
 func (p *projector) updateFullContent() error {
-	tmpl, err := template.ParseFiles("templates/projector.html")
+	tmpl, err := template.ParseFiles("templates/projector-content.html")
 	if err != nil {
 		return fmt.Errorf("error reading projector template %w", err)
 	}

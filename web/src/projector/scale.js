@@ -1,31 +1,37 @@
-function setPageWidthVar() {
-  const pageEl = document.getElementById(`projector-page`);
-  const projectorWidth = +getComputedStyle(document.body).getPropertyValue(
-    `--projector-width`,
-  );
-  const projectorAspectRatio =
-    +getComputedStyle(document.body).getPropertyValue(
-      `--projector-aspect-ratio-denominator`,
-    ) /
-    +getComputedStyle(document.body).getPropertyValue(
-      `--projector-aspect-ratio-numerator`,
+export function setPageWidthVar(pageEl) {
+  function update() {
+    const projectorWidth = +getComputedStyle(document.body).getPropertyValue(
+      `--projector-width`,
     );
-  const projectorHeight = projectorWidth * projectorAspectRatio;
-  const projectorPageAspectRatio = pageEl.offsetHeight / pageEl.offsetWidth;
+    const projectorAspectRatio =
+      +getComputedStyle(document.body).getPropertyValue(
+        `--projector-aspect-ratio-denominator`,
+      ) /
+      +getComputedStyle(document.body).getPropertyValue(
+        `--projector-aspect-ratio-numerator`,
+      );
+    const projectorHeight = projectorWidth * projectorAspectRatio;
+    const projectorPageAspectRatio = pageEl.offsetHeight / pageEl.offsetWidth;
 
-  let containerWidth = pageEl.offsetWidth;
-  if (projectorAspectRatio >= projectorPageAspectRatio) {
-    containerWidth = pageEl.offsetHeight / projectorAspectRatio;
+    let containerWidth = pageEl.offsetWidth;
+    if (projectorAspectRatio >= projectorPageAspectRatio) {
+      containerWidth = pageEl.offsetHeight / projectorAspectRatio;
+    }
+
+    pageEl.style.setProperty("--projector-container-width", `${containerWidth}`);
+    pageEl.style.setProperty(
+      "--projector-container-height",
+      `${(containerWidth / projectorWidth) * projectorHeight}`,
+    );
+
+    pageEl.style.setProperty("--projector-height", `${projectorHeight}`);
   }
 
-  pageEl.style.setProperty("--projector-container-width", `${containerWidth}`);
-  pageEl.style.setProperty(
-    "--projector-container-height",
-    `${(containerWidth / projectorWidth) * projectorHeight}`,
-  );
+  window.addEventListener("load", update);
+  window.addEventListener("resize", update);
 
-  pageEl.style.setProperty("--projector-height", `${projectorHeight}`);
+  return () => {
+    window.removeEventListener("load", update);
+    window.removeEventListener("resize", update);
+  }
 }
-
-window.addEventListener("load", setPageWidthVar);
-window.addEventListener("resize", setPageWidthVar);
