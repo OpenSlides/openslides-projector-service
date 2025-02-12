@@ -4,7 +4,7 @@ import { setPageWidthVar } from './projector/scale.js';
 /**
  * Creates a projector on the given element
  */
-export function Projector(container, id, auth = undefined) {
+export function Projector(container, id, auth = () => ``) {
   const removeSizeListener = setPageWidthVar(container);
   let subscriptionUrl = `/system/projector/subscribe/${id}`;
   let needsInit = !container.childNodes.length;
@@ -20,7 +20,7 @@ export function Projector(container, id, auth = undefined) {
         ...init,
         headers: {
           ...init.headers,
-          Authorization: auth,
+          Authorization: auth(),
         },
       })
     },
