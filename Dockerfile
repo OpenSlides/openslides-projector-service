@@ -3,11 +3,6 @@ WORKDIR /root
 
 RUN apk add git curl make
 
-ADD https://esbuild.github.io/dl/latest esbuild-install
-RUN sh esbuild-install
-RUN rm esbuild-install
-RUN mv esbuild /usr/bin
-
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -18,10 +13,14 @@ COPY web web
 COPY Makefile Makefile
 RUN mkdir static
 
+
 # Build service in seperate stage.
 FROM base as builder
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
+FROM node:22.13 as builder-web
+COPY web web
+COPY Makefile Makefile
 RUN make build-web-assets
 
 
@@ -35,6 +34,8 @@ CMD go vet ./... && go test -test.short ./...
 
 # Development build.
 FROM base as development
+
+COPY --from=builder-web /static ./static
 
 RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
 EXPOSE 9051
@@ -51,5 +52,6 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
 COPY --from=builder /root/openslides-projector-service .
+COPY --from=builder-web /root/openslides-projector-service/static ./static
 EXPOSE 9051
 ENTRYPOINT ["/openslides-projector-service"]

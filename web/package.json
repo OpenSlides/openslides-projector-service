@@ -1,0 +1,17 @@
+{
+  "name": "openslides-projector-js",
+  "version": "1.0.0",
+  "main": "projector.js",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "esbuild": "0.25.0"
+  },
+  "dependencies": {
+    "eventsource": "^3.0.5"
+  }
+}

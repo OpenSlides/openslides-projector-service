@@ -5,51 +5,52 @@
 
     <link href="/assets/img/favicon.png" rel="icon" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="../static/projector.css" />
-    <style>
-    :root {
-        {{if .Projector.Color}}
-            --projector-color: {{.Projector.Color}};
-        {{end}}
-        {{if .Projector.BackgroundColor}}
-            --projector-background-color: {{.Projector.BackgroundColor}};
-        {{end}}
-        {{if .Projector.HeaderBackgroundColor}}
-            --projector-header-background-color: {{.Projector.HeaderBackgroundColor}};
-        {{end}}
-        {{if .Projector.HeaderFontColor}}
-            --projector-header-font-color: {{.Projector.HeaderFontColor}};
-        {{end}}
-        {{if .Projector.HeaderH1Color}}
-            --projector-header-h1-color: {{.Projector.HeaderH1Color}};
-        {{end}}
-        {{if .Projector.ChyronBackgroundColor}}
-            --projector-chyron-background-color: {{.Projector.ChyronBackgroundColor}};
-        {{end}}
-        {{if .Projector.ChyronBackgroundColor2}}
-            --projector-chyron-background-color2: {{.Projector.ChyronBackgroundColor2}};
-        {{end}}
-        {{if .Projector.ChyronFontColor}}
-            --projector-chyron-font-color: {{.Projector.ChyronFontColor}};
-        {{end}}
-        {{if .Projector.ChyronFontColor2}}
-            --projector-chyron-font-color2: {{.Projector.ChyronFontColor2}};
-        {{end}}
-        {{if .Projector.Width}}
-            --projector-width: {{.Projector.Width}};
-        {{end}}
-        {{if .Projector.AspectRatioDenominator}}
-            {{if .Projector.AspectRatioNumerator}}
-                --projector-aspect-ratio-numerator: {{.Projector.AspectRatioNumerator}};
-                --projector-aspect-ratio-denominator: {{.Projector.AspectRatioDenominator}};
-            {{end}}
-        {{end}}
-    }
-    </style>
 </head>
 
 <body>
     <div id="projector-page" class="projector-container">
         <div id="projector-container" class="nocursor">
+            <style>
+            :root {
+                {{if .Projector.Color}}
+                    --projector-color: {{.Projector.Color}};
+                {{end}}
+                {{if .Projector.BackgroundColor}}
+                    --projector-background-color: {{.Projector.BackgroundColor}};
+                {{end}}
+                {{if .Projector.HeaderBackgroundColor}}
+                    --projector-header-background-color: {{.Projector.HeaderBackgroundColor}};
+                {{end}}
+                {{if .Projector.HeaderFontColor}}
+                    --projector-header-font-color: {{.Projector.HeaderFontColor}};
+                {{end}}
+                {{if .Projector.HeaderH1Color}}
+                    --projector-header-h1-color: {{.Projector.HeaderH1Color}};
+                {{end}}
+                {{if .Projector.ChyronBackgroundColor}}
+                    --projector-chyron-background-color: {{.Projector.ChyronBackgroundColor}};
+                {{end}}
+                {{if .Projector.ChyronBackgroundColor2}}
+                    --projector-chyron-background-color2: {{.Projector.ChyronBackgroundColor2}};
+                {{end}}
+                {{if .Projector.ChyronFontColor}}
+                    --projector-chyron-font-color: {{.Projector.ChyronFontColor}};
+                {{end}}
+                {{if .Projector.ChyronFontColor2}}
+                    --projector-chyron-font-color2: {{.Projector.ChyronFontColor2}};
+                {{end}}
+                {{if .Projector.Width}}
+                    --projector-width: {{.Projector.Width}};
+                {{end}}
+                {{if .Projector.AspectRatioDenominator}}
+                    {{if .Projector.AspectRatioNumerator}}
+                        --projector-aspect-ratio-numerator: {{.Projector.AspectRatioNumerator}};
+                        --projector-aspect-ratio-denominator: {{.Projector.AspectRatioDenominator}};
+                    {{end}}
+                {{end}}
+            }
+            </style>
+
             <div id="projector">
                 <div id="header" class="header-footer">
                     <div id="eventdata">
@@ -72,6 +73,10 @@
             </div>
         </div>
     </div>
-    <script src="../static/projector.js"></script>
+    <script src="../static/projector.js" type="module"></script>
+    <script>
+        let id = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+        // Projector(docu)
+    </script>
 </body>
 </html>

@@ -8,3 +8,4 @@
 /*.env
 /main
 /static
+/web/node_modules
