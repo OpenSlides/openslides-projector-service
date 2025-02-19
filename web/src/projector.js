@@ -20,7 +20,7 @@ export function Projector(container, id, auth = () => ``) {
         ...init,
         headers: {
           ...init.headers,
-          Authorization: auth(),
+          Authentication: auth(),
         },
       })
     },
