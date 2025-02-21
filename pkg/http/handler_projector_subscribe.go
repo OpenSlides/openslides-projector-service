@@ -9,8 +9,6 @@ import (
 
 func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Check if user can access projector
-
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

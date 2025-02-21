@@ -77,6 +77,7 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 			return
 		}
 
+		// TODO: Listen for permission changes
 		body := []byte(fmt.Sprintf(`[{"collection": "projector", "ids":[%d], "fields": {"id": null}}]`, id))
 		userID := auth.FromContext(ctx)
 		restrictUrl := fmt.Sprintf("%s?user_id=%d&single=1", cfg.RestricterUrl, userID)
