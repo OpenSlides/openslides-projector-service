@@ -1,5 +1,5 @@
 <style>
-:root {
+#projector-container {
     {{if .Projector.Color}}
         --projector-color: {{.Projector.Color}};
     {{end}}
@@ -38,6 +38,8 @@
     {{end}}
 }
 </style>
+
+<link rel="stylesheet" type="text/css" href="/system/projector/static/projector.css" />
 
 <div id="projector-container" class="nocursor">
     <div id="projector">
