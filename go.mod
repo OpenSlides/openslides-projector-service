@@ -7,7 +7,7 @@ require (
 	github.com/goccy/go-yaml v1.15.23
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/redis/go-redis/v9 v9.7.0
+	github.com/redis/go-redis/v9 v9.7.1
 	github.com/rs/zerolog v1.33.0
 	golang.org/x/text v0.22.0
 )
