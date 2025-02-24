@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 )
 
 type ProjectorPool struct {
 	ctx        context.Context
 	mu         sync.Mutex
 	projectors map[int]*projector
-	db         *datastore.Datastore
+	db         *database.Datastore
 }
 
-func NewProjectorPool(ctx context.Context, db *datastore.Datastore) *ProjectorPool {
+func NewProjectorPool(ctx context.Context, db *database.Datastore) *ProjectorPool {
 	return &ProjectorPool{
 		ctx:        ctx,
 		db:         db,

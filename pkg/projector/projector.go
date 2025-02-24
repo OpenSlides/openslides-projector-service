@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
 	"github.com/rs/zerolog/log"
@@ -17,7 +17,7 @@ import (
 
 type projector struct {
 	ctxCancel      context.CancelFunc
-	db             *datastore.Datastore
+	db             *database.Datastore
 	slideRouter    *slide.SlideRouter
 	projector      *models.Projector
 	listeners      []chan *ProjectorUpdateEvent
@@ -32,8 +32,8 @@ type ProjectorUpdateEvent struct {
 	Data  string
 }
 
-func newProjector(parentCtx context.Context, id int, db *datastore.Datastore) (*projector, error) {
-	projectorQuery := datastore.Collection(db, &models.Projector{}).SetIds(id)
+func newProjector(parentCtx context.Context, id int, db *database.Datastore) (*projector, error) {
+	projectorQuery := database.Collection(db, &models.Projector{}).SetIds(id)
 	data, err := projectorQuery.GetOne()
 	if err != nil {
 		return nil, fmt.Errorf("error fetching projector from db %w", err)
@@ -83,7 +83,7 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 	// TODO: Subscribe on projector settings updates
 	// Ignore e.g. projection defaults and [...]_projection_ids
 	// If header active: Meeting name + description need to be subscribed
-	projectorSub, err := datastore.Collection(p.db, &models.Projector{}).SetIds(p.projector.ID).SubscribeOne(p.projector)
+	projectorSub, err := database.Collection(p.db, &models.Projector{}).SetIds(p.projector.ID).SubscribeOne(p.projector)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not open projector subscription")
 	}
@@ -203,7 +203,7 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 	addProjection := make(chan int)
 	removeProjection := make(chan int)
 	var projectionIDs []int
-	sub, err := datastore.Collection(p.db, &models.Projector{}).SetIds(p.projector.ID).SetFields("current_projection_ids").SubscribeField(&projectionIDs)
+	sub, err := database.Collection(p.db, &models.Projector{}).SetIds(p.projector.ID).SetFields("current_projection_ids").SubscribeField(&projectionIDs)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to subscibe projection ids: %w", err)
 	}

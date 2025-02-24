@@ -12,7 +12,7 @@ import (
 	"github.com/OpenSlides/openslides-go/auth"
 	"github.com/OpenSlides/openslides-go/environment"
 	"github.com/OpenSlides/openslides-go/redis"
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
 	"github.com/rs/zerolog/log"
 )
@@ -24,13 +24,13 @@ type ProjectorConfig struct {
 type projectorHttp struct {
 	ctx       context.Context
 	serverMux *http.ServeMux
-	ds        *datastore.Datastore
+	ds        *database.Datastore
 	projector *projector.ProjectorPool
 	cfg       ProjectorConfig
 	auth      *auth.Auth
 }
 
-func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds *datastore.Datastore) {
+func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds *database.Datastore) {
 	projectorPool := projector.NewProjectorPool(ctx, ds)
 
 	lookup := new(environment.ForProduction)

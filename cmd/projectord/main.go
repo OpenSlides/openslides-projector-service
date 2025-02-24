@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	projectorHttp "github.com/OpenSlides/openslides-projector-service/pkg/http"
 )
 
@@ -76,7 +76,7 @@ func run(cfg config) error {
 	return nil
 }
 
-func getDatabase(cfg config) (*datastore.Datastore, error) {
+func getDatabase(cfg config) (*database.Datastore, error) {
 	password, err := parseSecretsFile(cfg.PostgresPasswordFile)
 	if err != nil {
 		if cfg.Development {
@@ -96,7 +96,7 @@ func getDatabase(cfg config) (*datastore.Datastore, error) {
 	)
 	redisAddr := cfg.MessageBusHost + ":" + cfg.MessageBusPort
 
-	ds, err := datastore.New(pgAddr, redisAddr)
+	ds, err := database.New(pgAddr, redisAddr)
 	if err != nil {
 		return nil, fmt.Errorf("creating datastore: %w", err)
 	}

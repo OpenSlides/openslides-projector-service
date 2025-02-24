@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +16,7 @@ func TopicSlideHandler(ctx context.Context, req *projectionRequest) (<-chan stri
 	projection := req.Projection
 
 	var topic models.Topic
-	topicSub, err := datastore.Collection(req.DB, &models.Topic{}).With("agenda_item_id", nil).SetFqids(projection.ContentObjectID).SubscribeOne(&topic)
+	topicSub, err := database.Collection(req.DB, &models.Topic{}).With("agenda_item_id", nil).SetFqids(projection.ContentObjectID).SubscribeOne(&topic)
 	if err != nil {
 		return nil, fmt.Errorf("TopicSlideHandler: %w", err)
 	}

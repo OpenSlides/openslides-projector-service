@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/rs/zerolog/log"
 )
@@ -16,7 +16,7 @@ func AssignmentSlideHandler(ctx context.Context, req *projectionRequest) (<-chan
 	projection := req.Projection
 
 	var assignment models.Assignment
-	assignmentSub, err := datastore.Collection(req.DB, &models.Assignment{}).SetFqids(projection.ContentObjectID).SubscribeOne(&assignment)
+	assignmentSub, err := database.Collection(req.DB, &models.Assignment{}).SetFqids(projection.ContentObjectID).SubscribeOne(&assignment)
 	if err != nil {
 		return nil, fmt.Errorf("AssignmentSlideHandler: %w", err)
 	}

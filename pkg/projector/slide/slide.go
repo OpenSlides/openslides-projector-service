@@ -6,13 +6,13 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 )
 
 type projectionRequest struct {
 	Projection *models.Projection
-	DB         *datastore.Datastore
+	DB         *database.Datastore
 }
 
 type projectionUpdate struct {
@@ -24,11 +24,11 @@ type slideHandler func(context.Context, *projectionRequest) (<-chan string, erro
 
 type SlideRouter struct {
 	ctx    context.Context
-	db     *datastore.Datastore
+	db     *database.Datastore
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *datastore.Datastore) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
 	routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
@@ -68,7 +68,7 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 }
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
-	projection, err := datastore.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
+	projection, err := database.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
 	if err != nil {
 		log.Error().Err(err).Msg("getting projection type and content object from db")
 		return
