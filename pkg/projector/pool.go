@@ -58,7 +58,7 @@ func (pool *ProjectorPool) SubscribeProjectorContent(ctx context.Context, id int
 		return nil, fmt.Errorf("error retrieving projector channel: %w", err)
 	}
 
-	channel := make(chan *ProjectorUpdateEvent)
+	channel := make(chan *ProjectorUpdateEvent, 10)
 	projector.AddListener <- channel
 	go func() {
 		<-ctx.Done()

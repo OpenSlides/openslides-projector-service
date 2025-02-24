@@ -173,7 +173,12 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 
 func (p *projector) sendToAll(event *ProjectorUpdateEvent) {
 	for _, listener := range p.listeners {
-		listener <- event
+		select {
+		case listener <- event:
+		default:
+			// TODO: Check if handling makes sense
+			log.Error().Msg("could not send a projection: listener queue is full")
+		}
 	}
 }
 

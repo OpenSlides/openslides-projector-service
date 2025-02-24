@@ -24,14 +24,14 @@ type ProjectorConfig struct {
 type projectorHttp struct {
 	ctx       context.Context
 	serverMux *http.ServeMux
-	ds        *database.Datastore
+	db        *database.Datastore
 	projector *projector.ProjectorPool
 	cfg       ProjectorConfig
 	auth      *auth.Auth
 }
 
-func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds *database.Datastore) {
-	projectorPool := projector.NewProjectorPool(ctx, ds)
+func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db *database.Datastore) {
+	projectorPool := projector.NewProjectorPool(ctx, db)
 
 	lookup := new(environment.ForProduction)
 	redis := redis.New(lookup)
@@ -47,7 +47,7 @@ func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, ds 
 	handler := projectorHttp{
 		ctx:       ctx,
 		serverMux: serverMux,
-		ds:        ds,
+		db:        db,
 		projector: projectorPool,
 		auth:      authService,
 		cfg:       cfg,

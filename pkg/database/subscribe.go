@@ -249,6 +249,6 @@ func (q *query[T, PT]) SubscribeField(field interface{}) (*subscription[<-chan s
 	}()
 
 	return &subscription[<-chan struct{}]{q.datastore, updateChannel, func() error { return nil }, notifyChannel, func() {
-		close(notifyChannel)
+		q.datastore.change.RemoveListener <- updateChannel
 	}}, nil
 }
