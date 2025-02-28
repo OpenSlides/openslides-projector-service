@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/auth"
+	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-go/environment"
 	"github.com/OpenSlides/openslides-go/redis"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
@@ -25,13 +26,14 @@ type projectorHttp struct {
 	ctx       context.Context
 	serverMux *http.ServeMux
 	db        *database.Datastore
+	ds        flow.Flow
 	projector *projector.ProjectorPool
 	cfg       ProjectorConfig
 	auth      *auth.Auth
 }
 
-func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db *database.Datastore) {
-	projectorPool := projector.NewProjectorPool(ctx, db)
+func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db *database.Datastore, ds flow.Flow) {
+	projectorPool := projector.NewProjectorPool(ctx, db, ds)
 
 	lookup := new(environment.ForProduction)
 	redis := redis.New(lookup)
@@ -48,6 +50,7 @@ func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db 
 		ctx:       ctx,
 		serverMux: serverMux,
 		db:        db,
+		ds:        ds,
 		projector: projectorPool,
 		auth:      authService,
 		cfg:       cfg,

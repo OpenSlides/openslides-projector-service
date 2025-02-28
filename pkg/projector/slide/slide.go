@@ -6,6 +6,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 )
@@ -13,6 +15,7 @@ import (
 type projectionRequest struct {
 	Projection *models.Projection
 	DB         *database.Datastore
+	Fetch      *dsfetch.Fetch
 }
 
 type projectionUpdate struct {
@@ -25,18 +28,20 @@ type slideHandler func(context.Context, *projectionRequest) (<-chan string, erro
 type SlideRouter struct {
 	ctx    context.Context
 	db     *database.Datastore
+	ds     flow.Flow
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *database.Datastore) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
-	routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
-	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
+	// routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
+	// routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
 		db:     db,
+		ds:     ds,
 		Routes: routes,
 	}
 }
@@ -67,6 +72,10 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 	return updateChannel
 }
 
+type Projection struct {
+	model dsfetch.Projection
+}
+
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
 	projection, err := database.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
 	if err != nil {
@@ -76,10 +85,17 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 	projectionType := getProjectionType(projection)
 	if handler, ok := r.Routes[projectionType]; ok {
+		fetch := dsfetch.New(r.ds)
 		projectionChan, err := handler(ctx, &projectionRequest{
 			Projection: projection,
 			DB:         r.db,
+			Fetch:      fetch,
 		})
+
+		var projection Projection
+		fetch.Projection(id).Lazy(&projection.model)
+		fetch.Execute(ctx)
+		println(projection.model.Type)
 
 		if err != nil {
 			log.Error().Err(err).Msg("failed initialize projection handler")
