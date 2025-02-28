@@ -2,17 +2,22 @@ package slide
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 )
 
 type projectionRequest struct {
-	Projection *models.Projection
-	DB         *database.Datastore
+	ContentObjectID *int
+	Projection      *models.Projection
+	DB              *database.Datastore
+	Fetch           *dsfetch.Fetch
 }
 
 type projectionUpdate struct {
@@ -20,23 +25,25 @@ type projectionUpdate struct {
 	Content string
 }
 
-type slideHandler func(context.Context, *projectionRequest) (<-chan string, error)
+type slideHandler func(context.Context, *projectionRequest) (string, error)
 
 type SlideRouter struct {
 	ctx    context.Context
 	db     *database.Datastore
+	ds     flow.Flow
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *database.Datastore) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
-	routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
-	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
+	// routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
+	// routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
 		db:     db,
+		ds:     ds,
 		Routes: routes,
 	}
 }
@@ -67,6 +74,10 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 	return updateChannel
 }
 
+type Projection struct {
+	model dsfetch.Projection
+}
+
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
 	projection, err := database.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
 	if err != nil {
@@ -74,33 +85,30 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 		return
 	}
 
-	projectionType := getProjectionType(projection)
+	projectionType, contentObjectID := getProjectionType(projection)
 	if handler, ok := r.Routes[projectionType]; ok {
-		projectionChan, err := handler(ctx, &projectionRequest{
-			Projection: projection,
-			DB:         r.db,
-		})
-
-		if err != nil {
-			log.Error().Err(err).Msg("failed initialize projection handler")
-			return
-		}
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case projectionContent, ok := <-projectionChan:
-				if !ok {
-					return
-				}
-
-				updateChannel <- &projectionUpdate{
-					ID:      id,
-					Content: projectionContent,
-				}
+		r.db.NewContext(ctx, func(fetch *dsfetch.Fetch) {
+			var cId *int
+			if contentObjectID != 0 {
+				cId = &contentObjectID
 			}
-		}
+
+			projectionContent, err := handler(ctx, &projectionRequest{
+				ContentObjectID: cId,
+				Projection:      projection,
+				DB:              r.db,
+				Fetch:           fetch,
+			})
+
+			if err != nil {
+				log.Error().Err(err).Msg("failed executing projection handler")
+			}
+
+			updateChannel <- &projectionUpdate{
+				ID:      id,
+				Content: projectionContent,
+			}
+		})
 	} else {
 		log.Warn().Msgf("unknown projection type %s", projectionType)
 		updateChannel <- &projectionUpdate{
@@ -110,15 +118,16 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 	}
 }
 
-func getProjectionType(projection *models.Projection) string {
+func getProjectionType(projection *models.Projection) (string, int) {
 	if projection.Type != nil {
-		return *projection.Type
+		return *projection.Type, 0
 	}
 
-	collection, _, found := strings.Cut(projection.ContentObjectID, "/")
+	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
 	if found {
-		return collection
+		nId, _ := strconv.Atoi(id)
+		return collection, nId
 	}
 
-	return "unknown"
+	return "unknown", 0
 }

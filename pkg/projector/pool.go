@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 )
 
@@ -13,12 +14,14 @@ type ProjectorPool struct {
 	mu         sync.Mutex
 	projectors map[int]*projector
 	db         *database.Datastore
+	ds         flow.Flow
 }
 
-func NewProjectorPool(ctx context.Context, db *database.Datastore) *ProjectorPool {
+func NewProjectorPool(ctx context.Context, db *database.Datastore, ds flow.Flow) *ProjectorPool {
 	return &ProjectorPool{
 		ctx:        ctx,
 		db:         db,
+		ds:         ds,
 		projectors: make(map[int]*projector),
 	}
 }
@@ -34,7 +37,7 @@ func (pool *ProjectorPool) readOrCreateProjector(id int) (*projector, error) {
 		return projector, nil
 	}
 
-	projector, err := newProjector(pool.ctx, id, pool.db)
+	projector, err := newProjector(pool.ctx, id, pool.db, pool.ds)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new projector: %w", err)
 	}

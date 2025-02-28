@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
@@ -32,7 +33,7 @@ type ProjectorUpdateEvent struct {
 	Data  string
 }
 
-func newProjector(parentCtx context.Context, id int, db *database.Datastore) (*projector, error) {
+func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds flow.Flow) (*projector, error) {
 	projectorQuery := database.Collection(db, &models.Projector{}).SetIds(id)
 	data, err := projectorQuery.GetOne()
 	if err != nil {
@@ -48,7 +49,7 @@ func newProjector(parentCtx context.Context, id int, db *database.Datastore) (*p
 		ctxCancel:      cancel,
 		db:             db,
 		projector:      data,
-		slideRouter:    slide.New(ctx, db),
+		slideRouter:    slide.New(ctx, db, ds),
 		Projections:    make(map[int]template.HTML),
 		AddListener:    make(chan chan *ProjectorUpdateEvent),
 		RemoveListener: make(chan (<-chan *ProjectorUpdateEvent)),
