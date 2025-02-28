@@ -2,6 +2,7 @@ package slide
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -13,9 +14,10 @@ import (
 )
 
 type projectionRequest struct {
-	Projection *models.Projection
-	DB         *database.Datastore
-	Fetch      *dsfetch.Fetch
+	ContentObjectID *int
+	Projection      *models.Projection
+	DB              *database.Datastore
+	Fetch           *dsfetch.Fetch
 }
 
 type projectionUpdate struct {
@@ -23,7 +25,7 @@ type projectionUpdate struct {
 	Content string
 }
 
-type slideHandler func(context.Context, *projectionRequest) (<-chan string, error)
+type slideHandler func(context.Context, *projectionRequest) (string, error)
 
 type SlideRouter struct {
 	ctx    context.Context
@@ -83,40 +85,30 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 		return
 	}
 
-	projectionType := getProjectionType(projection)
+	projectionType, contentObjectID := getProjectionType(projection)
 	if handler, ok := r.Routes[projectionType]; ok {
-		fetch := dsfetch.New(r.ds)
-		projectionChan, err := handler(ctx, &projectionRequest{
-			Projection: projection,
-			DB:         r.db,
-			Fetch:      fetch,
-		})
-
-		var projection Projection
-		fetch.Projection(id).Lazy(&projection.model)
-		fetch.Execute(ctx)
-		println(projection.model.Type)
-
-		if err != nil {
-			log.Error().Err(err).Msg("failed initialize projection handler")
-			return
-		}
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case projectionContent, ok := <-projectionChan:
-				if !ok {
-					return
-				}
-
-				updateChannel <- &projectionUpdate{
-					ID:      id,
-					Content: projectionContent,
-				}
+		r.db.NewContext(ctx, func(fetch *dsfetch.Fetch) {
+			var cId *int
+			if contentObjectID != 0 {
+				cId = &contentObjectID
 			}
-		}
+
+			projectionContent, err := handler(ctx, &projectionRequest{
+				ContentObjectID: cId,
+				Projection:      projection,
+				DB:              r.db,
+				Fetch:           fetch,
+			})
+
+			if err != nil {
+				log.Error().Err(err).Msg("failed executing projection handler")
+			}
+
+			updateChannel <- &projectionUpdate{
+				ID:      id,
+				Content: projectionContent,
+			}
+		})
 	} else {
 		log.Warn().Msgf("unknown projection type %s", projectionType)
 		updateChannel <- &projectionUpdate{
@@ -126,15 +118,16 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 	}
 }
 
-func getProjectionType(projection *models.Projection) string {
+func getProjectionType(projection *models.Projection) (string, int) {
 	if projection.Type != nil {
-		return *projection.Type
+		return *projection.Type, 0
 	}
 
-	collection, _, found := strings.Cut(projection.ContentObjectID, "/")
+	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
 	if found {
-		return collection
+		nId, _ := strconv.Atoi(id)
+		return collection, nId
 	}
 
-	return "unknown"
+	return "unknown", 0
 }

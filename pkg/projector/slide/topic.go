@@ -5,63 +5,37 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-
-	"github.com/OpenSlides/openslides-projector-service/pkg/database"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
-	"github.com/rs/zerolog/log"
 )
 
-func TopicSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
-	projection := req.Projection
-
-	var topic models.Topic
-	topicSub, err := database.Collection(req.DB, &models.Topic{}).With("agenda_item_id", nil).SetFqids(projection.ContentObjectID).SubscribeOne(&topic)
-	if err != nil {
-		return nil, fmt.Errorf("TopicSlideHandler: %w", err)
-	}
-
-	go func() {
-		defer topicSub.Unsubscribe()
-		defer close(content)
-
-		content <- getTopicSlideContent(&topic)
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-topicSub.Channel:
-				content <- getTopicSlideContent(&topic)
-			}
-		}
-	}()
-
-	return content, nil
-}
-
-func getTopicSlideContent(topic *models.Topic) string {
+func TopicSlideHandler(ctx context.Context, req *projectionRequest) (string, error) {
 	tmpl, err := template.ParseFiles("templates/slides/topic.html")
 	if err != nil {
-		log.Error().Err(err).Msg("could not load topic template")
-		return ""
+		return "", fmt.Errorf("could not load topic template", err)
 	}
 
-	text := ""
-	if topic.Text != nil {
-		text = *topic.Text
+	if req.ContentObjectID == nil {
+		return "", fmt.Errorf("no topic id provided for slide %w", err)
+	}
+
+	topic, err := req.Fetch.Topic(*req.ContentObjectID).Value(ctx)
+	if err != nil {
+		return "", fmt.Errorf("could not load topic %w", err)
+	}
+
+	agendaItem, err := topic.AgendaItem().Value(ctx)
+	if err != nil {
+		return "", fmt.Errorf("could not load agenda item %w", err)
 	}
 
 	var content bytes.Buffer
 	err = tmpl.Execute(&content, map[string]interface{}{
-		"AgendaItem": topic.AgendaItem(),
+		"AgendaItem": agendaItem,
 		"Topic":      topic,
-		"Text":       template.HTML(text),
+		"Text":       template.HTML(topic.Text),
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("could not execute topic template")
-		return ""
+		return "", fmt.Errorf("could not execute topic template")
 	}
 
-	return content.String()
+	return content.String(), nil
 }

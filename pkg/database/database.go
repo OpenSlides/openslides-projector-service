@@ -41,7 +41,14 @@ func New(addr string, redisAddr string, dsFlow flow.Flow) (*Datastore, error) {
 	ds := Datastore{pool: pool, redis: rdb, ctx: context.Background(), ds: dsFlow}
 	go ds.setupRedisListener()
 	go dsFlow.Update(ctx, func(m map[dskey.Key][]byte, err error) {
-		println(m)
+		for _, listener := range ds.dsListeners {
+			for key := range m {
+				if _, ok := listener.keys[key]; ok {
+					listener.handler()
+					break
+				}
+			}
+		}
 	})
 
 	return &ds, nil
