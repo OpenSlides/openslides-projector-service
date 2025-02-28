@@ -1,4 +1,4 @@
-package datastore
+package database
 
 import (
 	"encoding/json"
@@ -66,7 +66,7 @@ func (q *query[T, PT]) Subscribe() *subscription[<-chan map[string]map[string]in
 }
 
 func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], error) {
-	notifyChannel := make(chan []string)
+	notifyChannel := make(chan []string, 1)
 	updateChannel := make(chan map[string]map[string]string)
 	listener := queryChangeListener{
 		fqids:   q.fqids,
@@ -91,9 +91,7 @@ func (q *query[T, PT]) SubscribeOne(model PT) (*subscription[<-chan []string], e
 			return fmt.Errorf("failed to fetch data from db: %w", err)
 		}
 		*model = *data
-		go func() {
-			notifyChannel <- []string{}
-		}()
+		notifyChannel <- []string{}
 		return nil
 	}
 
@@ -251,6 +249,6 @@ func (q *query[T, PT]) SubscribeField(field interface{}) (*subscription[<-chan s
 	}()
 
 	return &subscription[<-chan struct{}]{q.datastore, updateChannel, func() error { return nil }, notifyChannel, func() {
-		close(notifyChannel)
+		q.datastore.change.RemoveListener <- updateChannel
 	}}, nil
 }

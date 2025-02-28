@@ -1,20 +1,23 @@
 package projector
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 )
 
 type ProjectorPool struct {
+	ctx        context.Context
 	mu         sync.Mutex
 	projectors map[int]*projector
-	db         *datastore.Datastore
+	db         *database.Datastore
 }
 
-func NewProjectorPool(db *datastore.Datastore) *ProjectorPool {
+func NewProjectorPool(ctx context.Context, db *database.Datastore) *ProjectorPool {
 	return &ProjectorPool{
+		ctx:        ctx,
 		db:         db,
 		projectors: make(map[int]*projector),
 	}
@@ -31,7 +34,7 @@ func (pool *ProjectorPool) readOrCreateProjector(id int) (*projector, error) {
 		return projector, nil
 	}
 
-	projector, err := newProjector(id, pool.db)
+	projector, err := newProjector(pool.ctx, id, pool.db)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new projector: %w", err)
 	}
@@ -49,23 +52,18 @@ func (pool *ProjectorPool) GetProjectorContent(id int) (*string, error) {
 	return &projector.Content, nil
 }
 
-func (pool *ProjectorPool) SubscribeProjectorContent(id int) (chan *ProjectorUpdateEvent, error) {
+func (pool *ProjectorPool) SubscribeProjectorContent(ctx context.Context, id int) (<-chan *ProjectorUpdateEvent, error) {
 	projector, err := pool.readOrCreateProjector(id)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving projector channel: %w", err)
 	}
 
-	channel := make(chan *ProjectorUpdateEvent)
+	channel := make(chan *ProjectorUpdateEvent, 10)
 	projector.AddListener <- channel
+	go func() {
+		<-ctx.Done()
+		projector.RemoveListener <- channel
+	}()
 
 	return channel, nil
-}
-
-func (pool *ProjectorPool) UnsubscribeProjectorContent(id int, channel chan *ProjectorUpdateEvent) {
-	projector, err := pool.readOrCreateProjector(id)
-	if err != nil {
-		return
-	}
-
-	projector.RemoveListener <- channel
 }

@@ -19,8 +19,11 @@ gofmt:
 gogenertate:
 	go generate ./...
 
-build-web-assets:
-	esbuild web/projector.js web/projector.css web/slide/*.css web/slide/*.js --outdir=static/ --external:*.woff --bundle --minify --sourcemap --target=chrome58,firefox57,safari11,edge16
+install-web-asset-deps:
+	cd web && npm i
 
-build-watch-web-assets:
-	esbuild web/projector.js web/projector.css web/slide/*.css web/slide/*.js --outdir=static/ --external:*.woff --watch --bundle --minify --sourcemap --target=chrome58,firefox57,safari11,edge16
+build-web-assets: | install-web-asset-deps
+	cd web && npm run build
+
+build-watch-web-assets: | install-web-asset-deps
+	cd web && npm run build

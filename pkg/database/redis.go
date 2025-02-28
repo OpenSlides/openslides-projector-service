@@ -1,4 +1,4 @@
-package datastore
+package database
 
 import (
 	"context"
@@ -72,7 +72,10 @@ func (ds *Datastore) setupRedisListener() {
 				}
 
 				if len(listenerChanged) > 0 {
-					listener.channel <- listenerChanged
+					select {
+					case listener.channel <- listenerChanged:
+					default:
+					}
 				}
 			}
 		}

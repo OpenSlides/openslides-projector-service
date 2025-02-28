@@ -6,24 +6,23 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/rs/zerolog/log"
 )
 
 func MotionSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
+	content := make(chan string, 1)
 	projection := req.Projection
 
 	var motion models.Motion
-	motionSub, err := datastore.Collection(req.DB, &models.Motion{}).SetFqids(projection.ContentObjectID).SubscribeOne(&motion)
+	motionSub, err := database.Collection(req.DB, &models.Motion{}).SetFqids(projection.ContentObjectID).SubscribeOne(&motion)
 	if err != nil {
 		return nil, fmt.Errorf("MotionSlideHandler: %w", err)
 	}
 
+	content <- getMotionSlideContent(&motion)
 	go func() {
-		content <- getMotionSlideContent(&motion)
-
 		for {
 			select {
 			case <-ctx.Done():

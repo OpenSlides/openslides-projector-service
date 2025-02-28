@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 	"github.com/rs/zerolog/log"
 )
@@ -19,13 +19,13 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	projection := req.Projection
 
 	referenceProjectorId := 0
-	refProjectorSub, err := datastore.Collection(req.DB, &models.Meeting{}).SetFqids(projection.ContentObjectID).SetFields("reference_projector_id").SubscribeField(&referenceProjectorId)
+	refProjectorSub, err := database.Collection(req.DB, &models.Meeting{}).SetFqids(projection.ContentObjectID).SetFields("reference_projector_id").SubscribeField(&referenceProjectorId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe reference projector id: %w", err)
 	}
 
 	var projector models.Projector
-	projectorQ := datastore.Collection(req.DB, &models.Projector{}).With("current_projection_ids", nil)
+	projectorQ := database.Collection(req.DB, &models.Projector{}).With("current_projection_ids", nil)
 	projectorSub, err := projectorQ.SubscribeOne(&projector)
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe reference projector: %w", err)
@@ -35,7 +35,7 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	projectionsQ.With("content_object_id", nil)
 
 	var los models.ListOfSpeakers
-	losQ := datastore.Collection(req.DB, &models.ListOfSpeakers{}).With("speaker_ids", nil)
+	losQ := database.Collection(req.DB, &models.ListOfSpeakers{}).With("speaker_ids", nil)
 	speakersQ := losQ.GetSubquery("speaker_ids")
 	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
 	meetingUsersQ.With("user_id", nil)

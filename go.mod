@@ -1,8 +1,9 @@
 module github.com/OpenSlides/openslides-projector-service
 
-go 1.23.1
+go 1.23.6
 
 require (
+	github.com/OpenSlides/openslides-go v0.0.0-20250208121842-319b8084179d
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/goccy/go-yaml v1.15.23
 	github.com/iancoleman/strcase v0.3.0
@@ -10,6 +11,12 @@ require (
 	github.com/redis/go-redis/v9 v9.7.1
 	github.com/rs/zerolog v1.33.0
 	golang.org/x/text v0.22.0
+)
+
+require (
+	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
+	github.com/gomodule/redigo v1.9.2 // indirect
+	github.com/ostcar/topic v0.4.1 // indirect
 )
 
 require (
