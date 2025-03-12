@@ -1,7 +1,10 @@
 package slide
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"html/template"
 	"strconv"
 	"strings"
 
@@ -25,7 +28,7 @@ type projectionUpdate struct {
 	Content string
 }
 
-type slideHandler func(context.Context, *projectionRequest) (string, error)
+type slideHandler func(context.Context, *projectionRequest) (interface{}, error)
 
 type SlideRouter struct {
 	ctx    context.Context
@@ -104,9 +107,20 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				log.Error().Err(err).Msg("failed executing projection handler")
 			}
 
+			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", projectionType))
+			if err != nil {
+				log.Error().Err(err).Msgf("could not load %s template", projectionType)
+			}
+
+			var content bytes.Buffer
+			err = tmpl.Execute(&content, projectionContent)
+			if err != nil {
+				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
+			}
+
 			updateChannel <- &projectionUpdate{
 				ID:      id,
-				Content: projectionContent,
+				Content: content.String(),
 			}
 		})
 	} else {
