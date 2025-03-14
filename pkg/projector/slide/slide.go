@@ -77,10 +77,6 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 	return updateChannel
 }
 
-type Projection struct {
-	model dsfetch.Projection
-}
-
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
 	projection, err := database.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
 	if err != nil {
