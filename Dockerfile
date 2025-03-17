@@ -18,7 +18,7 @@ RUN mkdir static
 FROM base as builder
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
-FROM node:22.13 as builder-web
+FROM node:22.14 as builder-web
 COPY web web
 COPY Makefile Makefile
 RUN make build-web-assets
