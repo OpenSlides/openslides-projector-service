@@ -40,7 +40,7 @@ type SlideRouter struct {
 func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
-	// routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
+	routes["current_los"] = CurrentListOfSpeakersSlideHandler
 	// routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 
 	return &SlideRouter{
@@ -129,11 +129,11 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 }
 
 func getProjectionType(projection *models.Projection) (string, int) {
+	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
 	if projection.Type != nil {
-		return *projection.Type, 0
+		collection = *projection.Type
 	}
 
-	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
 	if found {
 		nId, _ := strconv.Atoi(id)
 		return collection, nId
