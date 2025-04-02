@@ -2,12 +2,10 @@ package slide
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/OpenSlides/openslides-go/datastore/dskey"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
@@ -16,45 +14,19 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 
 	referenceProjectorId, err := req.Fetch.Meeting_ReferenceProjectorID(*req.ContentObjectID).Value(ctx)
 	if err != nil {
-		return "", fmt.Errorf("could not load reference projector id %w", err)
+		return nil, fmt.Errorf("could not load reference projector id %w", err)
 	}
 
-	refProjections, err := req.Fetch.Projector_CurrentProjectionIDs(referenceProjectorId).Value(ctx)
+	losID, err := viewmodels.Projector_ListOfSpeakersID(ctx, req.Fetch, referenceProjectorId)
 	if err != nil {
-		return nil, fmt.Errorf("could not load reference projector: %w", err)
+		return nil, fmt.Errorf("could not load list of speakers id %w", err)
 	}
 
-	losID := 0
-	for _, pID := range refProjections {
-		content, err := req.Fetch.Projection_ContentObjectID(pID).Value(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load projection: %w", err)
-		}
-
-		losDsKey, err := dskey.FromString("%s/list_of_speakers_id", content)
-		if err != nil {
-			continue
-		}
-
-		keys, err := req.Fetch.Get(ctx, losDsKey)
-		if err != nil {
-			return nil, fmt.Errorf("load los id: %w", err)
-		}
-
-		if val, ok := keys[losDsKey]; !ok || len(val) == 0 {
-			continue
-		}
-
-		if err := json.Unmarshal(keys[losDsKey], &losID); err != nil {
-			return nil, fmt.Errorf("parse los id: %w", err)
-		}
-	}
-
-	if losID == 0 {
+	if losID == nil {
 		return nil, nil
 	}
 
-	speakerIDs, err := req.Fetch.ListOfSpeakers_SpeakerIDs(losID).Value(ctx)
+	speakerIDs, err := req.Fetch.ListOfSpeakers_SpeakerIDs(*losID).Value(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load speakers: %w", err)
 	}
