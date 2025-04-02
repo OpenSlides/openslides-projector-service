@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
@@ -57,17 +56,12 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 
 			name = viewmodels.User_ShortName(&user)
 			if len(meetingUser.StructureLevelList()) != 0 {
-				structureLevelNames := []string{}
-				for _, slRef := range meetingUser.StructureLevelList() {
-					sl, err := slRef.Value(ctx)
-					if err != nil {
-						return "", err
-					}
-
-					structureLevelNames = append(structureLevelNames, sl.Name)
+				structureLevels, err := viewmodels.MeetingUser_StructureLevelNames(ctx, &meetingUser)
+				if err != nil {
+					return nil, fmt.Errorf("could not load structure levels: %w", err)
 				}
 
-				name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
+				name = fmt.Sprintf("%s (%s)", name, structureLevels)
 			}
 		}
 

@@ -41,7 +41,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
 	routes["current_los"] = CurrentListOfSpeakersSlideHandler
-	// routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
+	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
@@ -101,17 +101,20 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 			if err != nil {
 				log.Error().Err(err).Msg("failed executing projection handler")
+				return
 			}
 
 			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", projectionType))
 			if err != nil {
 				log.Error().Err(err).Msgf("could not load %s template", projectionType)
+				return
 			}
 
 			var content bytes.Buffer
 			err = tmpl.Execute(&content, projectionContent)
 			if err != nil {
 				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
+				return
 			}
 
 			updateChannel <- &projectionUpdate{

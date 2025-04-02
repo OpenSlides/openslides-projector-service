@@ -40,3 +40,17 @@ func MeetingUser_FullName(ctx context.Context, mu *dsfetch.MeetingUser) (string,
 
 	return fmt.Sprintf("%s (%s)", name, strings.Join(additional, " · ")), nil
 }
+
+func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsfetch.MeetingUser) (string, error) {
+	structureLevelNames := []string{}
+	for _, slRef := range mu.StructureLevelList() {
+		sl, err := slRef.Value(ctx)
+		if err != nil {
+			return "", fmt.Errorf("could not load structure level: %w", err)
+		}
+
+		structureLevelNames = append(structureLevelNames, sl.Name)
+	}
+
+	return strings.Join(structureLevelNames, ", "), nil
+}
