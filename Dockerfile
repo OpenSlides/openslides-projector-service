@@ -1,5 +1,5 @@
 FROM golang:1.24.0-alpine as base
-WORKDIR /root
+WORKDIR /root/openslides-projector-service
 
 RUN apk add git curl make
 
@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY cmd cmd
 COPY pkg pkg
-COPY templates templates
+COPY templates /root/templates
 COPY web web
 COPY Makefile Makefile
 RUN mkdir static
@@ -34,13 +34,14 @@ CMD go vet ./... && go test -test.short ./...
 
 # Development build.
 FROM base as development
+WORKDIR /root
 
 COPY --from=builder-web /static ./static
 
 RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
 EXPOSE 9051
 
-CMD CompileDaemon -log-prefix=false -build="go build -o openslides-projector-service cmd/projectord/main.go" -command="./openslides-projector-service"
+CMD CompileDaemon -log-prefix=false -build="go build -o projector-service ./openslides-projector-service/cmd/projectord/main.go" -command="./projector-service"
 
 
 # Productive build
@@ -51,7 +52,7 @@ LABEL org.opencontainers.image.description="The Projector Service is a http endp
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
-COPY --from=builder /root/openslides-projector-service .
+COPY --from=builder /root/openslides-projector-service/openslides-projector-service .
 COPY --from=builder-web /root/openslides-projector-service/static ./static
 EXPOSE 9051
 ENTRYPOINT ["/openslides-projector-service"]

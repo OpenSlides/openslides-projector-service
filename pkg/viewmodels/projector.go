@@ -22,7 +22,7 @@ func Projector_ListOfSpeakersID(ctx context.Context, fetch *dsfetch.Fetch, proje
 			return nil, fmt.Errorf("could not load projection: %w", err)
 		}
 
-		losDsKey, err := dskey.FromString("%s/list_of_speakers_id", content)
+		losDsKey, err := dskey.FromStringf("%s/list_of_speakers_id", content)
 		if err != nil {
 			continue
 		}
