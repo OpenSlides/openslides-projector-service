@@ -1,16 +1,6 @@
 package slide
 
-import (
-	"bytes"
-	"context"
-	"fmt"
-	"html/template"
-
-	"github.com/OpenSlides/openslides-projector-service/pkg/database"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
-	"github.com/rs/zerolog/log"
-)
-
+/*
 func MotionSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
 	content := make(chan string, 1)
 	projection := req.Projection
@@ -56,3 +46,4 @@ func getMotionSlideContent(motion *models.Motion) string {
 
 	return content.String()
 }
+*/

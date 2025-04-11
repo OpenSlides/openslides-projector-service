@@ -13,13 +13,11 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 )
 
 type projectionRequest struct {
 	ContentObjectID *int
-	Projection      *models.Projection
-	DB              *database.Datastore
+	Projection      *dsfetch.Projection
 	Fetch           *dsfetch.Fetch
 }
 
@@ -28,7 +26,7 @@ type projectionUpdate struct {
 	Content string
 }
 
-type slideHandler func(context.Context, *projectionRequest) (interface{}, error)
+type slideHandler func(context.Context, *projectionRequest) (any, error)
 
 type SlideRouter struct {
 	ctx    context.Context
@@ -78,15 +76,15 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 }
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
-	projection, err := database.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
-	if err != nil {
-		log.Error().Err(err).Msg("getting projection type and content object from db")
-		return
-	}
+	r.db.NewContext(ctx, func(fetch *dsfetch.Fetch) {
+		projection, err := fetch.Projection(id).Value(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("getting projection from db")
+			return
+		}
 
-	projectionType, contentObjectID := getProjectionType(projection)
-	if handler, ok := r.Routes[projectionType]; ok {
-		r.db.NewContext(ctx, func(fetch *dsfetch.Fetch) {
+		projectionType, contentObjectID := getProjectionType(&projection)
+		if handler, ok := r.Routes[projectionType]; ok {
 			var cId *int
 			if contentObjectID != 0 {
 				cId = &contentObjectID
@@ -94,8 +92,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 			projectionContent, err := handler(ctx, &projectionRequest{
 				ContentObjectID: cId,
-				Projection:      projection,
-				DB:              r.db,
+				Projection:      &projection,
 				Fetch:           fetch,
 			})
 
@@ -121,20 +118,20 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				ID:      id,
 				Content: content.String(),
 			}
-		})
-	} else {
-		log.Warn().Msgf("unknown projection type %s", projectionType)
-		updateChannel <- &projectionUpdate{
-			ID:      id,
-			Content: "",
+		} else {
+			log.Warn().Msgf("unknown projection type %s", projectionType)
+			updateChannel <- &projectionUpdate{
+				ID:      id,
+				Content: "",
+			}
 		}
-	}
+	})
 }
 
-func getProjectionType(projection *models.Projection) (string, int) {
+func getProjectionType(projection *dsfetch.Projection) (string, int) {
 	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
-	if projection.Type != nil {
-		collection = *projection.Type
+	if projection.Type != "" {
+		collection = projection.Type
 	}
 
 	if found {
