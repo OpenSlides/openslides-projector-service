@@ -9,7 +9,7 @@ import (
 
 func ListOfSpeakers_CurrentSpeaker(ctx context.Context, los *dsfetch.ListOfSpeakers) (*dsfetch.Speaker, error) {
 	var currentSpeaker *dsfetch.Speaker
-	for _, speakerRef := range los.SpeakerList() {
+	for _, speakerRef := range los.SpeakerList().Refs() {
 		speaker, err := speakerRef.Value(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load speaker: %w", err)

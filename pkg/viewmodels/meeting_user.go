@@ -20,7 +20,7 @@ func MeetingUser_FullName(ctx context.Context, mu *dsfetch.MeetingUser) (string,
 		additional = append(additional, user.Pronoun)
 	}
 
-	for _, slRef := range mu.StructureLevelList() {
+	for _, slRef := range mu.StructureLevelList().Refs() {
 		sl, err := slRef.Value(ctx)
 		if err != nil {
 			return "", err
@@ -43,7 +43,7 @@ func MeetingUser_FullName(ctx context.Context, mu *dsfetch.MeetingUser) (string,
 
 func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsfetch.MeetingUser) (string, error) {
 	structureLevelNames := []string{}
-	for _, slRef := range mu.StructureLevelList() {
+	for _, slRef := range mu.StructureLevelList().Refs() {
 		sl, err := slRef.Value(ctx)
 		if err != nil {
 			return "", fmt.Errorf("could not load structure level: %w", err)

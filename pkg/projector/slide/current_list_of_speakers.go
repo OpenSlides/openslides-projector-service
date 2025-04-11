@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
-func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (interface{}, error) {
+func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (any, error) {
 	referenceProjectorId, err := req.Fetch.Meeting_ReferenceProjectorID(*req.ContentObjectID).Value(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load reference projector id %w", err)
@@ -23,7 +24,9 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 		return nil, nil
 	}
 
-	speakerIDs, err := req.Fetch.ListOfSpeakers_SpeakerIDs(*losID).Value(ctx)
+	los, err := req.Fetch.ListOfSpeakers(*losID).
+		Preload("SpeakerList.MeetingUser.StructureLevelList").
+		Preload("SpeakerList.MeetingUser.User").Load(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load speakers: %w", err)
 	}
@@ -36,32 +39,18 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	interposedQuestions := []speakerListItem{}
 	var currentSpeaker *speakerListItem
 	var currentInterposedQuestion *speakerListItem
-	for _, sID := range speakerIDs {
-		speaker, err := req.Fetch.Speaker(sID).Value(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load speaker: %w", err)
-		}
-
+	for _, speaker := range los.SpeakerList().Values() {
 		name := ""
-		if meetingUserRef, isSet := speaker.MeetingUser().Value(); isSet {
-			meetingUser, err := meetingUserRef.Value(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("could not load meeting user: %w", err)
-			}
-
-			user, err := meetingUser.User().Value(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("could not load user: %w", err)
-			}
-
-			name = viewmodels.User_ShortName(&user)
-			if len(meetingUser.StructureLevelList()) != 0 {
-				structureLevels, err := viewmodels.MeetingUser_StructureLevelNames(ctx, &meetingUser)
-				if err != nil {
-					return nil, fmt.Errorf("could not load structure levels: %w", err)
+		if meetingUser, isSet := speaker.MeetingUser().ValueGet(); isSet {
+			user := meetingUser.User().Get()
+			name = viewmodels.User_ShortName(user)
+			if len(meetingUser.StructureLevelList().Refs()) != 0 {
+				structureLevelNames := []string{}
+				for _, sl := range meetingUser.StructureLevelList().Values() {
+					structureLevelNames = append(structureLevelNames, sl.Name)
 				}
 
-				name = fmt.Sprintf("%s (%s)", name, structureLevels)
+				name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
 			}
 		}
 
@@ -93,16 +82,11 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 		return interposedQuestions[i].Weight < interposedQuestions[j].Weight
 	})
 
-	stable := false
-	if req.Projection.Stable != nil {
-		stable = *req.Projection.Stable
-	}
-
-	return map[string]interface{}{
+	return map[string]any{
 		"CurrentSpeaker":            currentSpeaker,
 		"Speakers":                  waitingSpeakers,
 		"InterposedQuestions":       interposedQuestions,
 		"CurrentInterposedQuestion": currentInterposedQuestion,
-		"Overlay":                   stable,
+		"Overlay":                   req.Projection.Stable,
 	}, nil
 }
