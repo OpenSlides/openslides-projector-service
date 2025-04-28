@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dskey"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func Projector_ListOfSpeakersID(ctx context.Context, fetch *dsfetch.Fetch, projectorID int) (*int, error) {
+func Projector_ListOfSpeakersID(ctx context.Context, fetch *dsmodels.Fetch, projectorID int) (*int, error) {
 	projections, err := fetch.Projector_CurrentProjectionIDs(projectorID).Value(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load reference projector: %w", err)

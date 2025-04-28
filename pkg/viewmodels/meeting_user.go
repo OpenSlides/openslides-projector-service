@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func MeetingUser_FullName(ctx context.Context, mu *dsfetch.MeetingUser) (string, error) {
+func MeetingUser_FullName(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {
 	user, err := mu.User().Value(ctx)
 	if err != nil {
 		return "", err
@@ -41,7 +41,7 @@ func MeetingUser_FullName(ctx context.Context, mu *dsfetch.MeetingUser) (string,
 	return fmt.Sprintf("%s (%s)", name, strings.Join(additional, " · ")), nil
 }
 
-func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsfetch.MeetingUser) (string, error) {
+func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {
 	structureLevelNames := []string{}
 	for _, slRef := range mu.StructureLevelList().Refs() {
 		sl, err := slRef.Value(ctx)

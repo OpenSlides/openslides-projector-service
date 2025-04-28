@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
@@ -21,7 +22,7 @@ type projector struct {
 	ctxCancel      context.CancelFunc
 	db             *database.Datastore
 	slideRouter    *slide.SlideRouter
-	projector      *dsfetch.Projector
+	projector      *dsmodels.Projector
 	listeners      []chan *ProjectorUpdateEvent
 	Content        string
 	Projections    map[int]template.HTML
@@ -103,7 +104,7 @@ type ProjectorSettings struct {
 func (p *projector) subscribeProjector(ctx context.Context) {
 	defer p.ctxCancel()
 	// TODO: If header active: Meeting name + description need to be subscribed
-	p.db.NewContext(ctx, func(f *dsfetch.Fetch) {
+	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		var projectorSettings ProjectorSettings
 		f.Projector_Name(p.projector.ID).Lazy(&projectorSettings.Name)
 		f.Projector_IsInternal(p.projector.ID).Lazy(&projectorSettings.IsInternal)
@@ -270,7 +271,7 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 	removeProjection := make(chan int)
 
 	projectionChannel := p.slideRouter.SubscribeContent(addProjection, removeProjection)
-	p.db.NewContext(ctx, func(f *dsfetch.Fetch) {
+	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		projectionIDs, err := f.Projector_CurrentProjectionIDs(p.projector.ID).Value(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to subscibe projection ids")

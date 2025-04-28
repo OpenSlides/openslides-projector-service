@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func ListOfSpeakers_CurrentSpeaker(ctx context.Context, los *dsfetch.ListOfSpeakers) (*dsfetch.Speaker, error) {
-	var currentSpeaker *dsfetch.Speaker
+func ListOfSpeakers_CurrentSpeaker(ctx context.Context, los *dsmodels.ListOfSpeakers) (*dsmodels.Speaker, error) {
+	var currentSpeaker *dsmodels.Speaker
 	for _, speakerRef := range los.SpeakerList().Refs() {
 		speaker, err := speakerRef.Value(ctx)
 		if err != nil {

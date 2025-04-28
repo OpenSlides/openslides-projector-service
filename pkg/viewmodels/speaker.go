@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func Speaker_IsCurrent(s *dsfetch.Speaker) bool {
+func Speaker_IsCurrent(s *dsmodels.Speaker) bool {
 	return s.BeginTime != 0 && s.EndTime == 0
 }
 
-func Speaker_FullName(ctx context.Context, speaker *dsfetch.Speaker) (*string, error) {
+func Speaker_FullName(ctx context.Context, speaker *dsmodels.Speaker) (*string, error) {
 	if meetingUserRef, isSet := speaker.MeetingUser().Value(); isSet {
 		meetingUser, err := meetingUserRef.Value(ctx)
 		if err != nil {
@@ -30,7 +30,7 @@ func Speaker_FullName(ctx context.Context, speaker *dsfetch.Speaker) (*string, e
 	return nil, nil
 }
 
-func Speaker_StructureLevelName(ctx context.Context, speaker *dsfetch.Speaker) (*string, error) {
+func Speaker_StructureLevelName(ctx context.Context, speaker *dsmodels.Speaker) (*string, error) {
 	if sllosRef, isSet := speaker.StructureLevelListOfSpeakers().Value(); isSet {
 		sllos, err := sllosRef.Value(ctx)
 		if err != nil {

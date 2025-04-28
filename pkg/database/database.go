@@ -3,8 +3,8 @@ package database
 import (
 	"context"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dskey"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 )
 
@@ -12,7 +12,7 @@ type Datastore struct {
 	ctx         context.Context
 	ds          flow.Flow
 	dsListeners []*dsChangeListener
-	Fetch       *dsfetch.Fetch
+	Fetch       *dsmodels.Fetch
 }
 
 func New(addr string, redisAddr string, dsFlow flow.Flow) (*Datastore, error) {
@@ -20,7 +20,7 @@ func New(addr string, redisAddr string, dsFlow flow.Flow) (*Datastore, error) {
 	ds := Datastore{
 		ctx:   context.Background(),
 		ds:    dsFlow,
-		Fetch: dsfetch.New(dsFlow),
+		Fetch: dsmodels.New(dsFlow),
 	}
 	go dsFlow.Update(ctx, func(m map[dskey.Key][]byte, err error) {
 		for _, listener := range ds.dsListeners {

@@ -10,15 +10,15 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 )
 
 type projectionRequest struct {
 	ContentObjectID *int
-	Projection      *dsfetch.Projection
-	Fetch           *dsfetch.Fetch
+	Projection      *dsmodels.Projection
+	Fetch           *dsmodels.Fetch
 }
 
 type projectionUpdate struct {
@@ -76,7 +76,7 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 }
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
-	r.db.NewContext(ctx, func(fetch *dsfetch.Fetch) {
+	r.db.NewContext(ctx, func(fetch *dsmodels.Fetch) {
 		projection, err := fetch.Projection(id).Value(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("getting projection from db")
@@ -128,7 +128,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 	})
 }
 
-func getProjectionType(projection *dsfetch.Projection) (string, int) {
+func getProjectionType(projection *dsmodels.Projection) (string, int) {
 	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
 	if projection.Type != "" {
 		collection = projection.Type

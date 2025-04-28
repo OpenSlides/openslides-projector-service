@@ -3,8 +3,8 @@ package database
 import (
 	"context"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dskey"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/dsrecorder"
 )
 
@@ -14,9 +14,9 @@ type dsChangeListener struct {
 	handler func()
 }
 
-func (db *Datastore) NewContext(ctx context.Context, handler func(*dsfetch.Fetch)) {
+func (db *Datastore) NewContext(ctx context.Context, handler func(*dsmodels.Fetch)) {
 	recorder := dsrecorder.New(db.ds)
-	fetch := dsfetch.New(recorder)
+	fetch := dsmodels.New(recorder)
 
 	handler(fetch)
 	listener := dsChangeListener{

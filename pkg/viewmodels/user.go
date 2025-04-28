@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func User_Name(u *dsfetch.User) string {
+func User_Name(u *dsmodels.User) string {
 	nameParts := []string{}
 	if firstName := u.FirstName; firstName != "" {
 		nameParts = append(nameParts, firstName)
@@ -24,7 +24,7 @@ func User_Name(u *dsfetch.User) string {
 	return strings.Join(nameParts, " ")
 }
 
-func User_ShortName(u *dsfetch.User) string {
+func User_ShortName(u *dsmodels.User) string {
 	nameParts := []string{}
 	if title := u.Title; title != "" {
 		nameParts = append(nameParts, title)
