@@ -28,7 +28,8 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 		return nil, nil
 	}
 
-	los, err := req.Fetch.ListOfSpeakers(*losID).Value(ctx)
+	losQ := req.Fetch.ListOfSpeakers(*losID)
+	los, err := losQ.Preload(losQ.SpeakerList().MeetingUser().User()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load list of speakers: %w", err)
 	}
@@ -70,12 +71,7 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 					slideStructureLevel = *structureLevel
 				}
 			} else {
-				if meetingUserRef, isSet := currentSpeaker.MeetingUser().Value(); isSet {
-					meetingUser, err := meetingUserRef.Value(ctx)
-					if err != nil {
-						return nil, fmt.Errorf("could not load meeting user: %w", err)
-					}
-
+				if meetingUser, isSet := currentSpeaker.MeetingUser.Value(); isSet {
 					structureLevels, err := viewmodels.MeetingUser_StructureLevelNames(ctx, &meetingUser)
 					if err != nil {
 						return nil, fmt.Errorf("could not load structure levels: %w", err)

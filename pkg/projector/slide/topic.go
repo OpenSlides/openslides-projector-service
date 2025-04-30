@@ -11,14 +11,14 @@ func TopicSlideHandler(ctx context.Context, req *projectionRequest) (any, error)
 		return "", fmt.Errorf("no topic id provided for slide")
 	}
 
-	topic, err := req.Fetch.Topic(*req.ContentObjectID).Preload("AgendaItem").Load(ctx)
+	t := req.Fetch.Topic(*req.ContentObjectID)
+	topic, err := t.Preload(t.AgendaItem()).First(ctx)
 	if err != nil {
 		return "", fmt.Errorf("could not load topic %w", err)
 	}
 
-	agendaItem := topic.AgendaItem().Get()
 	return map[string]any{
-		"AgendaItem": agendaItem,
+		"AgendaItem": topic.AgendaItem,
 		"Topic":      topic,
 		"Text":       template.HTML(topic.Text),
 	}, nil

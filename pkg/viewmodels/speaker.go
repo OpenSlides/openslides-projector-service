@@ -2,7 +2,6 @@ package viewmodels
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
@@ -12,18 +11,9 @@ func Speaker_IsCurrent(s *dsmodels.Speaker) bool {
 }
 
 func Speaker_FullName(ctx context.Context, speaker *dsmodels.Speaker) (*string, error) {
-	if meetingUserRef, isSet := speaker.MeetingUser().Value(); isSet {
-		meetingUser, err := meetingUserRef.Value(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load meeting user: %w", err)
-		}
-
-		user, err := meetingUser.User().Value(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load user: %w", err)
-		}
-
-		name := User_ShortName(&user)
+	if meetingUser, isSet := speaker.MeetingUser.Value(); isSet {
+		user := meetingUser.User
+		name := User_ShortName(user)
 		return &name, nil
 	}
 
@@ -31,18 +21,8 @@ func Speaker_FullName(ctx context.Context, speaker *dsmodels.Speaker) (*string, 
 }
 
 func Speaker_StructureLevelName(ctx context.Context, speaker *dsmodels.Speaker) (*string, error) {
-	if sllosRef, isSet := speaker.StructureLevelListOfSpeakers().Value(); isSet {
-		sllos, err := sllosRef.Value(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load los structure level: %w", err)
-		}
-
-		sl, err := sllos.StructureLevel().Value(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load structure level: %w", err)
-		}
-
-		return &sl.Name, nil
+	if sllos, isSet := speaker.StructureLevelListOfSpeakers.Value(); isSet {
+		return &sllos.StructureLevel.Name, nil
 	}
 
 	return nil, nil

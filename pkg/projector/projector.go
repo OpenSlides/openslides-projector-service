@@ -38,7 +38,7 @@ type ProjectorUpdateEvent struct {
 func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds flow.Flow) (*projector, error) {
 	ctx, cancel := context.WithCancel(parentCtx)
 
-	data, err := db.Fetch.Projector(id).Value(ctx)
+	data, err := db.Fetch.Projector(id).First(ctx)
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("error fetching projector from db %w", err)

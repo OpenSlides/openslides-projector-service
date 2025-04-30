@@ -9,23 +9,13 @@ import (
 )
 
 func MeetingUser_FullName(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {
-	user, err := mu.User().Value(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	name := User_ShortName(&user)
+	name := User_ShortName(mu.User)
 	additional := []string{}
-	if user.Pronoun != "" {
-		additional = append(additional, user.Pronoun)
+	if mu.User.Pronoun != "" {
+		additional = append(additional, mu.User.Pronoun)
 	}
 
-	for _, slRef := range mu.StructureLevelList().Refs() {
-		sl, err := slRef.Value(ctx)
-		if err != nil {
-			return "", err
-		}
-
+	for _, sl := range mu.StructureLevelList {
 		additional = append(additional, sl.Name)
 	}
 
@@ -43,12 +33,7 @@ func MeetingUser_FullName(ctx context.Context, mu *dsmodels.MeetingUser) (string
 
 func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {
 	structureLevelNames := []string{}
-	for _, slRef := range mu.StructureLevelList().Refs() {
-		sl, err := slRef.Value(ctx)
-		if err != nil {
-			return "", fmt.Errorf("could not load structure level: %w", err)
-		}
-
+	for _, sl := range mu.StructureLevelList {
 		structureLevelNames = append(structureLevelNames, sl.Name)
 	}
 

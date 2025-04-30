@@ -24,9 +24,10 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 		return nil, nil
 	}
 
-	los, err := req.Fetch.ListOfSpeakers(*losID).
-		Preload("SpeakerList.MeetingUser.StructureLevelList").
-		Preload("SpeakerList.MeetingUser.User").Load(ctx)
+	lQ := req.Fetch.ListOfSpeakers(*losID)
+	los, err := lQ.
+		Preload(lQ.SpeakerList().MeetingUser().StructureLevelList()).
+		Preload(lQ.SpeakerList().MeetingUser().User()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load speakers: %w", err)
 	}
@@ -39,14 +40,14 @@ func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionReque
 	interposedQuestions := []speakerListItem{}
 	var currentSpeaker *speakerListItem
 	var currentInterposedQuestion *speakerListItem
-	for _, speaker := range los.SpeakerList().Values() {
+	for _, speaker := range los.SpeakerList {
 		name := ""
-		if meetingUser, isSet := speaker.MeetingUser().ValueGet(); isSet {
-			user := meetingUser.User().Get()
+		if meetingUser, isSet := speaker.MeetingUser.Value(); isSet {
+			user := meetingUser.User
 			name = viewmodels.User_ShortName(user)
-			if len(meetingUser.StructureLevelList().Refs()) != 0 {
+			if len(meetingUser.StructureLevelList) != 0 {
 				structureLevelNames := []string{}
-				for _, sl := range meetingUser.StructureLevelList().Values() {
+				for _, sl := range meetingUser.StructureLevelList {
 					structureLevelNames = append(structureLevelNames, sl.Name)
 				}
 
