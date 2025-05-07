@@ -3,6 +3,7 @@ package slide
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"strconv"
@@ -79,7 +80,10 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 	r.db.NewContext(ctx, func(fetch *dsmodels.Fetch) {
 		projection, err := fetch.Projection(id).First(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("getting projection from db")
+			if !errors.Is(err, context.Canceled) {
+				log.Error().Err(err).Msg("getting projection from db")
+			}
+
 			return
 		}
 
