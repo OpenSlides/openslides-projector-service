@@ -271,36 +271,36 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 	removeProjection := make(chan int)
 
 	projectionChannel := p.slideRouter.SubscribeContent(addProjection, removeProjection)
-	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
-		projectionIDs, err := f.Projector_CurrentProjectionIDs(p.projector.ID).Value(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to subscibe projection ids")
-		}
-
-		updated := []int{}
-		for id := range projections {
-			if !slices.Contains(projectionIDs, id) {
-				updated = append(updated, id)
-				removeProjection <- id
-				delete(projections, id)
-			}
-		}
-
-		for _, id := range projectionIDs {
-			if _, ok := projections[id]; !ok {
-				addProjection <- id
-			}
-		}
-
-		if len(updated) > 0 || len(projectionIDs) == 0 {
-			updateChannel <- updated
-		}
-	})
-
 	go func() {
 		defer close(updateChannel)
 		defer close(addProjection)
 		defer close(removeProjection)
+
+		p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
+			projectionIDs, err := f.Projector_CurrentProjectionIDs(p.projector.ID).Value(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to subscibe projection ids")
+			}
+
+			updated := []int{}
+			for id := range projections {
+				if !slices.Contains(projectionIDs, id) {
+					updated = append(updated, id)
+					removeProjection <- id
+					delete(projections, id)
+				}
+			}
+
+			for _, id := range projectionIDs {
+				if _, ok := projections[id]; !ok {
+					addProjection <- id
+				}
+			}
+
+			if len(updated) > 0 || len(projectionIDs) == 0 {
+				updateChannel <- updated
+			}
+		})
 
 		for {
 			select {
