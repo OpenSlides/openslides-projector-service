@@ -43,12 +43,16 @@
 
 <div id="projector-container" class="nocursor">
     <div id="projector">
+        {{if .Projector.ShowHeaderFooter}}
         <div id="header" class="header-footer">
+            {{if .Projector.ShowTitle}}
             <div id="eventdata">
-                <div class="event-name ellipsis-overflow">OpenSlides Demo</div>
-                <div class="event-description">Presentation and assembly system</div>
+                <div class="event-name ellipsis-overflow">{{.Projector.MeetingName}}</div>
+                <div class="event-description">{{.Projector.MeetingDescription}}</div>
             </div>
+            {{end}}
         </div>
+        {{end}}
 
         <div id="slides">
             {{range $index, $element := .Projections}}
@@ -58,8 +62,10 @@
             {{end}}
         </div>
 
+        {{if .Projector.ShowHeaderFooter}}
         <div id="footer" class="header-footer">
             <div class="footertext"></div>
         </div>
+        {{end}}
     </div>
 </div>

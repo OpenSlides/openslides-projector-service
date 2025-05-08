@@ -18,11 +18,37 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ProjectorSettings struct {
+	MeetingName            string
+	MeetingDescription     string
+	Name                   string
+	IsInternal             bool
+	Scale                  int
+	Scroll                 int
+	Width                  int
+	AspectRatioNumerator   int
+	AspectRatioDenominator int
+	Color                  string
+	BackgroundColor        string
+	HeaderBackgroundColor  string
+	HeaderFontColor        string
+	HeaderH1Color          string
+	ChyronBackgroundColor  string
+	ChyronBackgroundColor2 string
+	ChyronFontColor        string
+	ChyronFontColor2       string
+	ShowHeaderFooter       bool
+	ShowTitle              bool
+	ShowLogo               bool
+	ShowClock              bool
+}
+
 type projector struct {
 	ctxCancel      context.CancelFunc
 	db             *database.Datastore
 	slideRouter    *slide.SlideRouter
 	projector      *dsmodels.Projector
+	pSettings      *ProjectorSettings
 	listeners      []chan *ProjectorUpdateEvent
 	Content        string
 	Projections    map[int]template.HTML
@@ -48,14 +74,11 @@ func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds 
 		ctxCancel:      cancel,
 		db:             db,
 		projector:      &data,
+		pSettings:      &ProjectorSettings{},
 		slideRouter:    slide.New(ctx, db, ds),
 		Projections:    make(map[int]template.HTML),
 		AddListener:    make(chan chan *ProjectorUpdateEvent),
 		RemoveListener: make(chan (<-chan *ProjectorUpdateEvent)),
-	}
-
-	if err = p.updateFullContent(); err != nil {
-		return nil, fmt.Errorf("error generating projector content: %w", err)
 	}
 
 	go p.subscribeProjector(ctx)
@@ -78,75 +101,32 @@ func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds 
 	return p, nil
 }
 
-type ProjectorSettings struct {
-	Name                   string
-	IsInternal             bool
-	Scale                  int
-	Scroll                 int
-	Width                  int
-	AspectRatioNumerator   int
-	AspectRatioDenominator int
-	Color                  string
-	BackgroundColor        string
-	HeaderBackgroundColor  string
-	HeaderFontColor        string
-	HeaderH1Color          string
-	ChyronBackgroundColor  string
-	ChyronBackgroundColor2 string
-	ChyronFontColor        string
-	ChyronFontColor2       string
-	ShowHeaderFooter       bool
-	ShowTitle              bool
-	ShowLogo               bool
-	ShowClock              bool
-}
-
 func (p *projector) subscribeProjector(ctx context.Context) {
 	defer p.ctxCancel()
 	// TODO: If header active: Meeting name + description need to be subscribed
 	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
-		var projectorSettings ProjectorSettings
-		f.Projector_Name(p.projector.ID).Lazy(&projectorSettings.Name)
-		f.Projector_IsInternal(p.projector.ID).Lazy(&projectorSettings.IsInternal)
-		f.Projector_Scale(p.projector.ID).Lazy(&projectorSettings.Scale)
-		f.Projector_Scroll(p.projector.ID).Lazy(&projectorSettings.Scroll)
-		f.Projector_Width(p.projector.ID).Lazy(&projectorSettings.Width)
-		f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&projectorSettings.AspectRatioNumerator)
-		f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&projectorSettings.AspectRatioDenominator)
-		f.Projector_Color(p.projector.ID).Lazy(&projectorSettings.Color)
-		f.Projector_BackgroundColor(p.projector.ID).Lazy(&projectorSettings.BackgroundColor)
-		f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&projectorSettings.HeaderBackgroundColor)
-		f.Projector_HeaderFontColor(p.projector.ID).Lazy(&projectorSettings.HeaderFontColor)
-		f.Projector_HeaderH1Color(p.projector.ID).Lazy(&projectorSettings.HeaderH1Color)
-		f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&projectorSettings.ChyronBackgroundColor)
-		f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&projectorSettings.ChyronBackgroundColor2)
-		f.Projector_ChyronFontColor(p.projector.ID).Lazy(&projectorSettings.ChyronFontColor)
-		f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&projectorSettings.ChyronFontColor2)
-		f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&projectorSettings.ShowHeaderFooter)
-		f.Projector_ShowTitle(p.projector.ID).Lazy(&projectorSettings.ShowTitle)
-		f.Projector_ShowLogo(p.projector.ID).Lazy(&projectorSettings.ShowLogo)
-		f.Projector_ShowClock(p.projector.ID).Lazy(&projectorSettings.ShowClock)
-
-		f.Projector_Name(p.projector.ID).Lazy(&p.projector.Name)
-		f.Projector_IsInternal(p.projector.ID).Lazy(&p.projector.IsInternal)
-		f.Projector_Scale(p.projector.ID).Lazy(&p.projector.Scale)
-		f.Projector_Scroll(p.projector.ID).Lazy(&p.projector.Scroll)
-		f.Projector_Width(p.projector.ID).Lazy(&p.projector.Width)
-		f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&p.projector.AspectRatioNumerator)
-		f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&p.projector.AspectRatioDenominator)
-		f.Projector_Color(p.projector.ID).Lazy(&p.projector.Color)
-		f.Projector_BackgroundColor(p.projector.ID).Lazy(&p.projector.BackgroundColor)
-		f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&p.projector.HeaderBackgroundColor)
-		f.Projector_HeaderFontColor(p.projector.ID).Lazy(&p.projector.HeaderFontColor)
-		f.Projector_HeaderH1Color(p.projector.ID).Lazy(&p.projector.HeaderH1Color)
-		f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&p.projector.ChyronBackgroundColor)
-		f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&p.projector.ChyronBackgroundColor2)
-		f.Projector_ChyronFontColor(p.projector.ID).Lazy(&p.projector.ChyronFontColor)
-		f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&p.projector.ChyronFontColor2)
-		f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&p.projector.ShowHeaderFooter)
-		f.Projector_ShowTitle(p.projector.ID).Lazy(&p.projector.ShowTitle)
-		f.Projector_ShowLogo(p.projector.ID).Lazy(&p.projector.ShowLogo)
-		f.Projector_ShowClock(p.projector.ID).Lazy(&p.projector.ShowClock)
+		f.Projector_Name(p.projector.ID).Lazy(&p.pSettings.Name)
+		f.Projector_IsInternal(p.projector.ID).Lazy(&p.pSettings.IsInternal)
+		f.Projector_Scale(p.projector.ID).Lazy(&p.pSettings.Scale)
+		f.Projector_Scroll(p.projector.ID).Lazy(&p.pSettings.Scroll)
+		f.Projector_Width(p.projector.ID).Lazy(&p.pSettings.Width)
+		f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&p.pSettings.AspectRatioNumerator)
+		f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&p.pSettings.AspectRatioDenominator)
+		f.Projector_Color(p.projector.ID).Lazy(&p.pSettings.Color)
+		f.Projector_BackgroundColor(p.projector.ID).Lazy(&p.pSettings.BackgroundColor)
+		f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&p.pSettings.HeaderBackgroundColor)
+		f.Projector_HeaderFontColor(p.projector.ID).Lazy(&p.pSettings.HeaderFontColor)
+		f.Projector_HeaderH1Color(p.projector.ID).Lazy(&p.pSettings.HeaderH1Color)
+		f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor)
+		f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor2)
+		f.Projector_ChyronFontColor(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor)
+		f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor2)
+		f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&p.pSettings.ShowHeaderFooter)
+		f.Projector_ShowTitle(p.projector.ID).Lazy(&p.pSettings.ShowTitle)
+		f.Projector_ShowLogo(p.projector.ID).Lazy(&p.pSettings.ShowLogo)
+		f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
+		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
+		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
 
 		err := f.Execute(ctx)
 		var doesNotExist dsfetch.DoesNotExistError
@@ -159,7 +139,7 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 			return
 		}
 
-		encodedData, err := json.Marshal(projectorSettings)
+		encodedData, err := json.Marshal(p.pSettings)
 		if err != nil {
 			log.Error().Err(err).Msg("could not encode projector data")
 		} else {
@@ -252,7 +232,7 @@ func (p *projector) updateFullContent() error {
 
 	var content bytes.Buffer
 	err = tmpl.Execute(&content, map[string]any{
-		"Projector":   p.projector,
+		"Projector":   p.pSettings,
 		"Projections": p.Projections,
 	})
 	if err != nil {
