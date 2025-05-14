@@ -21,6 +21,8 @@ import (
 type ProjectorSettings struct {
 	MeetingName            string
 	MeetingDescription     string
+	MeetingLogo            int
+	HeaderImage            int
 	Name                   string
 	IsInternal             bool
 	Scale                  int
@@ -103,7 +105,6 @@ func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds 
 
 func (p *projector) subscribeProjector(ctx context.Context) {
 	defer p.ctxCancel()
-	// TODO: If header active: Meeting name + description need to be subscribed
 	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		f.Projector_Name(p.projector.ID).Lazy(&p.pSettings.Name)
 		f.Projector_IsInternal(p.projector.ID).Lazy(&p.pSettings.IsInternal)
@@ -127,6 +128,10 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 		f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
+		var logo dsfetch.Maybe[int]
+		f.Meeting_LogoProjectorMainID(p.projector.ID).Lazy(&logo)
+		var header dsfetch.Maybe[int]
+		f.Meeting_LogoProjectorHeaderID(p.projector.ID).Lazy(&header)
 
 		err := f.Execute(ctx)
 		var doesNotExist dsfetch.DoesNotExistError
@@ -137,6 +142,14 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 		} else if err != nil {
 			log.Error().Err(err).Msg("failed to update projector data")
 			return
+		}
+
+		if val, set := logo.Value(); set {
+			p.pSettings.MeetingLogo = val
+		}
+
+		if val, set := header.Value(); set {
+			p.pSettings.HeaderImage = val
 		}
 
 		encodedData, err := json.Marshal(p.pSettings)

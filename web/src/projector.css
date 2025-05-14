@@ -33,6 +33,14 @@ body {
   background-size: 100% 100%;
 }
 
+#projector-logo-main {
+  height: 50px;
+  padding-left: 50px;
+  padding-top: 10px;
+  float: left;
+  display: flex;
+}
+
 #eventdata {
   padding-left: 50px;
   padding-top: 12px;

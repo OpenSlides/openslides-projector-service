@@ -44,7 +44,13 @@
 <div id="projector-container" class="nocursor">
     <div id="projector">
         {{if .Projector.ShowHeaderFooter}}
-        <div id="header" class="header-footer">
+        <div id="header" class="header-footer"{{if  .Projector.MeetingLogo}} style="background-image: url(/system/media/get/{{.Projector.HeaderImage}});"{{end}}>
+            {{if .Projector.ShowLogo}}
+                {{if  .Projector.MeetingLogo}}
+                <img id="projector-logo-main" src="/system/media/get/{{.Projector.MeetingLogo}}" aria-hidden>
+                {{end}}
+            {{end}}
+
             {{if .Projector.ShowTitle}}
             <div id="eventdata">
                 <div class="event-name ellipsis-overflow">{{.Projector.MeetingName}}</div>
@@ -63,7 +69,7 @@
         </div>
 
         {{if .Projector.ShowHeaderFooter}}
-        <div id="footer" class="header-footer">
+        <div id="footer" class="header-footer"{{if  .Projector.MeetingLogo}} style="background-image: url(/system/media/get/{{.Projector.HeaderImage}});"{{end}}>
             <div class="footertext"></div>
         </div>
         {{end}}
