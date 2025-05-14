@@ -5,8 +5,8 @@ import { setPageWidthVar } from './projector/scale.js';
  * Creates a projector on the given element
  */
 export function Projector(host, id, auth = () => ``) {
-  const container = host.attachShadow({ mode: `open` })
-  const removeSizeListener = setPageWidthVar(container);
+  const container = host.attachShadow({ mode: `open` });
+  const sizeListener = setPageWidthVar(container);
   let subscriptionUrl = `/system/projector/subscribe/${id}`;
   let needsInit = !container.childNodes.length;
 
@@ -40,6 +40,7 @@ export function Projector(host, id, auth = () => ``) {
 
   eventSource.addEventListener(`projector-replace`, (e) => {
     container.innerHTML = JSON.parse(e.data);
+    sizeListener.update();
   });
 
   eventSource.addEventListener(`projection-updated`, (e) => {
@@ -69,7 +70,7 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   return () => {
-    removeSizeListener();
+    sizeListener.unregister();
     eventSource.close();
   };
 }
