@@ -35,6 +35,7 @@ export function setPageWidthVar(shadowDom) {
 
   window.addEventListener("load", update);
   window.addEventListener("resize", update);
+  pageEl.addEventListener("resize", update);
 
   return {
     update() {
@@ -43,6 +44,7 @@ export function setPageWidthVar(shadowDom) {
     unregister() {
       window.removeEventListener("load", update);
       window.removeEventListener("resize", update);
+      pageEl.removeEventListener("resize", update);
     }
   }
 }
