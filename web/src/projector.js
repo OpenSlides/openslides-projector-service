@@ -1,5 +1,6 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
+import { createProjectorClock } from './projector/clock.js';
 
 /**
  * Creates a projector on the given element
@@ -7,6 +8,7 @@ import { setPageWidthVar } from './projector/scale.js';
 export function Projector(host, id, auth = () => ``) {
   const container = host.attachShadow({ mode: `open` });
   const sizeListener = setPageWidthVar(container);
+  const clock = createProjectorClock(container);
   let subscriptionUrl = `/system/projector/subscribe/${id}`;
   let needsInit = !container.childNodes.length;
 
@@ -34,13 +36,15 @@ export function Projector(host, id, auth = () => ``) {
     console.debug(`deleted`);
   });
 
-  eventSource.addEventListener(`connected`, () => {
+  eventSource.addEventListener(`connected`, (e) => {
+    clock.setOffset(+e.data);
     console.debug(`connected`);
   });
 
   eventSource.addEventListener(`projector-replace`, (e) => {
     container.innerHTML = JSON.parse(e.data);
     sizeListener.update();
+    clock.update();
   });
 
   eventSource.addEventListener(`projection-updated`, (e) => {
@@ -70,7 +74,9 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   return () => {
+    clearInterval(timeInterval);
     sizeListener.unregister();
+    clock.unregister();
     eventSource.close();
   };
 }

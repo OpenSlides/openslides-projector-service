@@ -24,7 +24,7 @@ export function setPageWidthVar(shadowDom) {
       containerWidth = pageEl.offsetHeight / projectorAspectRatio;
     }
 
-    pageEl.style.setProperty("--projector-container-width", `${containerWidth}`);
+    pageEl.style.setProperty("--projector-container-width", `${Math.floor(containerWidth)}`);
     pageEl.style.setProperty(
       "--projector-container-height",
       `${(containerWidth / projectorWidth) * projectorHeight}`,

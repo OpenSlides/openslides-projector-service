@@ -57,6 +57,12 @@
                 <div class="event-description">{{.Projector.MeetingDescription}}</div>
             </div>
             {{end}}
+
+            {{if .Projector.ShowClock}}
+            <div id="clock">
+                <span id="clock-time"></span>
+            </div>
+            {{end}}
         </div>
         {{end}}
 
