@@ -1,18 +1,25 @@
 package slide
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"fmt"
+	"html/template"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
 )
 
 type projectionRequest struct {
-	Projection *models.Projection
-	DB         *database.Datastore
+	ContentObjectID *int
+	Projection      *dsmodels.Projection
+	Fetch           *dsmodels.Fetch
 }
 
 type projectionUpdate struct {
@@ -20,23 +27,25 @@ type projectionUpdate struct {
 	Content string
 }
 
-type slideHandler func(context.Context, *projectionRequest) (<-chan string, error)
+type slideHandler func(context.Context, *projectionRequest) (any, error)
 
 type SlideRouter struct {
 	ctx    context.Context
 	db     *database.Datastore
+	ds     flow.Flow
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *database.Datastore) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["topic"] = TopicSlideHandler
-	routes["current_list_of_speakers"] = CurrentListOfSpeakersSlideHandler
+	routes["current_los"] = CurrentListOfSpeakersSlideHandler
 	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
 		db:     db,
+		ds:     ds,
 		Routes: routes,
 	}
 }
@@ -68,57 +77,71 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 }
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
-	projection, err := database.Collection(r.db, &models.Projection{}).SetIds(id).SetFields("id", "content_object_id", "type").GetOne()
-	if err != nil {
-		log.Error().Err(err).Msg("getting projection type and content object from db")
-		return
-	}
-
-	projectionType := getProjectionType(projection)
-	if handler, ok := r.Routes[projectionType]; ok {
-		projectionChan, err := handler(ctx, &projectionRequest{
-			Projection: projection,
-			DB:         r.db,
-		})
-
+	r.db.NewContext(ctx, func(fetch *dsmodels.Fetch) {
+		projection, err := fetch.Projection(id).First(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("failed initialize projection handler")
+			if !errors.Is(err, context.Canceled) {
+				log.Error().Err(err).Msg("getting projection from db")
+			}
+
 			return
 		}
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case projectionContent, ok := <-projectionChan:
-				if !ok {
-					return
-				}
+		projectionType, contentObjectID := getProjectionType(&projection)
+		if handler, ok := r.Routes[projectionType]; ok {
+			var cId *int
+			if contentObjectID != 0 {
+				cId = &contentObjectID
+			}
 
-				updateChannel <- &projectionUpdate{
-					ID:      id,
-					Content: projectionContent,
-				}
+			projectionContent, err := handler(ctx, &projectionRequest{
+				ContentObjectID: cId,
+				Projection:      &projection,
+				Fetch:           fetch,
+			})
+
+			if err != nil {
+				log.Error().Err(err).Msg("failed executing projection handler")
+				return
+			}
+
+			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", projectionType))
+			if err != nil {
+				log.Error().Err(err).Msgf("could not load %s template", projectionType)
+				return
+			}
+
+			var content bytes.Buffer
+			err = tmpl.Execute(&content, projectionContent)
+			if err != nil {
+				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
+				return
+			}
+
+			updateChannel <- &projectionUpdate{
+				ID:      id,
+				Content: content.String(),
+			}
+		} else {
+			log.Warn().Msgf("unknown projection type %s", projectionType)
+			updateChannel <- &projectionUpdate{
+				ID:      id,
+				Content: "",
 			}
 		}
-	} else {
-		log.Warn().Msgf("unknown projection type %s", projectionType)
-		updateChannel <- &projectionUpdate{
-			ID:      id,
-			Content: "",
-		}
-	}
+	})
 }
 
-func getProjectionType(projection *models.Projection) string {
-	if projection.Type != nil {
-		return *projection.Type
+func getProjectionType(projection *dsmodels.Projection) (string, int) {
+	collection, id, found := strings.Cut(projection.ContentObjectID, "/")
+	if projection.Type != "" {
+		collection = projection.Type
 	}
 
-	collection, _, found := strings.Cut(projection.ContentObjectID, "/")
 	if found {
-		return collection
+		nId, _ := strconv.Atoi(id)
+		return collection, nId
 	}
 
-	return "unknown"
+	return "unknown", 0
 }

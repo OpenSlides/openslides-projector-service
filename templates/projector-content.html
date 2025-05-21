@@ -43,12 +43,28 @@
 
 <div id="projector-container" class="nocursor">
     <div id="projector">
-        <div id="header" class="header-footer">
+        {{if .Projector.ShowHeaderFooter}}
+        <div id="header" class="header-footer"{{if  .Projector.MeetingLogo}} style="background-image: url(/system/media/get/{{.Projector.HeaderImage}});"{{end}}>
+            {{if .Projector.ShowLogo}}
+                {{if  .Projector.MeetingLogo}}
+                <img id="projector-logo-main" src="/system/media/get/{{.Projector.MeetingLogo}}" aria-hidden>
+                {{end}}
+            {{end}}
+
+            {{if .Projector.ShowTitle}}
             <div id="eventdata">
-                <div class="event-name ellipsis-overflow">OpenSlides Demo</div>
-                <div class="event-description">Presentation and assembly system</div>
+                <div class="event-name ellipsis-overflow">{{.Projector.MeetingName}}</div>
+                <div class="event-description">{{.Projector.MeetingDescription}}</div>
             </div>
+            {{end}}
+
+            {{if .Projector.ShowClock}}
+            <div id="clock">
+                <span id="clock-time"></span>
+            </div>
+            {{end}}
         </div>
+        {{end}}
 
         <div id="slides">
             {{range $index, $element := .Projections}}
@@ -58,8 +74,10 @@
             {{end}}
         </div>
 
-        <div id="footer" class="header-footer">
+        {{if .Projector.ShowHeaderFooter}}
+        <div id="footer" class="header-footer"{{if  .Projector.MeetingLogo}} style="background-image: url(/system/media/get/{{.Projector.HeaderImage}});"{{end}}>
             <div class="footertext"></div>
         </div>
+        {{end}}
     </div>
 </div>

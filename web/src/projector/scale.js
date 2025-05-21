@@ -1,13 +1,19 @@
-export function setPageWidthVar(pageEl) {
+export function setPageWidthVar(shadowDom) {
+  const pageEl = shadowDom.host;
   function update() {
-    const projectorWidth = +getComputedStyle(document.body).getPropertyValue(
+    const container = shadowDom.querySelector(`#projector-container`);
+    if (!container) {
+      return;
+    }
+
+    const projectorWidth = +getComputedStyle(container).getPropertyValue(
       `--projector-width`,
     );
     const projectorAspectRatio =
-      +getComputedStyle(document.body).getPropertyValue(
+      +getComputedStyle(container).getPropertyValue(
         `--projector-aspect-ratio-denominator`,
       ) /
-      +getComputedStyle(document.body).getPropertyValue(
+      +getComputedStyle(container).getPropertyValue(
         `--projector-aspect-ratio-numerator`,
       );
     const projectorHeight = projectorWidth * projectorAspectRatio;
@@ -18,7 +24,7 @@ export function setPageWidthVar(pageEl) {
       containerWidth = pageEl.offsetHeight / projectorAspectRatio;
     }
 
-    pageEl.style.setProperty("--projector-container-width", `${containerWidth}`);
+    pageEl.style.setProperty("--projector-container-width", `${Math.floor(containerWidth)}`);
     pageEl.style.setProperty(
       "--projector-container-height",
       `${(containerWidth / projectorWidth) * projectorHeight}`,
@@ -29,9 +35,16 @@ export function setPageWidthVar(pageEl) {
 
   window.addEventListener("load", update);
   window.addEventListener("resize", update);
+  pageEl.addEventListener("resize", update);
 
-  return () => {
-    window.removeEventListener("load", update);
-    window.removeEventListener("resize", update);
+  return {
+    update() {
+      update();
+    },
+    unregister() {
+      window.removeEventListener("load", update);
+      window.removeEventListener("resize", update);
+      pageEl.removeEventListener("resize", update);
+    }
   }
 }

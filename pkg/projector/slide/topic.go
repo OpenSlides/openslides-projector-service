@@ -1,67 +1,25 @@
 package slide
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"html/template"
-
-	"github.com/OpenSlides/openslides-projector-service/pkg/database"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
-	"github.com/rs/zerolog/log"
 )
 
-func TopicSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
-	projection := req.Projection
+func TopicSlideHandler(ctx context.Context, req *projectionRequest) (any, error) {
+	if req.ContentObjectID == nil {
+		return "", fmt.Errorf("no topic id provided for slide")
+	}
 
-	var topic models.Topic
-	topicSub, err := database.Collection(req.DB, &models.Topic{}).With("agenda_item_id", nil).SetFqids(projection.ContentObjectID).SubscribeOne(&topic)
+	t := req.Fetch.Topic(*req.ContentObjectID)
+	topic, err := t.Preload(t.AgendaItem()).First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("TopicSlideHandler: %w", err)
+		return "", fmt.Errorf("could not load topic %w", err)
 	}
 
-	go func() {
-		defer topicSub.Unsubscribe()
-		defer close(content)
-
-		content <- getTopicSlideContent(&topic)
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-topicSub.Channel:
-				content <- getTopicSlideContent(&topic)
-			}
-		}
-	}()
-
-	return content, nil
-}
-
-func getTopicSlideContent(topic *models.Topic) string {
-	tmpl, err := template.ParseFiles("templates/slides/topic.html")
-	if err != nil {
-		log.Error().Err(err).Msg("could not load topic template")
-		return ""
-	}
-
-	text := ""
-	if topic.Text != nil {
-		text = *topic.Text
-	}
-
-	var content bytes.Buffer
-	err = tmpl.Execute(&content, map[string]interface{}{
-		"AgendaItem": topic.AgendaItem(),
+	return map[string]any{
+		"AgendaItem": topic.AgendaItem,
 		"Topic":      topic,
-		"Text":       template.HTML(text),
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("could not execute topic template")
-		return ""
-	}
-
-	return content.String()
+		"Text":       template.HTML(topic.Text),
+	}, nil
 }

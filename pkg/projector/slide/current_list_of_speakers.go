@@ -1,110 +1,35 @@
 package slide
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"html/template"
-	"reflect"
 	"sort"
 	"strings"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/database"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
-	"github.com/rs/zerolog/log"
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
-func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
-	projection := req.Projection
-
-	referenceProjectorId := 0
-	refProjectorSub, err := database.Collection(req.DB, &models.Meeting{}).SetFqids(projection.ContentObjectID).SetFields("reference_projector_id").SubscribeField(&referenceProjectorId)
+func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (any, error) {
+	referenceProjectorId, err := req.Fetch.Meeting_ReferenceProjectorID(*req.ContentObjectID).Value(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe reference projector id: %w", err)
+		return nil, fmt.Errorf("could not load reference projector id %w", err)
 	}
 
-	var projector models.Projector
-	projectorQ := database.Collection(req.DB, &models.Projector{}).With("current_projection_ids", nil)
-	projectorSub, err := projectorQ.SubscribeOne(&projector)
+	losID, err := viewmodels.Projector_ListOfSpeakersID(ctx, req.Fetch, referenceProjectorId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe reference projector: %w", err)
+		return nil, fmt.Errorf("could not load list of speakers id %w", err)
 	}
 
-	projectionsQ := projectorQ.GetSubquery("current_projection_ids")
-	projectionsQ.With("content_object_id", nil)
-
-	var los models.ListOfSpeakers
-	losQ := database.Collection(req.DB, &models.ListOfSpeakers{}).With("speaker_ids", nil)
-	speakersQ := losQ.GetSubquery("speaker_ids")
-	meetingUsersQ := speakersQ.With("meeting_user_id", nil)
-	meetingUsersQ.With("user_id", nil)
-	meetingUsersQ.With("structure_level_ids", nil)
-
-	losSub, err := losQ.SubscribeOne(&los)
-	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe list of speakers: %w", err)
+	if losID == nil {
+		return nil, nil
 	}
 
-	stable := false
-	if projection.Stable != nil {
-		stable = *projection.Stable
-	}
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				refProjectorSub.Unsubscribe()
-				projectorSub.Unsubscribe()
-				losSub.Unsubscribe()
-				close(content)
-				return
-			case <-refProjectorSub.Channel:
-				if referenceProjectorId > 0 {
-					projectorQ.SetIds(referenceProjectorId)
-					if err := projectorSub.Reload(); err != nil {
-						log.Err(err).Msg("Reference projector load failed")
-					}
-				}
-			case <-projectorSub.Channel:
-				for _, p := range projector.CurrentProjections() {
-					if p.ContentObjectID == "" {
-						continue
-					}
-
-					losId := p.ContentObject().Get("list_of_speakers_id")
-					if losId != nil {
-						v := reflect.ValueOf(losId)
-						if v.Kind() == reflect.Ptr {
-							v = v.Elem()
-						}
-
-						losQ.SetIds(int(v.Int()))
-						if err := losSub.Reload(); err != nil {
-							log.Err(err).Msg("Reference projector load failed")
-						}
-						break
-					}
-				}
-			case <-losSub.Channel:
-				if los.ID != 0 {
-					content <- getCurrentListOfSpeakersSlideContent(&los, stable)
-				} else {
-					content <- ""
-				}
-			}
-		}
-	}()
-
-	return content, nil
-}
-
-func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bool) string {
-	tmpl, err := template.ParseFiles("templates/slides/current-list-of-speakers.html")
+	lQ := req.Fetch.ListOfSpeakers(*losID)
+	los, err := lQ.
+		Preload(lQ.SpeakerList().MeetingUser().StructureLevelList()).
+		Preload(lQ.SpeakerList().MeetingUser().User()).First(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("could not load current-list-of-speakers template")
-		return ""
+		return nil, fmt.Errorf("could not load speakers: %w", err)
 	}
 
 	type speakerListItem struct {
@@ -115,15 +40,14 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 	interposedQuestions := []speakerListItem{}
 	var currentSpeaker *speakerListItem
 	var currentInterposedQuestion *speakerListItem
-	for _, speaker := range los.Speakers() {
+	for _, speaker := range los.SpeakerList {
 		name := ""
-		if speaker.MeetingUser() != nil {
-			u := speaker.MeetingUser().User()
-			name = u.ShortName()
-
-			if len(speaker.MeetingUser().StructureLevels()) != 0 {
+		if meetingUser, isSet := speaker.MeetingUser.Value(); isSet {
+			user := meetingUser.User
+			name = viewmodels.User_ShortName(user)
+			if len(meetingUser.StructureLevelList) != 0 {
 				structureLevelNames := []string{}
-				for _, sl := range speaker.MeetingUser().StructureLevels() {
+				for _, sl := range meetingUser.StructureLevelList {
 					structureLevelNames = append(structureLevelNames, sl.Name)
 				}
 
@@ -131,28 +55,19 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 			}
 		}
 
-		weight := 0
-		if speaker.Weight != nil {
-			weight = *speaker.Weight
-		}
-
-		speechState := ""
-		if speaker.SpeechState != nil {
-			speechState = *speaker.SpeechState
-		}
-
 		item := speakerListItem{
 			Name:   name,
-			Weight: weight,
+			Weight: speaker.Weight,
 		}
-		if (speaker.BeginTime == nil) && speaker.EndTime == nil {
-			if speechState == "interposed_question" {
+
+		if (speaker.BeginTime == 0) && speaker.EndTime == 0 {
+			if speaker.SpeechState == "interposed_question" {
 				interposedQuestions = append(interposedQuestions, item)
 			} else {
 				waitingSpeakers = append(waitingSpeakers, item)
 			}
-		} else if speaker.EndTime == nil || *speaker.EndTime == 0 {
-			if speechState == "interposed_question" {
+		} else if speaker.EndTime == 0 {
+			if speaker.SpeechState == "interposed_question" {
 				currentInterposedQuestion = &item
 			} else {
 				currentSpeaker = &item
@@ -168,19 +83,11 @@ func getCurrentListOfSpeakersSlideContent(los *models.ListOfSpeakers, overlay bo
 		return interposedQuestions[i].Weight < interposedQuestions[j].Weight
 	})
 
-	var content bytes.Buffer
-	err = tmpl.Execute(&content, map[string]interface{}{
-		"ListOfSpeakers":            los,
+	return map[string]any{
 		"CurrentSpeaker":            currentSpeaker,
 		"Speakers":                  waitingSpeakers,
 		"InterposedQuestions":       interposedQuestions,
 		"CurrentInterposedQuestion": currentInterposedQuestion,
-		"Overlay":                   overlay,
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("could not execute current-list-of-speakers template")
-		return ""
-	}
-
-	return content.String()
+		"Overlay":                   req.Projection.Stable,
+	}, nil
 }

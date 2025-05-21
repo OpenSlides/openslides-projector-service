@@ -12,6 +12,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/OpenSlides/openslides-go/datastore"
+	"github.com/OpenSlides/openslides-go/datastore/flow"
+	"github.com/OpenSlides/openslides-go/environment"
+	"github.com/OpenSlides/openslides-go/redis"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	projectorHttp "github.com/OpenSlides/openslides-projector-service/pkg/http"
 )
@@ -50,7 +54,15 @@ func main() {
 func run(cfg config) error {
 	ctx := context.Background()
 
-	ds, err := getDatabase(cfg)
+	env := &environment.ForProduction{}
+	messageBus := redis.New(env)
+
+	dsFlow, err := datastore.NewFlowPostgres(env, messageBus)
+	if err != nil {
+		return fmt.Errorf("connecting to datastore: %w", err)
+	}
+
+	ds, err := getDatabase(cfg, dsFlow)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
 	}
@@ -58,7 +70,7 @@ func run(cfg config) error {
 	serverMux := http.NewServeMux()
 	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
 		RestricterUrl: cfg.RestricterUrl,
-	}, serverMux, ds)
+	}, serverMux, ds, dsFlow)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)
 
@@ -76,7 +88,7 @@ func run(cfg config) error {
 	return nil
 }
 
-func getDatabase(cfg config) (*database.Datastore, error) {
+func getDatabase(cfg config, dsFlow flow.Flow) (*database.Datastore, error) {
 	password, err := parseSecretsFile(cfg.PostgresPasswordFile)
 	if err != nil {
 		if cfg.Development {
@@ -96,7 +108,7 @@ func getDatabase(cfg config) (*database.Datastore, error) {
 	)
 	redisAddr := cfg.MessageBusHost + ":" + cfg.MessageBusPort
 
-	ds, err := database.New(pgAddr, redisAddr)
+	ds, err := database.New(pgAddr, redisAddr, dsFlow)
 	if err != nil {
 		return nil, fmt.Errorf("creating datastore: %w", err)
 	}
