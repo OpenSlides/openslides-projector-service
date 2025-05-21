@@ -1,4 +1,4 @@
-FROM golang:1.24.0-alpine as base
+FROM golang:1.24.3-alpine as base
 WORKDIR /root/openslides-projector-service
 
 RUN apk add git curl make
