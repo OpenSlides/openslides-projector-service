@@ -2,7 +2,6 @@ package http
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -13,35 +12,37 @@ func (s *projectorHttp) ProjectorGetHandler() http.HandlerFunc {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, `{"error": true, "msg": "Projector id invalid"}`)
+			writeResponse(w, `{"error": true, "msg": "Projector id invalid"}`)
 			return
 		}
 
 		projectorContent, err := s.projector.GetProjectorContent(id)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, `{"error": true, "msg": "Error reading projector content"}`)
+			writeResponse(w, `{"error": true, "msg": "Error reading projector content"}`)
 			return
 		}
 
 		if projectorContent == nil {
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintln(w, `{"error": true, "msg": "Projector not found"}`)
+			writeResponse(w, `{"error": true, "msg": "Projector not found"}`)
 			return
 		}
 
 		tmpl, err := template.ParseFiles("templates/projector.html")
 		if err != nil {
-			fmt.Fprintln(w, `{"error": true, "msg": "Error providing projector content"}`)
+			writeResponse(w, `{"error": true, "msg": "Error providing projector content"}`)
+			return
 		}
 
 		var content bytes.Buffer
-		if err := tmpl.Execute(&content, map[string]interface{}{
+		if err := tmpl.Execute(&content, map[string]any{
 			"ProjectorContent": template.HTML(*projectorContent),
 		}); err != nil {
-			fmt.Fprintln(w, `{"error": true, "msg": "Error providing projector content"}`)
+			writeResponse(w, `{"error": true, "msg": "Error providing projector content"}`)
+			return
 		}
 
-		fmt.Fprintln(w, content.String())
+		writeResponse(w, content.String())
 	}
 }

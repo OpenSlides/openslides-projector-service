@@ -58,6 +58,12 @@ func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db 
 	handler.registerRoutes(cfg)
 }
 
+func writeResponse(w http.ResponseWriter, resp string) {
+	if _, err := fmt.Fprintln(w, resp); err != nil {
+		log.Err(err).Msg("writing response")
+	}
+}
+
 func (s *projectorHttp) registerRoutes(cfg ProjectorConfig) {
 	s.serverMux.HandleFunc("/system/projector/health", s.HealthHandler())
 	s.serverMux.Handle("/system/projector/get/{id}", authMiddleware(http.HandlerFunc(s.ProjectorGetHandler()), s.auth, cfg))
@@ -69,14 +75,14 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		ctx, err := auth.Authenticate(w, r)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintln(w, `{"error": true, "msg": "authenticate request failed"}`)
+			writeResponse(w, `{"error": true, "msg": "authenticate request failed"}`)
 			return
 		}
 
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintln(w, `{"error": true, "msg": "Projector id invalid"}`)
+			writeResponse(w, `{"error": true, "msg": "Projector id invalid"}`)
 			return
 		}
 
@@ -86,7 +92,7 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		restrictUrl := fmt.Sprintf("%s?user_id=%d&single=1", cfg.RestricterUrl, userID)
 		req, err := http.NewRequest("POST", restrictUrl, bytes.NewReader(body))
 		if err != nil {
-			fmt.Fprintln(w, `{"error": true, "msg": "creating restriction request failed"}`)
+			writeResponse(w, `{"error": true, "msg": "creating restriction request failed"}`)
 			return
 		}
 
@@ -98,21 +104,25 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		resp, err := client.Do(req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintln(w, `{"error": true, "msg": "restriction request failed"}`)
+			writeResponse(w, `{"error": true, "msg": "restriction request failed"}`)
 			return
 		}
 
 		if resp.StatusCode != http.StatusOK {
 			w.WriteHeader(resp.StatusCode)
-			fmt.Fprintln(w, `{"error": true, "msg": "restriction request failed"}`)
+			writeResponse(w, `{"error": true, "msg": "restriction request failed"}`)
 			return
 		}
-		defer resp.Body.Close()
+
 		b, err := io.ReadAll(resp.Body)
 		if err != nil || !strings.Contains(string(b), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
 			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintln(w, `{"error": true, "msg": "permissions denied"}`)
+			writeResponse(w, `{"error": true, "msg": "permissions denied"}`)
 			return
+		}
+
+		if err := resp.Body.Close(); err != nil {
+			log.Err(err).Msg("error closing response body")
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))
