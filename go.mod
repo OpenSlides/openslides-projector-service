@@ -6,7 +6,7 @@ require (
 	github.com/OpenSlides/openslides-go v0.0.0-20250521145008-8e4ed1371a71
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/goccy/go-yaml v1.17.1
-	github.com/rs/zerolog v1.33.0
+	github.com/rs/zerolog v1.34.0
 )
 
 require (
