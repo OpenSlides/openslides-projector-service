@@ -7,6 +7,7 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
+	"golang.org/x/text/language"
 )
 
 type ProjectorPool struct {
@@ -26,7 +27,7 @@ func NewProjectorPool(ctx context.Context, db *database.Datastore, ds flow.Flow)
 	}
 }
 
-func (pool *ProjectorPool) readOrCreateProjector(id int) (*projector, error) {
+func (pool *ProjectorPool) readOrCreateProjector(id int, lang language.Tag) (*projector, error) {
 	if projector, ok := pool.projectors[id]; ok {
 		return projector, nil
 	}
@@ -37,7 +38,7 @@ func (pool *ProjectorPool) readOrCreateProjector(id int) (*projector, error) {
 		return projector, nil
 	}
 
-	projector, err := newProjector(pool.ctx, id, pool.db, pool.ds)
+	projector, err := newProjector(pool.ctx, id, lang, pool.db, pool.ds)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new projector: %w", err)
 	}
@@ -46,8 +47,8 @@ func (pool *ProjectorPool) readOrCreateProjector(id int) (*projector, error) {
 	return projector, nil
 }
 
-func (pool *ProjectorPool) GetProjectorContent(id int) (*string, error) {
-	projector, err := pool.readOrCreateProjector(id)
+func (pool *ProjectorPool) GetProjectorContent(id int, lang language.Tag) (*string, error) {
+	projector, err := pool.readOrCreateProjector(id, lang)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving projector content: %w", err)
 	}
@@ -55,8 +56,8 @@ func (pool *ProjectorPool) GetProjectorContent(id int) (*string, error) {
 	return &projector.Content, nil
 }
 
-func (pool *ProjectorPool) SubscribeProjectorContent(ctx context.Context, id int) (<-chan *ProjectorUpdateEvent, error) {
-	projector, err := pool.readOrCreateProjector(id)
+func (pool *ProjectorPool) SubscribeProjectorContent(ctx context.Context, id int, lang language.Tag) (<-chan *ProjectorUpdateEvent, error) {
+	projector, err := pool.readOrCreateProjector(id, lang)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving projector channel: %w", err)
 	}

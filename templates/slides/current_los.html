@@ -3,11 +3,11 @@
 <div class="content{{if .Overlay}} overlay{{end}} list-of-speakers">
     {{if .Overlay}}
     <h3>
-        List of speakers
+        {{ .Loc.Get "List of speakers" }}
     </h3>
     {{else}}
     <h1 class="projector_h1">
-        List of speakers
+        {{ .Loc.Get "List of speakers" }}
     </h1>
     {{end}}
     <div class="detail-view-text">
@@ -30,7 +30,7 @@
                     {{if .Name}}
                         {{ .Name }}
                     {{else}}
-                        <i>Unknown user</i>
+                        <i>{{ .Loc.Get "Unknown user" }}</i>
                     {{end}}
                 </li>
             {{end}}

@@ -16,7 +16,7 @@ func (s *projectorHttp) ProjectorGetHandler() http.HandlerFunc {
 			return
 		}
 
-		projectorContent, err := s.projector.GetProjectorContent(id)
+		projectorContent, err := s.projector.GetProjectorContent(id, getRequestLanguage(r))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			writeResponse(w, `{"error": true, "msg": "Error reading projector content"}`)

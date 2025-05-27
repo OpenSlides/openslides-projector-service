@@ -18,7 +18,7 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 			return
 		}
 
-		content, err := s.projector.SubscribeProjectorContent(r.Context(), id)
+		content, err := s.projector.SubscribeProjectorContent(r.Context(), id, getRequestLanguage(r))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			writeResponse(w, `{"error": true, "msg": "Error reading projector content"}`)
@@ -34,7 +34,7 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 		needsInit := r.URL.Query().Get("init") == "1"
 		var projectorContent string
 		if needsInit {
-			projectorContentRaw, err := s.projector.GetProjectorContent(id)
+			projectorContentRaw, err := s.projector.GetProjectorContent(id, getRequestLanguage(r))
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				writeResponse(w, `{"error": true, "msg": "Error reading projector content"}`)

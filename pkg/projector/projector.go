@@ -16,7 +16,9 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
+	"github.com/leonelquinteros/gotext"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/text/language"
 )
 
 type ProjectorSettings struct {
@@ -53,6 +55,7 @@ type projector struct {
 	projector      *dsmodels.Projector
 	pSettings      *ProjectorSettings
 	listeners      []chan *ProjectorUpdateEvent
+	locale         *gotext.Locale
 	Content        string
 	Projections    map[int]template.HTML
 	AddListener    chan chan *ProjectorUpdateEvent
@@ -64,7 +67,7 @@ type ProjectorUpdateEvent struct {
 	Data  string
 }
 
-func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds flow.Flow) (*projector, error) {
+func newProjector(parentCtx context.Context, id int, lang language.Tag, db *database.Datastore, ds flow.Flow) (*projector, error) {
 	ctx, cancel := context.WithCancel(parentCtx)
 
 	data, err := db.Fetch.Projector(id).First(ctx)
@@ -73,16 +76,21 @@ func newProjector(parentCtx context.Context, id int, db *database.Datastore, ds 
 		return nil, fmt.Errorf("error fetching projector from db %w", err)
 	}
 
+	langName, _ := lang.Base()
+	locale := gotext.NewLocale("locale", langName.String())
 	p := &projector{
 		ctxCancel:      cancel,
 		db:             db,
 		projector:      &data,
 		pSettings:      &ProjectorSettings{},
-		slideRouter:    slide.New(ctx, db, ds),
+		slideRouter:    slide.New(ctx, db, ds, locale),
+		locale:         locale,
 		Projections:    make(map[int]template.HTML),
 		AddListener:    make(chan chan *ProjectorUpdateEvent),
 		RemoveListener: make(chan (<-chan *ProjectorUpdateEvent)),
 	}
+
+	p.locale.AddDomain("default")
 
 	go p.subscribeProjector(ctx)
 

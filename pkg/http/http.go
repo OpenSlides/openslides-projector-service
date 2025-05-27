@@ -16,6 +16,7 @@ import (
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/text/language"
 )
 
 type ProjectorConfig struct {
@@ -68,6 +69,19 @@ func (s *projectorHttp) registerRoutes(cfg ProjectorConfig) {
 	s.serverMux.HandleFunc("/system/projector/health", s.HealthHandler())
 	s.serverMux.Handle("/system/projector/get/{id}", authMiddleware(http.HandlerFunc(s.ProjectorGetHandler()), s.auth, cfg))
 	s.serverMux.Handle("/system/projector/subscribe/{id}", authMiddleware(http.HandlerFunc(s.ProjectorSubscribeHandler()), s.auth, cfg))
+}
+
+var languageMatcher = language.NewMatcher([]language.Tag{
+	language.English,
+	language.German,
+})
+
+func getRequestLanguage(r *http.Request) language.Tag {
+	lang, _ := r.Cookie("lang")
+	accept := r.Header.Get("Accept-Language")
+	tag, _ := language.MatchStrings(languageMatcher, lang.String(), accept)
+
+	return tag
 }
 
 func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) http.Handler {
