@@ -1,1 +1,32 @@
-{{ .Loc.Get "Election" }}
+<div class="content">
+    <h1 class="projector_h1">
+        {{ .Assignment.Title }}
+    </h1>
+    <h2 class="projector_h2">
+        {{ .Loc.Get "Election" }}
+    </h2>
+    {{if .Description }}
+        <div class="detail-view-text">
+            {{.Description}}
+        </div>
+    {{end}}
+    <h3>{{ .Loc.Get "Candidates" }}</h3>
+
+    {{if .Assignment.NumberPollCandidates }}
+        <ol>
+    {{else}}
+        <ul>
+    {{end}}
+
+        {{range .Candidates}}
+            <li>
+                {{ .Name }}
+            </li>
+        {{end}}
+
+    {{if .Assignment.NumberPollCandidates }}
+        </ol>
+    {{else}}
+        </ul>
+    {{end}}
+</div>
