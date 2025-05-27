@@ -1,3 +1,7 @@
+.list-of-speakers.overlay h3 {
+  margin-top: 0;
+}
+
 .speaker {
   white-space: nowrap;
   text-overflow: ellipsis;

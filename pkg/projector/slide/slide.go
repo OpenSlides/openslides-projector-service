@@ -21,6 +21,7 @@ type projectionRequest struct {
 	ContentObjectID *int
 	Projection      *dsmodels.Projection
 	Fetch           *dsmodels.Fetch
+	Locale          *gotext.Locale
 }
 
 type projectionUpdate struct {
@@ -102,6 +103,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				ContentObjectID: cId,
 				Projection:      &projection,
 				Fetch:           fetch,
+				Locale:          r.locale,
 			})
 
 			if err != nil {
