@@ -9,7 +9,7 @@ import (
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
-func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (any, error) {
+func CurrentListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	referenceProjectorId, err := req.Fetch.Meeting_ReferenceProjectorID(*req.ContentObjectID).Value(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load reference projector id %w", err)

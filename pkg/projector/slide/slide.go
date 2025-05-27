@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/leonelquinteros/gotext"
 	"github.com/rs/zerolog/log"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
@@ -27,17 +28,19 @@ type projectionUpdate struct {
 	Content string
 }
 
-type slideHandler func(context.Context, *projectionRequest) (any, error)
+type slideHandler func(context.Context, *projectionRequest) (map[string]any, error)
 
 type SlideRouter struct {
 	ctx    context.Context
 	db     *database.Datastore
 	ds     flow.Flow
+	locale *gotext.Locale
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gotext.Locale) *SlideRouter {
 	routes := make(map[string]slideHandler)
+	routes["assignment"] = AssignmentSlideHandler
 	routes["topic"] = TopicSlideHandler
 	routes["current_los"] = CurrentListOfSpeakersSlideHandler
 	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
@@ -46,6 +49,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow) *SlideRouter
 		ctx:    ctx,
 		db:     db,
 		ds:     ds,
+		locale: locale,
 		Routes: routes,
 	}
 }
@@ -112,6 +116,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 			}
 
 			var content bytes.Buffer
+			projectionContent["Loc"] = r.locale
 			err = tmpl.Execute(&content, projectionContent)
 			if err != nil {
 				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
