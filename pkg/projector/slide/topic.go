@@ -6,15 +6,15 @@ import (
 	"html/template"
 )
 
-func TopicSlideHandler(ctx context.Context, req *projectionRequest) (any, error) {
+func TopicSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	if req.ContentObjectID == nil {
-		return "", fmt.Errorf("no topic id provided for slide")
+		return nil, fmt.Errorf("no topic id provided for slide")
 	}
 
 	t := req.Fetch.Topic(*req.ContentObjectID)
 	topic, err := t.Preload(t.AgendaItem()).First(ctx)
 	if err != nil {
-		return "", fmt.Errorf("could not load topic %w", err)
+		return nil, fmt.Errorf("could not load topic %w", err)
 	}
 
 	return map[string]any{

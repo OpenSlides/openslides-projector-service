@@ -1,0 +1,5 @@
+msgid "Election"
+msgstr "Wahl"
+
+msgid "List of speakers"
+msgstr "Redeliste"

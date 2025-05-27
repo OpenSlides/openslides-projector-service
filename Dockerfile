@@ -10,6 +10,7 @@ COPY cmd cmd
 COPY pkg pkg
 COPY templates /root/templates
 COPY web web
+COPY locale locale
 COPY Makefile Makefile
 RUN mkdir static
 
