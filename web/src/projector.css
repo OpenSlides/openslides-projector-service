@@ -106,9 +106,26 @@ h1 {
 }
 
 h3 {
-  margin-top: 0;
   margin-bottom: 10px;
   font-weight: 500;
+}
+
+.slidetitle {
+  border-bottom: 2px solid #d3d3d3;
+  padding-bottom: 10px;
+}
+
+.slidetitle h1 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.slidetitle h2 {
+  color: #9a9898;
+  margin-top: 10px;
+  margin-bottom: -10px;
+  font-size: 28px;
+  font-weight: normal;
 }
 
 #projector-page {
