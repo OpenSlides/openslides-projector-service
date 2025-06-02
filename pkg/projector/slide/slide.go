@@ -42,9 +42,10 @@ type SlideRouter struct {
 func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gotext.Locale) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["assignment"] = AssignmentSlideHandler
-	routes["topic"] = TopicSlideHandler
 	routes["current_los"] = CurrentListOfSpeakersSlideHandler
 	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
+	routes["projector_message"] = ProjectorMessageSlideHandler
+	routes["topic"] = TopicSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
