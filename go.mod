@@ -5,7 +5,6 @@ go 1.24.0
 require (
 	github.com/OpenSlides/openslides-go v0.0.0-20250521145008-8e4ed1371a71
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/goccy/go-yaml v1.17.1
 	github.com/rs/zerolog v1.34.0
 )
 
@@ -16,6 +15,7 @@ require (
 )
 
 require (
+	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.7.5 // indirect
