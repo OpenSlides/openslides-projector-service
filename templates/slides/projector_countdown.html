@@ -1,0 +1,16 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_countdown.css" />
+
+<div class="countdown {{if .Options.Fullscreen}}fullscreen{{else}}overlay{{end}}">
+    <projector-countdown
+        id="countdown-{{.Countdown.ID}}"
+        default-time="{{.Countdown.DefaultTime}}"
+        countdown-time="{{printf "%.0f" .Countdown.CountdownTime}}"
+        running="{{.Countdown.Running}}"></projector-countdown>
+    {{if .Options.Fullscreen}}
+        {{if .Countdown.Description}}
+        <div class="description">
+            {{.Countdown.Description}}
+        </div>
+        {{end}}
+    {{end}}
+</div>

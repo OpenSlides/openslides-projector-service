@@ -1,6 +1,11 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
+import { ProjectorCountdown } from './slide/projector_countdown.js';
+
+customElements.define("projector-countdown", ProjectorCountdown);
+
+window.serverTime = () => new Date();
 
 /**
  * Creates a projector on the given element
@@ -37,7 +42,12 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   eventSource.addEventListener(`connected`, (e) => {
-    clock.setOffset(+e.data);
+    const timeOffset = +e.data - Math.floor(Date.now() / 1000);
+    window.serverTime = () => {
+      return new Date(Date.now() - (timeOffset * 1000));
+    };
+    clock.update();
+
     console.debug(`connected`);
   });
 
@@ -49,8 +59,6 @@ export function Projector(host, id, auth = () => ``) {
 
   eventSource.addEventListener(`projection-updated`, (e) => {
     const data = JSON.parse(e.data);
-    console.debug(`projection-updated`, data);
-
     for (let id of Object.keys(data)) {
       let el = container.querySelector(`.slide[data-id="${id}"]`);
       if (!el) {
