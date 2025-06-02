@@ -1,10 +1,9 @@
 export function createProjectorClock(shadowDom) {
-  let timeOffset = 0;
   let updateTimeout;
   function updateTime() {
     clearTimeout(updateTimeout);
 
-    const time = new Date(Date.now() - (timeOffset * 1000));
+    const time = window.serverTime();
     const clockEl = shadowDom.querySelector(`#clock-time`);
     if (clockEl) {
       const hour = `0${time.getHours()}`.substr(-2);
@@ -18,10 +17,6 @@ export function createProjectorClock(shadowDom) {
 
 
   return {
-    setOffset(serverTime) {
-      timeOffset = serverTime - Math.floor(Date.now() / 1000);
-      updateTime();
-    },
     update() {
       updateTime();
     },
