@@ -44,6 +44,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gote
 	routes["assignment"] = AssignmentSlideHandler
 	routes["current_los"] = CurrentListOfSpeakersSlideHandler
 	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
+	routes["poll"] = PollSlideHandler
 	routes["projector_countdown"] = ProjectorCountdownSlideHandler
 	routes["projector_message"] = ProjectorMessageSlideHandler
 	routes["topic"] = TopicSlideHandler
