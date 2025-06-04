@@ -1,9 +1,4 @@
 export class ProjectorCountdown extends HTMLElement {
-  defaultTime = 0;
-  countdownTime = 0;
-  running = false;
-  updateCallback = null;
-
   get secondsRemaining() {
     const factor = this.defaultTime === 0 ? -1 : 1;
     if (this.running) {
@@ -42,16 +37,65 @@ export class ProjectorCountdown extends HTMLElement {
   }
 
   connectedCallback() {
-    this.defaultTime = +this.getAttribute(`default-time`);
-    this.countdownTime = +this.getAttribute(`countdown-time`);
+    this.defaultTime = +this.getAttribute(`default-time`) || 0;
+    this.countdownTime = +this.getAttribute(`countdown-time`) || 0;
+    this.warningTime = +this.getAttribute(`warning-time`) || 0;
     this.running = this.getAttribute(`running`) === `true`;
 
-    this.updateCallback = setInterval(() => {
-      this.innerText = this.countdownTimeFormatted;
-    }, 500);
+    const displayType = this.getAttribute(`display-type`) || `onlyCountdown`;
+    this.showTimeIndicator = displayType === `countdownAndTimeIndicator` || displayType === `onlyTimeIndicator`;
+    this.showCountdown = displayType === `onlyCountdown` || displayType === `countdownAndTimeIndicator`;
+
+    this.classList.add(`countdown-time-wrapper`);
+
+    if (this.showTimeIndicator) {
+      const timeIndicator = document.createElement(`div`);
+      timeIndicator.id = `timeIndicator`;
+
+      const timeIndicatorWrapper = document.createElement(`div`);
+      timeIndicatorWrapper.classList.add(`time-indicator-wrapper`);
+      timeIndicatorWrapper.appendChild(timeIndicator);
+      this.appendChild(timeIndicatorWrapper);
+    }
+
+    if (this.showCountdown) {
+      this.countdownEl = document.createElement(`div`);
+      this.countdownEl.id = `countdown`;
+
+      const countdownWrapper = document.createElement(`div`);
+      countdownWrapper.classList.add(`countdown-wrapper`);
+      countdownWrapper.appendChild(this.countdownEl);
+      this.appendChild(countdownWrapper);
+    }
+
+    if (this.running) {
+      this.updateCallback = setInterval(() => {
+        this.updateComponent();
+      }, 500);
+    } else {
+      this.updateComponent();
+    }
+  }
+
+  updateComponent() {
+    if (this.showCountdown) {
+      this.countdownEl.innerText = this.countdownTimeFormatted;
+    }
+
+    const isNegative = this.seconds <= 0 && (this.defaultTime !== 0 || this.seconds < 0);
+    const isWarning = this.defaultTime !== 0 && this.seconds <= this.warningTime && this.seconds > 0;
+    if (isWarning) {
+      this.classList.add('warning-time');
+    }
+
+    if (isNegative) {
+      this.classList.add('negative-time');
+    }
   }
 
   disconnectedCallback() {
-    clearInterval(this.updateCallback);
+    if (this.updateCallback) {
+      clearInterval(this.updateCallback);
+    }
   }
 }

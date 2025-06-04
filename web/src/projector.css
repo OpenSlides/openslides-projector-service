@@ -76,6 +76,15 @@ body {
   justify-content: center;
 }
 
+#slides {
+  position: relative;
+  height: 100%;
+}
+
+#header + #slides {
+  height: calc(100% - 105px);
+}
+
 #slides .slide > .content {
   width: calc(100% - 100px);
   line-height: 1.5;

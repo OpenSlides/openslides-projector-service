@@ -3,10 +3,12 @@
 <div class="countdown {{if .Options.Fullscreen}}fullscreen{{else}}overlay{{end}}">
     <projector-countdown
         id="countdown-{{.Countdown.ID}}"
-        default-time="{{.Countdown.DefaultTime}}"
         countdown-time="{{printf "%.0f" .Countdown.CountdownTime}}"
-        running="{{.Countdown.Running}}"></projector-countdown>
-    {{if .Options.Fullscreen}}
+        default-time="{{.Countdown.DefaultTime}}"
+        display-type="{{.Options.DisplayType}}"
+        running="{{.Countdown.Running}}"
+        warning-time="{{.WarningTime}}"></projector-countdown>
+    {{if not .Options.Fullscreen}}
         {{if .Countdown.Description}}
         <div class="description">
             {{.Countdown.Description}}

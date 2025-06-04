@@ -31,8 +31,14 @@ func ProjectorCountdownSlideHandler(ctx context.Context, req *projectionRequest)
 		}
 	}
 
+	warningTime, err := req.Fetch.Meeting_ProjectorCountdownWarningTime(countdown.MeetingID).Value(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not load projector countdown warning time %w", err)
+	}
+
 	return map[string]any{
-		"Countdown": countdown,
-		"Options":   options,
+		"Countdown":   countdown,
+		"Options":     options,
+		"WarningTime": warningTime,
 	}, nil
 }
