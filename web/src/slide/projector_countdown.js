@@ -68,12 +68,11 @@ export class ProjectorCountdown extends HTMLElement {
       this.appendChild(countdownWrapper);
     }
 
+    this.updateComponent();
     if (this.running) {
       this.updateCallback = setInterval(() => {
         this.updateComponent();
       }, 500);
-    } else {
-      this.updateComponent();
     }
   }
 
