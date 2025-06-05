@@ -121,7 +121,12 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				return
 			}
 
-			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", projectionType))
+			templateName := projectionType
+			if val, ok := projectionContent["_template"]; ok {
+				templateName = val.(string)
+			}
+
+			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
 			if err != nil {
 				log.Error().Err(err).Msgf("could not load %s template", projectionType)
 				return
