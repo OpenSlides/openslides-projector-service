@@ -36,6 +36,11 @@
             --projector-aspect-ratio-denominator: {{.Projector.AspectRatioDenominator}};
         {{end}}
     {{end}}
+    {{if .Projector.Theme}}
+        --theme-yes: {{or .Projector.Theme.Yes "#4caf50"}};
+        --theme-no: {{or .Projector.Theme.No "#cc6c5b"}};
+        --theme-abstain: {{or .Projector.Theme.Abstain "#a6a6a6"}};
+    {{end}}
 }
 </style>
 
