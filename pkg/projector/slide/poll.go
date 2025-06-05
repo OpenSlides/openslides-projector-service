@@ -46,7 +46,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	pQ := req.Fetch.Poll()
-	poll, err := req.Fetch.Poll(*req.ContentObjectID).Preload(pQ.OptionList()).First(ctx)
+	poll, err := req.Fetch.Poll(*req.ContentObjectID).Preload(pQ.OptionList().VoteList()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll id %w", err)
 	}
@@ -61,7 +61,9 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		pollOption = poll.OptionList[0]
 	}
 
-	var entitledUsersAtStop []dsmodels.MeetingUser
+	var entitledUsersAtStop []struct {
+		UserID int `json:"user_id"`
+	}
 	if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
 		return nil, fmt.Errorf("parse los id: %w", err)
 	}
@@ -73,6 +75,32 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Abstain": strings.Contains(poll.Pollmethod, "A"),
 	}
 
+	type voteEntry struct {
+		Value     string
+		FirstName string
+		LastName  string
+	}
+
+	voteEntries := map[int]*voteEntry{}
+	for _, entry := range entitledUsersAtStop {
+		user, err := req.Fetch.User(entry.UserID).First(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not load entitled user: %w", err)
+		}
+
+		voteEntries[entry.UserID] = &voteEntry{
+			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
+			LastName:  user.LastName,
+			Value:     "",
+		}
+	}
+
+	for _, entry := range pollOption.VoteList {
+		if val, ok := entry.UserID.Value(); ok {
+			voteEntries[val].Value = entry.Value
+		}
+	}
+
 	return map[string]any{
 		"_template":        "poll_single_vote",
 		"_fullHeight":      true,
@@ -80,7 +108,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
 		"PollOption":       pollOption,
-		"EntitledUsers":    entitledUsersAtStop,
 		"NumEntitledUsers": numEntitledUsers,
+		"Votes":            voteEntries,
 	}, nil
 }
