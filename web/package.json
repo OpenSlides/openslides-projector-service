@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "projector.js",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "build-watch": "node build.mjs -- --watch"
   },
   "author": "",
   "license": "MIT",

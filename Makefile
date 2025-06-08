@@ -26,4 +26,4 @@ build-web-assets: | install-web-asset-deps
 	cd web && npm run build
 
 build-watch-web-assets: | install-web-asset-deps
-	cd web && npm run build
+	cd web && npm run build-watch
