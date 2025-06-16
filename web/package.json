@@ -13,6 +13,7 @@
     "esbuild": "0.25.0"
   },
   "dependencies": {
-    "eventsource": "^3.0.5"
+    "eventsource": "^3.0.5",
+    "material-icons": "^1.13.14"
   }
 }

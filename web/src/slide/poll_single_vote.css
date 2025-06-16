@@ -1,3 +1,12 @@
+.poll-single-vote {
+    display: flex;
+    flex-direction: column;
+
+    > .content-wrapper {
+        flex-grow: 1;
+    }
+}
+
 .single-votes-slidetitle {
     border-bottom: 0 !important;
     padding-bottom: 0 !important;
@@ -61,21 +70,21 @@
 }
 
 .votes-area {
-    display: inline-flex;
+    /* display: inline-flex; */
     gap: 0 5px;
     width: 100%;
+
+    .vote-entry {
+        min-height: 29px;
+        display: flex;
+        align-items: center;
+    }
 
     .votes-column {
         display: flex;
         flex-direction: column;
         flex-grow: 1;
         min-width: 0;
-
-        .vote-entry {
-            min-height: 29px;
-            display: flex;
-            align-items: center;
-        }
 
         :not(:last-child) {
             border-bottom: 1px solid rgba(128, 128, 128, 0.2);

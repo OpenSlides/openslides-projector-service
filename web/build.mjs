@@ -15,7 +15,11 @@ let ctx = await esbuild.context({
   format: 'esm',
   target: ['chrome58', 'firefox57', 'safari11', 'edge18'],
   outdir: '../static/',
-  external: ['*.woff']
+  loader: {
+    '.woff': 'file',
+    '.woff2': 'file'
+  },
+  external: ['/assets/fonts/*.woff']
 });
 
 if (process.argv.indexOf(`--watch`) !== -1) {
