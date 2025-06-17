@@ -1,12 +1,14 @@
-import * as esbuild from 'esbuild';
+import { context } from 'esbuild';
+import { copy } from 'esbuild-plugin-copy';
 
-let ctx = await esbuild.context({
+let ctx = await context({
   entryPoints: [
     'src/projector.js',
     'src/projector.css',
     'src/projector-page.css',
     'src/slide/*.css',
-    'src/slide/*.js'
+    'src/slide/*.js',
+    'src/components/*.js'
   ],
   bundle: true,
   minify: true,
@@ -14,7 +16,22 @@ let ctx = await esbuild.context({
   format: 'esm',
   target: ['chrome58', 'firefox57', 'safari11', 'edge18'],
   outdir: '../static/',
-  external: ['*.woff']
+  external: ['*.woff'],
+  loader: {
+    '.svg': 'file',
+    '.gif': 'file'
+  },
+  plugins: [copy({
+    assets: {
+      from: ['node_modules/pdfjs-dist/build/pdf.worker.mjs'],
+      to: ['../static/lib']
+    }
+  }), copy({
+    assets: {
+      from: ['node_modules/pdfjs-dist/cmaps/*'],
+      to: ['../static/lib/cmaps']
+    }
+  })]
 });
 
 if (process.argv.indexOf(`--watch`) !== -1) {
