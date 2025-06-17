@@ -1,0 +1,13 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_mediafile.css" />
+
+<div class="mediafile-slide">
+    {{if eq .FileType "pdf"}}
+        <div class="mediafile-inner mediafile-pdf fullscreen">
+            {{.Mediafile.Title}}
+        </div>
+    {{else if eq .FileType "image"}}
+        <div class="mediafile-inner mediafile-image{{if .Options.Fullscreen}} fullscreen{{end}}">
+            <img src="/system/media/get/{{.Mediafile.ID}}" />
+        </div>
+    {{end}}
+</div>

@@ -31,6 +31,11 @@ export function setPageWidthVar(shadowDom) {
     );
 
     pageEl.style.setProperty("--projector-height", `${projectorHeight}`);
+
+    const headerHeight = shadowDom.querySelector(`#header`) ? 70 : 0;
+    const footerHeight = shadowDom.querySelector(`#footer`) ? 35 : 0;
+    const innerHeight = projectorHeight - headerHeight - footerHeight;
+    pageEl.style.setProperty("--projector-inner-height", `${innerHeight}`);
   }
 
   window.addEventListener("load", update);
