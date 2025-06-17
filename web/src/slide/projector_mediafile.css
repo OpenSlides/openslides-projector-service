@@ -9,6 +9,18 @@
     align-items: center;
   }
 
+  .mediafile-pdf {
+    pdf-viewer {
+      display: block;
+      > div {
+        position: absolute;
+        overflow: auto;
+        width: 100%;
+        inset: 5rem 0 4rem;
+      }
+    }
+  }
+
   img {
     margin: auto;
   }

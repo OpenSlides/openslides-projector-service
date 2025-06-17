@@ -2,8 +2,10 @@ import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
+import { PdfViewer } from './components/pdf-viewer.js';
 
 customElements.define("projector-countdown", ProjectorCountdown);
+customElements.define("pdf-viewer", PdfViewer);
 
 window.serverTime = () => new Date();
 
