@@ -16,3 +16,8 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* Needed for pdf.js */
+.hiddenCanvasElement {
+  position: absolute;
+}

@@ -36,6 +36,11 @@
             --projector-aspect-ratio-denominator: {{.Projector.AspectRatioDenominator}};
         {{end}}
     {{end}}
+    {{if .Projector.Scroll}}
+        --projector-scroll: {{.Projector.Scroll}};
+    {{else}}
+        --projector-scroll: 0;
+    {{end}}
 }
 </style>
 

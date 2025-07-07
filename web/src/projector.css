@@ -179,3 +179,8 @@ h3 {
 ol, ul {
   margin: 0 0 10px 0;
 }
+
+/* Needed for pdf.js */
+.hiddenCanvasElement {
+  position: absolute;
+}
