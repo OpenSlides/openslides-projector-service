@@ -35,8 +35,31 @@ export function Projector(host, id, auth = () => ``) {
       })
     },
   })
+
   eventSource.addEventListener(`settings`, (e) => {
-    console.debug(`settings`, e.data);
+    const projectorContainer = container.querySelector(`#projector-container`);
+    const settings = JSON.parse(e.data);
+    const cssProperties = {
+      '--projector-color': settings.Color,
+      '--projector-background-color': settings.BackgroundColor,
+      '--projector-header-background-color': settings.HeaderBackgroundColor,
+      '--projector-header-font-color': settings.HeaderFontColor,
+      '--projector-header-h1-color': settings.HeaderH1Color,
+      '--projector-chyron-background-color': settings.ChyronBackgroundColor,
+      '--projector-chyron-background-color2': settings.ChyronBackgroundColor2,
+      '--projector-chyron-font-color': settings.ChyronFontColor,
+      '--projector-chyron-font-color2': settings.ChyronFontColor2,
+      '--projector-width': settings.Width,
+      '--projector-aspect-ratio-numerator': settings.AspectRatioNumerator,
+      '--projector-aspect-ratio-denominator': settings.AspectRatioDenominator,
+      '--projector-scroll': settings.Scroll,
+    };
+
+    for (let prop in cssProperties) {
+      if (cssProperties[prop] !== undefined) {
+        projectorContainer.style.setProperty(prop, cssProperties[prop]);
+      }
+    }
   });
 
   eventSource.addEventListener(`deleted`, () => {
