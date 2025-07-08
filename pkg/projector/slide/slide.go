@@ -48,6 +48,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gote
 	routes["projector_countdown"] = ProjectorCountdownSlideHandler
 	routes["projector_message"] = ProjectorMessageSlideHandler
 	routes["topic"] = TopicSlideHandler
+	routes["wifi_access_data"] = WifiAccessDataSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,

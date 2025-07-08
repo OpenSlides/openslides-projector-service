@@ -3,9 +3,11 @@ import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
+import { QrCode } from './components/qr-code.js';
 
 customElements.define("projector-countdown", ProjectorCountdown);
 customElements.define("pdf-viewer", PdfViewer);
+customElements.define("qr-code", QrCode);
 
 window.serverTime = () => new Date();
 
