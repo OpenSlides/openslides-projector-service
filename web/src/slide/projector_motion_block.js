@@ -40,7 +40,6 @@ export class ProjectorMotionBlock extends HTMLElement {
       offsets.add(motion.offsetLeft);
     }
 
-
     const display = offsets.size > 1 ? `none` : null;
     for (const motion of motions) {
       motion.querySelector(`.motion-title`).style.display = display;
