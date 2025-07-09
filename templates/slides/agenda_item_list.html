@@ -1,0 +1,15 @@
+<div class="content">
+    <h1 class="projector_h1">
+        {{ .Loc.Get "Agenda" }}
+    </h1>
+
+    <div class="agenda-item-list-content">
+        {{range .Agenda}}
+        <div class="item">
+            {{ .Number }} -
+            {{ .Level }} -
+            {{ .Weight }}
+        </div>
+        {{end}}
+    </div>
+</div>

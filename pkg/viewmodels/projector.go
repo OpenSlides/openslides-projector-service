@@ -2,10 +2,8 @@ package viewmodels
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
-	"github.com/OpenSlides/openslides-go/datastore/dskey"
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
@@ -22,22 +20,9 @@ func Projector_ListOfSpeakersID(ctx context.Context, fetch *dsmodels.Fetch, proj
 			return nil, fmt.Errorf("could not load projection: %w", err)
 		}
 
-		losDsKey, err := dskey.FromStringf("%s/list_of_speakers_id", content)
+		losID, err = GetContentObjectField[int](ctx, fetch, "list_of_speakers_id", content)
 		if err != nil {
 			continue
-		}
-
-		keys, err := fetch.Get(ctx, losDsKey)
-		if err != nil {
-			return nil, fmt.Errorf("load los id: %w", err)
-		}
-
-		if val, ok := keys[losDsKey]; !ok || len(val) == 0 {
-			continue
-		}
-
-		if err := json.Unmarshal(keys[losDsKey], &losID); err != nil {
-			return nil, fmt.Errorf("parse los id: %w", err)
 		}
 	}
 
