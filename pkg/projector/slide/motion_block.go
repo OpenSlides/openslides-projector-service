@@ -31,7 +31,7 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 		recoName := ""
 		recoColor := ""
 		if reco, hasReco := motion.Recommendation.Value(); hasReco {
-			recoName = reco.Name
+			recoName = reco.RecommendationLabel
 			recoColor = reco.CssClass
 		}
 		motionList = append(motionList, motionListEntry{
