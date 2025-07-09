@@ -1,0 +1,56 @@
+.motion-block-slide {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--projector-inner-height) * 1px - 20px);
+
+  .column-item {
+    display: flex;
+    align-items: center;
+    .motion-number {
+      white-space: nowrap;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    .motion-details {
+      overflow: hidden;
+    }
+    .motion-recommendation {
+      line-height: 1;
+      .label {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: bold;
+        border-radius: 5px !important;
+        padding: 0px 8px !important;
+        line-height: 2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+    .motion-title {
+      font-size: 14px;
+    }
+  }
+
+  .grid-container {
+    --grid-layout-gap: 2.5px;
+    --grid-column-count: 1;
+    --grid-item--min-width: 200px;
+
+    --gap-count: calc(var(--grid-column-count) - 1);
+    --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
+    --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
+    grid-gap: var(--grid-layout-gap);
+    margin-top: calc(var(--projector-scroll) * -20px);
+  }
+
+  projector-motion-block {
+    padding-top: 12px;
+    overflow: hidden;
+    flex-grow: 1;
+  }
+}

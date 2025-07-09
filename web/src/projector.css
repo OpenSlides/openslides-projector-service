@@ -1,4 +1,5 @@
 @import "fonts.css";
+@import "colors.css";
 
 :root {
   --projector-color: #000000;
@@ -85,10 +86,17 @@ body {
   height: calc(100% - 105px);
 }
 
+#slides .slide > .full-height {
+  min-height: calc(var(--projector-inner-height) * 1px);
+}
+
 #slides .slide > .content {
   width: calc(100% - 100px);
   line-height: 1.5;
-  margin-top: 20px;
+  padding-top: 20px;
+  &.full-height {
+    min-height: calc(var(--projector-inner-height) * 1px - 20px);
+  }
 }
 
 #slides .slide > .content.overlay {

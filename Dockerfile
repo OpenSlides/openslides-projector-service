@@ -42,7 +42,7 @@ COPY --from=builder-web /static ./static
 RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
 EXPOSE 9051
 
-CMD CompileDaemon -log-prefix=false -build="go build -o projector-service ./openslides-projector-service/cmd/projectord/main.go" -command="./projector-service"
+CMD CompileDaemon -log-prefix=false -include="*.html" -build="go build -o projector-service ./openslides-projector-service/cmd/projectord/main.go" -command="./projector-service"
 
 
 # Productive build

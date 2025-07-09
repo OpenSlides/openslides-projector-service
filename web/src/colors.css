@@ -1,0 +1,43 @@
+.white {
+    color: white;
+}
+
+.lightblue {
+    background-color: rgb(33, 150, 243) !important;
+    color: white !important;
+}
+
+.darkblue {
+    background-color: rgb(63, 81, 181) !important;
+    color: white !important;
+}
+
+.green {
+    background-color: rgb(76, 175, 80) !important;
+    color: white !important;
+}
+
+.light-green {
+    background-color: rgb(77, 243, 86) !important;
+}
+
+.red {
+    background-color: rgb(255, 82, 82) !important;
+    color: white !important;
+}
+
+.yellow {
+    background-color: rgb(255, 193, 7) !important;
+    color: white !important;
+}
+
+.bluegrey {
+    background-color: rgb(96, 125, 139) !important;
+    color: white !important;
+}
+
+.grey,
+.gray {
+    background-color: #e0e0e0 !important;
+    color: rgba(0, 0, 0, 0.87) !important;
+}

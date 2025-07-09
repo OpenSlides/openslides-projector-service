@@ -4,8 +4,10 @@ import { createProjectorClock } from './projector/clock.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
 import { QrCode } from './components/qr-code.js';
+import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
 
 customElements.define("projector-countdown", ProjectorCountdown);
+customElements.define("projector-motion-block", ProjectorMotionBlock);
 customElements.define("pdf-viewer", PdfViewer);
 customElements.define("qr-code", QrCode);
 
