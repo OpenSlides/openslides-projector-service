@@ -1,9 +1,12 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_list_of_speakers.css" />
 
-<div class="content motion-block-slide">
+<div class="content list-of-speakers-slide">
     <div class="slidetitle">
         <h1>
             {{ Loc.Get "List of speakers" }}
+            {{ if .LoS.Closed }}
+                <span class="material-icons los-lock">lock</span>
+            {{ end }}
         </h1>
         <h2>
             {{ if .ContentTitle.AgendaItemNumber }}
@@ -17,5 +20,9 @@
             {{ end }}
             &ndash; {{ len .LoS.SpeakerIDs }} {{ Loc.Get "Speakers" }}
         </h2>
+    </div>
+
+    <div class="">
+
     </div>
 </div>
