@@ -45,7 +45,7 @@ func recBuildAgendaList(ctx context.Context, fetch *dsmodels.Fetch, agendaItems 
 	agenda := []agendaListEntry{}
 	for _, agendaItem := range agendaItems {
 		parentId, _ := agendaItem.ParentID.Value()
-		if parentId == currentParent && !agendaItem.IsInternal && !agendaItem.IsHidden {
+		if parentId == currentParent && agendaItem.Type != "internal" && agendaItem.Type != "hidden" {
 			titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, fetch, agendaItem.ContentObjectID)
 			if err != nil {
 				return nil, fmt.Errorf("could not get title information: %w", err)
