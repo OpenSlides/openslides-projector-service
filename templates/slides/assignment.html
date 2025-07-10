@@ -6,7 +6,7 @@
             {{ .Assignment.Title }}
         </h1>
         <h2>
-            {{ .Loc.Get "Election" }}
+            {{ Loc.Get "Election" }}
         </h2>
     </div>
     {{if .Description }}
@@ -14,7 +14,7 @@
             {{.Description}}
         </div>
     {{end}}
-    <h3>{{ .Loc.Get "Candidates" }}</h3>
+    <h3>{{ Loc.Get "Candidates" }}</h3>
 
     {{if .Assignment.NumberPollCandidates }}
         <ol>
