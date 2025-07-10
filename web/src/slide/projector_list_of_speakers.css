@@ -1,11 +1,5 @@
-.agenda-item-list-content {
-  ul {
-    list-style: none;
-    font-size: 20px;
-  }
-
-  > ul {
-    font-size: 24px;
-    padding-left: 0;
+.list-of-speakers-slide {
+  .los-lock {
+    vertical-align: text-top;
   }
 }
