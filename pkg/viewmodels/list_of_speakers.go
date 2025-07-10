@@ -28,12 +28,15 @@ func ListOfSpeakers_CurrentSpeaker(ctx context.Context, los *dsmodels.ListOfSpea
 }
 
 type SpeakerListItem struct {
-	Name           string
-	Weight         int
-	IsSpeaking     bool
-	IsContribution bool
-	IsPointOfOrder bool
-	IsIntervention bool
+	Name                 string
+	Weight               int
+	IsSpeaking           bool
+	IsContribution       bool
+	IsPointOfOrder       bool
+	IsIntervention       bool
+	IsInterposedQuestion bool
+	IsForspeach          bool
+	IsCounterspeach      bool
 }
 
 type ListOfSpeakersLists struct {
@@ -72,12 +75,15 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 		}
 
 		item := SpeakerListItem{
-			Name:           name,
-			Weight:         speaker.Weight,
-			IsPointOfOrder: speaker.PointOfOrder,
-			IsContribution: speaker.SpeechState == "contribution",
-			IsIntervention: speaker.SpeechState == "intervention",
-			IsSpeaking:     false,
+			Name:                 name,
+			Weight:               speaker.Weight,
+			IsPointOfOrder:       speaker.PointOfOrder,
+			IsContribution:       speaker.SpeechState == "contribution",
+			IsIntervention:       speaker.SpeechState == "intervention",
+			IsInterposedQuestion: speaker.SpeechState == "interposed_question",
+			IsForspeach:          speaker.SpeechState == "pro",
+			IsCounterspeach:      speaker.SpeechState == "contra",
+			IsSpeaking:           false,
 		}
 
 		if speaker.BeginTime == 0 && speaker.EndTime == 0 {
