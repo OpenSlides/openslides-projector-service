@@ -6,7 +6,15 @@ import (
 	"slices"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
+
+type agendaListEntry struct {
+	Number       string
+	TitleInfo    viewmodels.TitleInformation
+	Weight       int
+	ChildEntries []agendaListEntry
+}
 
 func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	if req.ContentObjectID == nil {
@@ -23,43 +31,43 @@ func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		return nil, fmt.Errorf("could not load agenda items %w", err)
 	}
 
-	// TODO: Fix sorting
-	slices.SortFunc(agendaItems, func(a, b dsmodels.AgendaItem) int {
-		parentIdA, _ := a.ParentID.Value()
-		parentIdB, _ := b.ParentID.Value()
-		if parentIdA == parentIdB {
-			if a.Weight == b.Weight {
-				return a.ID - b.ID
-			}
-			return a.Weight - b.Weight
-		} else if a.ID == parentIdB {
-			return -1
-		} else if b.ID == parentIdA {
-			return 1
-		}
-
-		println(parentIdA, parentIdB, a.ID, b.ID)
-
-		return -1
-	})
-
-	type agendaListEntry struct {
-		Number string
-		Title  string
-		Type   string
-		Level  int
-		Weight int
-	}
-	agenda := []agendaListEntry{}
-	for _, agendaItem := range agendaItems {
-		agenda = append(agenda, agendaListEntry{
-			Number: agendaItem.ItemNumber,
-			Level:  agendaItem.Level,
-			Weight: agendaItem.Weight,
-		})
+	agenda, err := recBuildAgendaList(ctx, req.Fetch, agendaItems, 0)
+	if err != nil {
+		return nil, fmt.Errorf("could process agenda items %w", err)
 	}
 
 	return map[string]any{
 		"Agenda": agenda,
 	}, nil
+}
+
+func recBuildAgendaList(ctx context.Context, fetch *dsmodels.Fetch, agendaItems []dsmodels.AgendaItem, currentParent int) ([]agendaListEntry, error) {
+	agenda := []agendaListEntry{}
+	for _, agendaItem := range agendaItems {
+		parentId, _ := agendaItem.ParentID.Value()
+		if parentId == currentParent && !agendaItem.IsInternal && !agendaItem.IsHidden {
+			titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, fetch, agendaItem.ContentObjectID)
+			if err != nil {
+				return nil, fmt.Errorf("could not get title information: %w", err)
+			}
+
+			childEntries, err := recBuildAgendaList(ctx, fetch, agendaItems, agendaItem.ID)
+			if err != nil {
+				return nil, fmt.Errorf("could not get child entries: %w", err)
+			}
+
+			agenda = append(agenda, agendaListEntry{
+				Number:       agendaItem.ItemNumber,
+				TitleInfo:    titleInfo,
+				Weight:       agendaItem.Weight,
+				ChildEntries: childEntries,
+			})
+		}
+	}
+
+	slices.SortFunc(agenda, func(a, b agendaListEntry) int {
+		return a.Weight - b.Weight
+	})
+
+	return agenda, nil
 }

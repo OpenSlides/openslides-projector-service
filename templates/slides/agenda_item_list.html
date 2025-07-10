@@ -1,15 +1,39 @@
 <div class="content">
-    <h1 class="projector_h1">
-        {{ .Loc.Get "Agenda" }}
-    </h1>
+    <h1 class="projector_h1">{{ Loc.Get "Agenda" }}</h1>
 
     <div class="agenda-item-list-content">
-        {{range .Agenda}}
-        <div class="item">
-            {{ .Number }} -
-            {{ .Level }} -
-            {{ .Weight }}
-        </div>
-        {{end}}
+        {{ define "agenda-list" }}
+            {{ range . }}
+            <li>
+                {{ if .Number }}
+                    {{ .Number }}
+                {{ end }}
+                {{ if and .Number .TitleInfo.Title }}
+                    ·
+                {{ end }}
+                {{ if eq .TitleInfo.Collection "motion" }}
+                    {{ Loc.Get "Motion" }}
+                    {{ if .TitleInfo.Number }}
+                        {{ .TitleInfo.Number }}
+                    {{ else }}
+                        {{ .TitleInfo.Title }}
+                    {{ end }}
+                {{ else if eq .TitleInfo.Collection "motion_block" }}
+                    {{ .TitleInfo.Title }} ({{ Loc.Get "Motion block" }})
+                {{ else if eq .TitleInfo.Collection "assignment" }}
+                    {{ .TitleInfo.Title }} ({{ Loc.Get "Election" }})
+                {{ else }}
+                    {{ .TitleInfo.Title }}
+                {{ end }}
+                {{ if gt (len .ChildEntries) 0}}
+                    <ul>
+                        {{ template "agenda-list" .ChildEntries }}
+                    </ul>
+                {{ end }}
+            </li>
+            {{ end }}
+        {{ end }}
+
+        <ul>{{ template "agenda-list" .Agenda }}</ul>
     </div>
 </div>

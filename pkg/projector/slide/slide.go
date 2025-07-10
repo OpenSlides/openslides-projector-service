@@ -130,15 +130,19 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				templateName = val.(string)
 			}
 
-			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
+			tmplName := fmt.Sprintf("%s.html", templateName)
+			tmpl, err := template.New(tmplName).Funcs(template.FuncMap{
+				"Loc": func() *gotext.Locale {
+					return r.locale
+				},
+			}).ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
 			if err != nil {
 				log.Error().Err(err).Msgf("could not load %s template", projectionType)
 				return
 			}
 
 			var content bytes.Buffer
-			projectionContent["Loc"] = r.locale
-			err = tmpl.Execute(&content, projectionContent)
+			err = tmpl.Lookup(tmplName).Execute(&content, projectionContent)
 			if err != nil {
 				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
 				return
