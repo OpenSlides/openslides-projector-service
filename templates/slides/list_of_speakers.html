@@ -60,13 +60,13 @@
     <div class="detail-view-text">
         {{if .Speakers.CurrentSpeaker}}
             <div class="speaker current">
-                {{ template "speaker" .CurrentSpeaker }}
+                {{ template "speaker" .Speakers.CurrentSpeaker }}
             </div>
         {{end}}
 
         {{if .Speakers.CurrentInterposedQuestion}}
             <div class="speaker current interposed-question">
-                {{ template "speaker" .CurrentInterposedQuestion }}
+                {{ template "speaker" .Speakers.CurrentInterposedQuestion }}
             </div>
         {{end}}
 
