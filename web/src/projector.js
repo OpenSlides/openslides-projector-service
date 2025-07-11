@@ -111,7 +111,6 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   return () => {
-    clearInterval(timeInterval);
     sizeListener.unregister();
     clock.unregister();
     eventSource.close();
