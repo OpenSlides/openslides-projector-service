@@ -43,7 +43,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gote
 	routes := make(map[string]slideHandler)
 	routes["agenda_item_list"] = AgendaItemListSlideHandler
 	routes["assignment"] = AssignmentSlideHandler
-	routes["current_los"] = CurrentListOfSpeakersSlideHandler
+	routes["current_los"] = ListOfSpeakersSlideHandler
 	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
 	routes["list_of_speakers"] = ListOfSpeakersSlideHandler
 	routes["meeting_mediafile"] = MeetingMediafileSlideHandler

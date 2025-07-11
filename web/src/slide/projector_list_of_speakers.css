@@ -1,5 +1,69 @@
-.list-of-speakers-slide {
+.list-of-speakers {
   .los-lock {
     vertical-align: text-top;
   }
+}
+
+.list-of-speakers.overlay h3 {
+  margin-top: 0;
+}
+
+.speaker {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  .material-icons {
+    vertical-align: text-top;
+    &.point-of-order {
+      color: #f06400;
+    }
+    &.forspeach {
+      color: rgb(76, 175, 80);
+    }
+    &.counterspeach {
+      color: red;
+    }
+  }
+
+  &.current {
+    font-weight: 600;
+    margin: 20px 0 0;
+    &.interposed-question {
+      margin-top: 0;
+    }
+  }
+}
+
+.next-speakers {
+  margin: 20px 0 10px 0;
+  padding-left: 6px;
+}
+
+.next-speakers li {
+  list-style-position: inside;
+  line-height: 150%;
+}
+
+.interposed-question,
+.interposed-questions {
+  padding-left: 50px;
+}
+
+.interposed-questions .next-speakers {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 0;
+}
+
+#slides .slide > .content.overlay.list-of-speakers {
+  right: 50px;
+  bottom: 20px;
+  background-color: #d3d3d3;
+  width: 37%;
+  height: 210px;
+  border-radius: 7px;
+  border: 1px solid #999;
+  padding: 10px 10px 10px 25px;
+  box-shadow: 3px 3px 10px 1px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
