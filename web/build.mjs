@@ -19,8 +19,11 @@ let ctx = await context({
   external: ['*.woff'],
   loader: {
     '.svg': 'file',
-    '.gif': 'file'
+    '.gif': 'file',
+    '.woff': 'file',
+    '.woff2': 'file'
   },
+  external: ['/assets/fonts/*.woff'],
   plugins: [copy({
     assets: {
       from: ['node_modules/pdfjs-dist/build/pdf.worker.mjs'],
