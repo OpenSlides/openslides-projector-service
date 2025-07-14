@@ -1,4 +1,4 @@
-import QRCode from "qrcode";
+import QRCode from 'qrcode';
 
 export class QrCode extends HTMLElement {
   constructor() {
@@ -21,7 +21,9 @@ export class QrCode extends HTMLElement {
         {
           width: this.size
         },
-        (err) => { if (err) throw err; }
+        err => {
+          if (err) throw err;
+        }
       );
     }
   }

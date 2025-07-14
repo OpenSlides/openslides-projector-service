@@ -1,25 +1,30 @@
-<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_current_speaking_structure_level.css" />
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="/system/projector/static/slide/projector_current_speaking_structure_level.css"
+/>
 
 <div class="content current-speaking-structure-level overlay">
-    <div class="current-speaking-structure-level-countdown">
-        <div class="level-time-list">
-            <span class="align-right">
-                <hr
-                    class="structure-level-color"
-                    {{if .Color}}style="background-color: {{ .Color }}"{{end}}
-                />
-            </span>
-            <projector-countdown
-                id="structure-level-{{.ID}}"
-                countdown-time="{{printf "%.0f" .CountdownTime}}"
-                running="true"></projector-countdown>
-        </div>
-        <div class="structure-level-name">
-            {{if .Name}}
-                <div class="description">
-                    {{.Name}}
-                </div>
-            {{end}}
-        </div>
+  <div class="current-speaking-structure-level-countdown">
+    <div class="level-time-list">
+      <span class="align-right">
+        <hr
+          class="structure-level-color"
+          {{ if .Color }}style="background-color: {{ .Color }}"{{ end }}
+        />
+      </span>
+      <projector-countdown
+        id="structure-level-{{ .ID }}"
+        countdown-time="{{ printf "%.0f" .CountdownTime }}"
+        running="true"
+      ></projector-countdown>
     </div>
+    <div class="structure-level-name">
+      {{ if .Name }}
+        <div class="description">
+          {{ .Name }}
+        </div>
+      {{ end }}
+    </div>
+  </div>
 </div>

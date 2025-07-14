@@ -1,0 +1,19 @@
+{
+    "printWidth": 120,
+    "proseWrap": "always",
+    "tabWidth": 2,
+    "singleQuote": true,
+    "useTabs": false,
+    "bracketSpacing": true,
+    "htmlWhitespaceSensitivity": "ignore",
+    "semi": true,
+    "trailingComma": "none",
+    "arrowParens": "avoid",
+    "plugins": ["prettier-plugin-go-template"],
+    "overrides": [{
+        "files": ["*.html"],
+        "options": {
+            "parser": "go-template"
+        }
+    }]
+}

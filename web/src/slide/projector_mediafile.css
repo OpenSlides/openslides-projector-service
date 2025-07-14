@@ -14,8 +14,8 @@
   .mediafile-pdf {
     pdf-viewer {
       display: block;
-      > div {
-        background-color: #FFF;
+      & > div {
+        background-color: #fff;
         position: absolute;
         overflow: hidden;
         width: 100%;

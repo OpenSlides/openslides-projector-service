@@ -1,20 +1,20 @@
- <!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>OpenSlides</title>
 
-    <link href="/assets/img/favicon.png" rel="icon" type="image/x-icon">
+    <link href="/assets/img/favicon.png" rel="icon" type="image/x-icon" />
     <link rel="stylesheet" type="text/css" href="/system/projector/static/projector-page.css" />
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="projector-page" class="projector-container"></div>
 
     <script type="module">
-        import { Projector } from '../static/projector.js';
+      import { Projector } from '../static/projector.js';
 
-        let id = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
-        Projector(document.getElementById(`projector-page`), id)
+      let id = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
+      Projector(document.getElementById(`projector-page`), id);
     </script>
-</body>
+  </body>
 </html>

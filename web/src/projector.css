@@ -1,17 +1,17 @@
-@import "fonts.css";
-@import "colors.css";
-@import "material-icons/iconfont/material-icons.css";
+@import 'fonts.css';
+@import 'colors.css';
+@import 'material-icons/iconfont/material-icons.css';
 
 :root {
   --projector-color: #000000;
-  --projector-background-color: #FFFFFF;
+  --projector-background-color: #ffffff;
   --projector-header-background-color: #317796;
-  --projector-header-font-color: #FFFFFF;
+  --projector-header-font-color: #ffffff;
   --projector-header-h1-color: #317796;
   --projector-chyron-background-color: #317796;
   --projector-chyron-background-color2: #134768;
-  --projector-chyron-font-color: #FFFFFF;
-  --projector-chyron-font-color2: #FFFFFF;
+  --projector-chyron-font-color: #ffffff;
+  --projector-chyron-font-color2: #ffffff;
   --projector-width: 1200;
 }
 
@@ -19,7 +19,13 @@ body {
   margin: 0;
   background-color: var(--projector-background-color);
   color: var(--projector-color);
-  font-family: OSFont, Fira Sans, Roboto, Arial, Helvetica, sans-serif;
+  font-family:
+    OSFont,
+    Fira Sans,
+    Roboto,
+    Arial,
+    Helvetica,
+    sans-serif;
 }
 
 .header-footer {
@@ -185,7 +191,8 @@ h3 {
   line-height: 24px;
 }
 
-ol, ul {
+ol,
+ul {
   margin: 0 0 10px 0;
 }
 

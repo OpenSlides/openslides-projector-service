@@ -24,17 +24,20 @@ let ctx = await context({
     '.woff2': 'file'
   },
   external: ['/assets/fonts/*.woff'],
-  plugins: [copy({
-    assets: {
-      from: ['node_modules/pdfjs-dist/build/pdf.worker.mjs'],
-      to: ['../static/lib']
-    }
-  }), copy({
-    assets: {
-      from: ['node_modules/pdfjs-dist/cmaps/*'],
-      to: ['../static/lib/cmaps']
-    }
-  })]
+  plugins: [
+    copy({
+      assets: {
+        from: ['node_modules/pdfjs-dist/build/pdf.worker.mjs'],
+        to: ['../static/lib']
+      }
+    }),
+    copy({
+      assets: {
+        from: ['node_modules/pdfjs-dist/cmaps/*'],
+        to: ['../static/lib/cmaps']
+      }
+    })
+  ]
 });
 
 if (process.argv.indexOf(`--watch`) !== -1) {

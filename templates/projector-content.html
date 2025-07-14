@@ -47,42 +47,55 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/projector.css" />
 
 <div id="projector-container" class="nocursor">
-    <div id="projector">
-        {{if .Projector.ShowHeaderFooter}}
-        <div id="header" class="header-footer"{{if  .Projector.MeetingLogo}} style="background-image: url(/system/media/get/{{.Projector.HeaderImage}});"{{end}}>
-            {{if .Projector.ShowLogo}}
-                {{if  .Projector.MeetingLogo}}
-                <img id="projector-logo-main" src="/system/media/get/{{.Projector.MeetingLogo}}" aria-hidden>
-                {{end}}
-            {{end}}
+  <div id="projector">
+    {{ if .Projector.ShowHeaderFooter }}
+      <div
+        id="header"
+        class="header-footer"
+        {{ if  .Projector.MeetingLogo }}
+          style="background-image: url(/system/media/get/{{ .Projector.HeaderImage }});"
+        {{ end }}
+      >
+        {{ if .Projector.ShowLogo }}
+          {{ if  .Projector.MeetingLogo }}
+            <img id="projector-logo-main" src="/system/media/get/{{ .Projector.MeetingLogo }}" aria-hidden />
+          {{ end }}
+        {{ end }}
 
-            {{if .Projector.ShowTitle}}
-            <div id="eventdata">
-                <div class="event-name ellipsis-overflow">{{.Projector.MeetingName}}</div>
-                <div class="event-description">{{.Projector.MeetingDescription}}</div>
-            </div>
-            {{end}}
+        {{ if .Projector.ShowTitle }}
+          <div id="eventdata">
+            <div class="event-name ellipsis-overflow">{{ .Projector.MeetingName }}</div>
+            <div class="event-description">{{ .Projector.MeetingDescription }}</div>
+          </div>
+        {{ end }}
 
-            {{if .Projector.ShowClock}}
-            <div id="clock">
-                <span id="clock-time"></span>
-            </div>
-            {{end}}
+        {{ if .Projector.ShowClock }}
+          <div id="clock">
+            <span id="clock-time"></span>
+          </div>
+        {{ end }}
+      </div>
+    {{ end }}
+
+
+    <div id="slides">
+      {{ range $index, $element := .Projections }}
+        <div class="slide" data-id="{{ $index }}">
+          {{ $element }}
         </div>
-        {{end}}
-
-        <div id="slides">
-            {{range $index, $element := .Projections}}
-                <div class="slide" data-id="{{ $index }}">
-                    {{$element}}
-                </div>
-            {{end}}
-        </div>
-
-        {{if .Projector.ShowHeaderFooter}}
-        <div id="footer" class="header-footer"{{if  .Projector.MeetingLogo}} style="background-image: url(/system/media/get/{{.Projector.HeaderImage}});"{{end}}>
-            <div class="footertext"></div>
-        </div>
-        {{end}}
+      {{ end }}
     </div>
+
+    {{ if .Projector.ShowHeaderFooter }}
+      <div
+        id="footer"
+        class="header-footer"
+        {{ if  .Projector.MeetingLogo }}
+          style="background-image: url(/system/media/get/{{ .Projector.HeaderImage }});"
+        {{ end }}
+      >
+        <div class="footertext"></div>
+      </div>
+    {{ end }}
+  </div>
 </div>
