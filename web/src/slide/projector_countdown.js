@@ -9,8 +9,8 @@ export class ProjectorCountdown extends HTMLElement {
   }
 
   /**
-    * Updates the countdown time and string format it.
-    */
+   * Updates the countdown time and string format it.
+   */
   get countdownTimeFormatted() {
     this.seconds = this.secondsRemaining;
 

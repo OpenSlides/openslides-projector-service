@@ -1,7 +1,7 @@
-import { getDocument, GlobalWorkerOptions, PDFDocumentProxy } from "pdfjs-dist";
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import * as PDFJSViewer from 'pdfjs-dist/web/pdf_viewer.mjs';
 
-GlobalWorkerOptions.workerSrc = "/system/projector/static/lib/pdf.worker.mjs";
+GlobalWorkerOptions.workerSrc = '/system/projector/static/lib/pdf.worker.mjs';
 
 const CSS_UNITS = 96.0 / 72.0;
 
@@ -31,10 +31,10 @@ export class PdfViewer extends HTMLElement {
     });
     this.linkService.setViewer(this.pdfViewer);
     this.pdfViewer.currentScale = 2;
-    
-    eventBus.on("pagesinit", () => {
+
+    eventBus.on('pagesinit', () => {
       // We can use pdfViewer now, e.g. let's change default scale.
-      this.pdfViewer.currentScaleValue = "page-width";
+      this.pdfViewer.currentScaleValue = 'page-width';
     });
 
     getDocument({
@@ -42,14 +42,14 @@ export class PdfViewer extends HTMLElement {
       isEvalSupported: false,
       cMapUrl: '/system/projector/static/lib/cmaps/',
       cMapPacked: true
-    }).promise.then((pdf) => {
+    }).promise.then(pdf => {
       this.pdf = pdf;
       this.displayPdf(pdf);
     });
   }
 
   /**
-   * @param {PDFDocumentProxy} pdf 
+   * @param {PDFDocumentProxy} pdf
    */
   async displayPdf(pdf) {
     this.pdfViewer.setDocument(pdf);
@@ -72,10 +72,7 @@ export class PdfViewer extends HTMLElement {
   getScale(viewportWidth) {
     const pdfContainerWidth = this.pdfContainer.clientWidth;
 
-    if (
-      pdfContainerWidth === 0 ||
-      viewportWidth === 0
-    ) {
+    if (pdfContainerWidth === 0 || viewportWidth === 0) {
       return 1;
     }
 

@@ -6,10 +6,10 @@ import { PdfViewer } from './components/pdf-viewer.js';
 import { QrCode } from './components/qr-code.js';
 import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
 
-customElements.define("projector-countdown", ProjectorCountdown);
-customElements.define("projector-motion-block", ProjectorMotionBlock);
-customElements.define("pdf-viewer", PdfViewer);
-customElements.define("qr-code", QrCode);
+customElements.define('projector-countdown', ProjectorCountdown);
+customElements.define('projector-motion-block', ProjectorMotionBlock);
+customElements.define('pdf-viewer', PdfViewer);
+customElements.define('qr-code', QrCode);
 
 window.serverTime = () => new Date();
 
@@ -34,13 +34,13 @@ export function Projector(host, id, auth = () => ``) {
         ...init,
         headers: {
           ...init.headers,
-          Authentication: auth(),
-        },
-      })
-    },
-  })
+          Authentication: auth()
+        }
+      });
+    }
+  });
 
-  eventSource.addEventListener(`settings`, (e) => {
+  eventSource.addEventListener(`settings`, e => {
     const projectorContainer = container.querySelector(`#projector-container`);
     const settings = JSON.parse(e.data);
     const cssProperties = {
@@ -56,7 +56,7 @@ export function Projector(host, id, auth = () => ``) {
       '--projector-width': settings.Width,
       '--projector-aspect-ratio-numerator': settings.AspectRatioNumerator,
       '--projector-aspect-ratio-denominator': settings.AspectRatioDenominator,
-      '--projector-scroll': settings.Scroll,
+      '--projector-scroll': settings.Scroll
     };
 
     for (let prop in cssProperties) {
@@ -70,23 +70,23 @@ export function Projector(host, id, auth = () => ``) {
     console.debug(`deleted`);
   });
 
-  eventSource.addEventListener(`connected`, (e) => {
+  eventSource.addEventListener(`connected`, e => {
     const timeOffset = +e.data - Math.floor(Date.now() / 1000);
     window.serverTime = () => {
-      return new Date(Date.now() - (timeOffset * 1000));
+      return new Date(Date.now() - timeOffset * 1000);
     };
     clock.update();
 
     console.debug(`connected`);
   });
 
-  eventSource.addEventListener(`projector-replace`, (e) => {
+  eventSource.addEventListener(`projector-replace`, e => {
     container.innerHTML = JSON.parse(e.data);
     sizeListener.update();
     clock.update();
   });
 
-  eventSource.addEventListener(`projection-updated`, (e) => {
+  eventSource.addEventListener(`projection-updated`, e => {
     const data = JSON.parse(e.data);
     for (let id of Object.keys(data)) {
       let el = container.querySelector(`.slide[data-id="${id}"]`);
@@ -100,7 +100,7 @@ export function Projector(host, id, auth = () => ``) {
     }
   });
 
-  eventSource.addEventListener(`projection-deleted`, (e) => {
+  eventSource.addEventListener(`projection-deleted`, e => {
     console.debug(`projection-deleted`, e.data);
 
     container.querySelector(`.slide[data-id="${e.data}"]`)?.remove();

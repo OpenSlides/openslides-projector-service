@@ -15,7 +15,6 @@ export function createProjectorClock(shadowDom) {
     setTimeout(updateTime, nextUpdateAt - time);
   }
 
-
   return {
     update() {
       updateTime();
@@ -23,5 +22,5 @@ export function createProjectorClock(shadowDom) {
     unregister() {
       clearTimeout(updateTimeout);
     }
-  }
+  };
 }
