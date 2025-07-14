@@ -7,7 +7,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/leonelquinteros/gotext v1.7.1
 	github.com/rs/zerolog v1.34.0
-	golang.org/x/text v0.25.0
+	golang.org/x/text v0.27.0
 )
 
 require (
@@ -25,6 +25,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 )
