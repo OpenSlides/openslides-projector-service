@@ -1,32 +1,34 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_motion_block.css" />
 
 <div class="content full-height motion-block-slide">
-    <div class="slidetitle">
-        <h1>
-            {{ .MotionBlock.Title }}
-        </h1>
-        <h2>
-            {{ Loc.Get "Motion block" }} &ndash; {{ .NumMotions }} {{ Loc.Get "motions" }}
-        </h2>
-    </div>
+  <div class="slidetitle">
+    <h1>
+      {{ .MotionBlock.Title }}
+    </h1>
+    <h2>
+      {{ Loc.Get "Motion block" }} &ndash;
+      {{ .NumMotions }}
+      {{ Loc.Get "motions" }}
+    </h2>
+  </div>
 
-    <projector-motion-block>
-        <div class="grid-container">
-        {{range .Motions}}
-            <div class="column-item">
-                <div class="motion-number">
-                    <span>{{ .Number }}</span>
-                </div>
-                <div class="motion-details">
-                    <div class="motion-recommendation">
-                        <span class="label {{ .RecommendationColor }}">{{ .Recommendation }}</span>
-                    </div>
-                    <div class="motion-title">
-                        {{ .Title }}
-                    </div>
-                </div>
+  <projector-motion-block>
+    <div class="grid-container">
+      {{ range .Motions }}
+        <div class="column-item">
+          <div class="motion-number">
+            <span>{{ .Number }}</span>
+          </div>
+          <div class="motion-details">
+            <div class="motion-recommendation">
+              <span class="label {{ .RecommendationColor }}">{{ .Recommendation }}</span>
             </div>
-        {{end}}
+            <div class="motion-title">
+              {{ .Title }}
+            </div>
+          </div>
         </div>
-    </projector-motion-block>
+      {{ end }}
+    </div>
+  </projector-motion-block>
 </div>

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "projector.js",
   "scripts": {
-    "lint": "eslint src/ && prettier --check .",
-    "lint-fix": "eslint src/ --fix && prettier --write .",
+    "lint": "eslint src/ && prettier --check . ../templates",
+    "lint-fix": "eslint src/ --fix && prettier --write . ../templates",
     "build": "node build.mjs",
     "build-watch": "node build.mjs -- --watch"
   },

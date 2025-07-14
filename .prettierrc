@@ -8,5 +8,12 @@
     "htmlWhitespaceSensitivity": "ignore",
     "semi": true,
     "trailingComma": "none",
-    "arrowParens": "avoid"
+    "arrowParens": "avoid",
+    "plugins": ["prettier-plugin-go-template"],
+    "overrides": [{
+        "files": ["*.html"],
+        "options": {
+            "parser": "go-template"
+        }
+    }]
 }
