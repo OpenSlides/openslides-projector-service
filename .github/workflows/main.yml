@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  main:
-    name: Test
+  main-go:
+    name: Test go
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,3 +36,20 @@ jobs:
         uses: guyarb/golang-test-annotations@v0.8.0
         with:
           test-results: test.json
+
+  main-frontend:
+    name: Test web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Node
+        uses: actions/setup-go@v4
+        with:
+          node-version: 22
+
+      - run: cd web && npm ci
+
+      - name: Node lint
+        run: cd web && npm run lint
