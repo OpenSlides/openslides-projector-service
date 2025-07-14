@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/OpenSlides/openslides-go v0.0.0-20250711110229-adc9c561fb53
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/leonelquinteros/gotext v1.7.1
+	github.com/leonelquinteros/gotext v1.7.2
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/text v0.25.0
 )
