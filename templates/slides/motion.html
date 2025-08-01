@@ -2,25 +2,19 @@
 
 <div class="content">
   {{ if .ShowSidebox }}
-    <div
-      id="sidebox"
-      [ngClass]="{ 'metatable-background': !hideMetadataBackground }"
-      [ngStyle]="{ 'margin-top': projector.show_header_footer ? '144px' : '94px' }"
-    >
+    <div id="sidebox" [ngClass]="{ 'metatable-background': !hideMetadataBackground }">
       <!-- Submitters -->
-      @if (getSubmittersObservable() | async; as submitters) { @if (submitters.length > 0) {
-      <h3>{{ Loc.Get "Submitters" }}</h3>
-
-      }
-      <os-comma-separated-listing [list]="submitters"></os-comma-separated-listing>
-      }
+      {{ if .Submitters }}
+        <h3>{{ Loc.Get "Submitters" }}</h3>
+        {{ .Submitters }}
+      {{ end }}
       <!-- Recommendation -->
-      @if (recommender && recommendationLabel) {
-      <div>
-        <h3>{-{ recommender }}</h3>
-        {-{ recommendationLabel }}
-      </div>
-      }
+      {{ if and .Recommender .RecommendationLabel }}
+        <div>
+          <h3>{{ .Recommender }}</h3>
+          {{ .RecommendationLabel }}
+        </div>
+      {{ end }}
     </div>
   {{ end }}
   <div [ngStyle]="{ width: data.data.show_sidebox ? 'calc(100% - 250px)' : '100%' }">
@@ -33,6 +27,19 @@
         {{ end }}
         <projector-motion-title>
           <template id="content">{{ .Motion.Title }}</template>
+          {{ if .TitleChangeRecos }}
+            {{ range .TitleChangeRecos }}
+              <template
+                class="change-reco"
+                data-id="{{ .ID }}"
+                data-type="{{ .Type }}"
+                data-line-from="{{ .LineFrom }}"
+                data-line-to="{{ .LineTo }}"
+              >
+                {{ .Text }}
+              </template>
+            {{ end }}
+          {{ end }}
         </projector-motion-title>
       </h1>
       <!-- recommendation referencing motions -->
@@ -47,48 +54,47 @@
         </h2>
       {{ end }}
       <!-- Metainfo as table -->
-      @if (showMetaTable) {
-      <table
-        cellpadding="0"
-        cellspacing="0"
-        class="metatable spacer-top-20"
-        [ngClass]="{ 'metatable-background': !hideMetadataBackground }"
-      >
-        <!-- Submitters -->
-        @if (getSubmittersObservable() | async; as submitters) { @if (submitters.length > 0) {
-        <tr>
-          <td class="min">
-            <b>{{ Loc.Get "Submitters" }}</b>
-          </td>
-          <td>
-            <os-comma-separated-listing [list]="submitters"></os-comma-separated-listing>
-          </td>
-        </tr>
-        } }
-        <!-- Recommendation -->
-        @if (recommender && recommendationLabel) {
-        <tr class="topline">
-          <td class="min">
-            <b>{-{ recommender }}:</b>
-          </td>
-          <td>{-{ recommendationLabel }}</td>
-        </tr>
-        }
-        <!-- recommendation referencing motions -->
-        @if (data.data.recommendation_referencing_motions) {
-        <tr class="topline">
-          <td class="min">
-            <b>{{ Loc.Get "Referring motions" }}:</b>
-          </td>
-          <td>
-            <os-comma-separated-listing [list]="referencingMotions">
-              <ng-template let-information>{-{ getNumberOrTitle(information) }}</ng-template>
-            </os-comma-separated-listing>
-          </td>
-        </tr>
-        }
-      </table>
-      }
+      {{ if and (not .ShowSidebox) (or .Submitters (and .Recommender .RecommendationLabel) .RecommendationMotions) }}
+        <table
+          cellpadding="0"
+          cellspacing="0"
+          class="metatable spacer-top-20 {{ if not .HideMetadataBackground }}metatable-background{{ end }}"
+        >
+          <!-- Submitters -->
+          {{ if .Submitters }}
+            <tr>
+              <td class="min">
+                <b>{{ Loc.Get "Submitters" }}</b>
+              </td>
+              <td>
+                {{ .Submitters }}
+              </td>
+            </tr>
+          {{ end }}
+          <!-- Recommendation -->
+          {{ if and .Recommender .RecommendationLabel }}
+            <tr class="topline">
+              <td class="min">
+                <b>{{ .Recommender }}:</b>
+              </td>
+              <td>{{ .RecommendationLabel }}</td>
+            </tr>
+          {{ end }}
+          <!-- recommendation referencing motions -->
+          {{ if .RecommendationMotions }}
+            <tr class="topline">
+              <td class="min">
+                <b>{{ Loc.Get "Referring motions" }}:</b>
+              </td>
+              <td>
+                <os-comma-separated-listing [list]="referencingMotions">
+                  <ng-template let-information>{-{ getNumberOrTitle(information) }}</ng-template>
+                </os-comma-separated-listing>
+              </td>
+            </tr>
+          {{ end }}
+        </table>
+      {{ end }}
     </div>
   </div>
   {{ if .ShowText }}
@@ -138,8 +144,25 @@
                 <div [innerHTML]="getFormattedTitleDiff() | trust: 'html'"></div>
               </div>
             {{ end }}
-            <projector-motion-text class="detail-view-text">
+            <projector-motion-text
+              first-line="{{ .Motion.StartLineNumber }}"
+              line-length="{{ .LineLength }}"
+              class="detail-view-text"
+            >
               <template id="content">{{ .MotionText }}</template>
+              {{ if .MotionChangeRecos }}
+                {{ range .MotionChangeRecos }}
+                  <template
+                    class="change-reco"
+                    data-id="{{ .ID }}"
+                    data-type="{{ .Type }}"
+                    data-line-from="{{ .LineFrom }}"
+                    data-line-to="{{ .LineTo }}"
+                  >
+                    {{ .Text }}
+                  </template>
+                {{ end }}
+              {{ end }}
             </projector-motion-text>
           </div>
         {{ end }}

@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"html/template"
 	"maps"
+	"slices"
+	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
 type motionSlideMode string
@@ -25,13 +28,16 @@ type motionSlideOptions struct {
 }
 
 type motionSlideCommonData struct {
-	Mode          string
-	Motion        dsmodels.Motion
-	ShowSidebox   bool
-	ShowText      bool
-	LineNumbering string
-	LineLength    int
-	Preamble      string
+	ProjectionReq      *projectionRequest
+	Mode               string
+	Motion             *dsmodels.Motion
+	ShowSidebox        bool
+	ShowText           bool
+	HideMetaBackground bool
+	Submitters         string
+	LineNumbering      string
+	LineLength         int
+	Preamble           string
 }
 
 func (m *motionSlideCommonData) templateData(additional map[string]any) map[string]any {
@@ -45,6 +51,7 @@ func (m *motionSlideCommonData) templateData(additional map[string]any) map[stri
 		"LineNumbering":             m.LineNumbering,
 		"ShowText":                  m.ShowText,
 		"Preamble":                  m.Preamble,
+		"Submitters":                m.Submitters,
 	}
 	maps.Copy(data, additional)
 	return data
@@ -56,7 +63,9 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	}
 
 	mQ := req.Fetch.Motion(*req.ContentObjectID)
-	motion, err := mQ.First(ctx)
+	motion, err := mQ.Preload(mQ.SubmitterList().MeetingUser().User()).
+		Preload(mQ.SubmitterList().MeetingUser().StructureLevelList()).
+		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load motion block %w", err)
 	}
@@ -72,8 +81,10 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	}
 
 	data := motionSlideCommonData{
-		Mode:   string(options.Mode),
-		Motion: motion,
+		ProjectionReq: req,
+		Mode:          string(options.Mode),
+		Motion:        &motion,
+		Submitters:    strings.Join(motionSubmitterList(&motion), ", "),
 	}
 
 	req.Fetch.Meeting_MotionsDefaultLineNumbering(motion.MeetingID).Lazy(&data.LineNumbering)
@@ -81,6 +92,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	req.Fetch.Meeting_MotionsEnableTextOnProjector(motion.MeetingID).Lazy(&data.ShowText)
 	req.Fetch.Meeting_MotionsLineLength(motion.MeetingID).Lazy(&data.LineLength)
 	req.Fetch.Meeting_MotionsPreamble(motion.MeetingID).Lazy(&data.Preamble)
+	req.Fetch.Meeting_MotionsHideMetadataBackground(motion.MeetingID).Lazy(&data.HideMetaBackground)
 	if err := req.Fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("could fetch motion slide data: %w", err)
 	}
@@ -99,12 +111,65 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	return motionTextOriginalSlide(ctx, &data)
 }
 
+func motionSubmitterList(motion *dsmodels.Motion) []string {
+	submitters := []string{}
+	slices.SortFunc(motion.SubmitterList, func(a dsmodels.MotionSubmitter, b dsmodels.MotionSubmitter) int {
+		return a.Weight - b.Weight
+	})
+	for _, submitter := range motion.SubmitterList {
+		submitters = append(submitters, viewmodels.MeetingUser_FullName(submitter.MeetingUser))
+	}
+	if motion.AdditionalSubmitter != "" {
+		submitters = append(submitters, motion.AdditionalSubmitter)
+	}
+
+	return submitters
+}
+
 func motionTextOriginalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
 	return req.templateData(map[string]any{}), nil
 }
 
 func motionTextChangedSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
+	fetch := req.ProjectionReq.Fetch
+	crIDs := req.Motion.ChangeRecommendationIDs
+	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
+	}
+
+	type changeReco struct {
+		ID       int
+		Type     string
+		LineFrom int
+		LineTo   int
+		Text     template.HTML
+	}
+
+	changeRecos := []changeReco{}
+	titleChanges := []changeReco{}
+	for _, cr := range crs {
+		if !cr.Rejected && !cr.Internal {
+			newCr := changeReco{
+				ID:       cr.ID,
+				Type:     cr.Type,
+				LineFrom: cr.LineFrom,
+				LineTo:   cr.LineTo,
+				Text:     template.HTML(cr.Text),
+			}
+
+			if cr.LineFrom > 0 {
+				changeRecos = append(changeRecos, newCr)
+			} else {
+				titleChanges = append(titleChanges, newCr)
+			}
+		}
+	}
+
+	return req.templateData(map[string]any{
+		"TitleChangeRecos":  titleChanges,
+		"MotionChangeRecos": changeRecos,
+	}), nil
 }
 
 func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {

@@ -20,13 +20,22 @@ export class ProjectorMotionText extends HTMLElement {
   }
 
   connectedCallback() {
-    const text = LineNumbering.insert({
+    this.lineLength = this.getAttribute(`line-length`);
+    this.firstLine = this.getAttribute(`first-line`);
+
+    const config = {
       html: this.querySelector(`#content`).innerHTML
-    });
+    };
+    if (this.firstLine !== null) {
+      config.firstLine = +this.firstLine;
+    }
+
+    if (this.lineLength !== null) {
+      config.lineLength = +this.lineLength;
+    }
 
     const container = document.createElement(`div`);
-    container.innerHTML = text;
-
+    container.innerHTML = LineNumbering.insert(config);
     this.appendChild(container);
   }
 }
