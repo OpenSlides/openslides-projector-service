@@ -50,6 +50,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gote
 	routes["home"] = HomeSlideHandler
 	routes["list_of_speakers"] = ListOfSpeakersSlideHandler
 	routes["meeting_mediafile"] = MeetingMediafileSlideHandler
+	routes["motion"] = MotionSlideHandler
 	routes["motion_block"] = MotionBlockSlideHandler
 	routes["projector_countdown"] = ProjectorCountdownSlideHandler
 	routes["projector_message"] = ProjectorMessageSlideHandler

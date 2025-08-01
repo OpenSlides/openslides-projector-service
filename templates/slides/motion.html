@@ -1,0 +1,156 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_motion.css" />
+
+<div class="content">
+  {{ if .ShowSidebox }}
+    <div
+      id="sidebox"
+      [ngClass]="{ 'metatable-background': !hideMetadataBackground }"
+      [ngStyle]="{ 'margin-top': projector.show_header_footer ? '144px' : '94px' }"
+    >
+      <!-- Submitters -->
+      @if (getSubmittersObservable() | async; as submitters) { @if (submitters.length > 0) {
+      <h3>{{ Loc.Get "Submitters" }}</h3>
+
+      }
+      <os-comma-separated-listing [list]="submitters"></os-comma-separated-listing>
+      }
+      <!-- Recommendation -->
+      @if (recommender && recommendationLabel) {
+      <div>
+        <h3>{-{ recommender }}</h3>
+        {-{ recommendationLabel }}
+      </div>
+      }
+    </div>
+  {{ end }}
+  <div [ngStyle]="{ width: data.data.show_sidebox ? 'calc(100% - 250px)' : '100%' }">
+    <!-- Title -->
+    <div class="spacer" [ngStyle]="{ height: projector.show_header_footer ? '50px' : '0' }"></div>
+    <div [ngClass]="{ slidetitle: data.data.show_sidebox }">
+      <h1 class="projector_h1">
+        {{ if .Motion.Number }}
+          <span>{{ .Motion.Number }}:</span>
+        {{ end }}
+        <projector-motion-title>
+          <template id="content">{{ .Motion.Title }}</template>
+        </projector-motion-title>
+      </h1>
+      <!-- recommendation referencing motions -->
+      {{ if .ShowSidebox }}
+        @if (data.data.show_sidebox && data.data.recommendation_referencing_motions) {
+        <h2 class="projector_h2">
+          <span>{{ Loc.Get "Referring motions" }}</span>
+          :
+          <os-comma-separated-listing [list]="referencingMotions">
+            <ng-template let-information>{-{ getNumberOrTitle(information) }}</ng-template>
+          </os-comma-separated-listing>
+        </h2>
+      {{ end }}
+      <!-- Metainfo as table -->
+      @if (showMetaTable) {
+      <table
+        cellpadding="0"
+        cellspacing="0"
+        class="metatable spacer-top-20"
+        [ngClass]="{ 'metatable-background': !hideMetadataBackground }"
+      >
+        <!-- Submitters -->
+        @if (getSubmittersObservable() | async; as submitters) { @if (submitters.length > 0) {
+        <tr>
+          <td class="min">
+            <b>{{ Loc.Get "Submitters" }}</b>
+          </td>
+          <td>
+            <os-comma-separated-listing [list]="submitters"></os-comma-separated-listing>
+          </td>
+        </tr>
+        } }
+        <!-- Recommendation -->
+        @if (recommender && recommendationLabel) {
+        <tr class="topline">
+          <td class="min">
+            <b>{-{ recommender }}:</b>
+          </td>
+          <td>{-{ recommendationLabel }}</td>
+        </tr>
+        }
+        <!-- recommendation referencing motions -->
+        @if (data.data.recommendation_referencing_motions) {
+        <tr class="topline">
+          <td class="min">
+            <b>{{ Loc.Get "Referring motions" }}:</b>
+          </td>
+          <td>
+            <os-comma-separated-listing [list]="referencingMotions">
+              <ng-template let-information>{-{ getNumberOrTitle(information) }}</ng-template>
+            </os-comma-separated-listing>
+          </td>
+        </tr>
+        }
+      </table>
+      }
+    </div>
+  </div>
+  {{ if .ShowText }}
+    <section id="text-wrapper">
+      <div id="text" [ngStyle]="textDivStyles">
+        <!-- Text -->
+        {{ if or .IsParagraphBasedAmendment .Motion.Text }}
+          <span class="text-prefix-label">{{ .Preamble }}</span>
+        {{ end }}
+
+        {{ if .IsParagraphBasedAmendment }}
+          <!-- Amendment text -->
+          <section class="text-holder">
+            @if (getAmendedParagraphs().length === 0 && !data.data.text) {
+            <div class="alert alert-info">
+              <span>{{ Loc.Get "No changes at the text." }}</span>
+            </div>
+            } @if (data.data.text) {
+            <div
+              class="motion-text underlined-links line-numbers-{{ .LineNumbering }}"
+              [innerHtml]="getTextBasedAmendmentLines() | trust: 'html'"
+            ></div>
+            } @for (paragraph of getAmendedParagraphs(); track paragraph) {
+            <div class="motion-text motion-text-diff amendment-view underlined-links line-numbers-{{ .LineNumbering }}">
+              @if (paragraph.diffLineTo === paragraph.diffLineFrom) {
+              <h3 class="amendment-line-header">
+                <span>{{ Loc.Get "Line" }}</span>
+                {-{ paragraph.diffLineFrom }}:
+              </h3>
+              } @if (paragraph.diffLineTo !== paragraph.diffLineFrom) {
+              <h3 class="amendment-line-header">
+                <span>{{ Loc.Get "Line" }}</span>
+                {-{ paragraph.diffLineFrom }} - {-{ paragraph.diffLineTo }}:
+              </h3>
+              }
+              <div class="detail-view-text" [innerHtml]="paragraph.text | trust: 'html'"></div>
+            </div>
+            }
+          </section>
+        {{ else }}
+          <!-- Regular motions or traditional amendments -->
+          <div class="motion-text underlined-links line-numbers-{{ .LineNumbering }}">
+            {{ if eq .Mode "diff" }}
+              @if (getTitleChangingObject() && crMode === 'diff') {
+              <div>
+                <div class="bold">{{ Loc.Get "Changed title" }}:</div>
+                <div [innerHTML]="getFormattedTitleDiff() | trust: 'html'"></div>
+              </div>
+            {{ end }}
+            <projector-motion-text class="detail-view-text">
+              <template id="content">{{ .MotionText }}</template>
+            </projector-motion-text>
+          </div>
+        {{ end }}
+        <!-- Reason -->
+        {{ if .Motion.Reason }}
+          <div class="reason-text">
+            <h3>{{ Loc.Get "Reason" }}</h3>
+            <div class="detail-view-text">{{ .Reason }}</div>
+          </div>
+        {{ end }}
+      </div>
+    </section>
+  {{ end }}
+</div>

@@ -5,9 +5,12 @@ import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
 import { QrCode } from './components/qr-code.js';
 import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
+import { ProjectorMotionText, ProjectorMotionTitle } from './slide/projector_motion.js';
 
 customElements.define('projector-countdown', ProjectorCountdown);
 customElements.define('projector-motion-block', ProjectorMotionBlock);
+customElements.define('projector-motion-title', ProjectorMotionTitle);
+customElements.define('projector-motion-text', ProjectorMotionText);
 customElements.define('pdf-viewer', PdfViewer);
 customElements.define('qr-code', QrCode);
 
