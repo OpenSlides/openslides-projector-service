@@ -149,6 +149,7 @@
 .metatable {
   width: 100%;
   font-size: 120%;
+  margin-top: 20px;
 
   tr.topline td {
     border-top: 2px solid white;
@@ -176,6 +177,8 @@
 
 #text {
   position: relative;
+  margin-top: 40px;
+  font-size: 100%;
 }
 
 /* override the absolute position of outside linenumbers on motion slide */

@@ -2,7 +2,7 @@
 
 <div class="content">
   {{ if .ShowSidebox }}
-    <div id="sidebox" [ngClass]="{ 'metatable-background': !hideMetadataBackground }">
+    <div id="sidebox" class="{{ if not .HideMetadataBackground }}metatable-background{{ end }}">
       <!-- Submitters -->
       {{ if .Submitters }}
         <h3>{{ Loc.Get "Submitters" }}</h3>
@@ -17,10 +17,10 @@
       {{ end }}
     </div>
   {{ end }}
-  <div [ngStyle]="{ width: data.data.show_sidebox ? 'calc(100% - 250px)' : '100%' }">
+  <div style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
     <!-- Title -->
-    <div class="spacer" [ngStyle]="{ height: projector.show_header_footer ? '50px' : '0' }"></div>
-    <div [ngClass]="{ slidetitle: data.data.show_sidebox }">
+    <div class="spacer"></div>
+    <div class="{{ if .ShowSidebox }}slidetitle{{ end }}">
       <h1 class="projector_h1">
         {{ if .Motion.Number }}
           <span>{{ .Motion.Number }}:</span>
@@ -99,7 +99,7 @@
   </div>
   {{ if .ShowText }}
     <section id="text-wrapper">
-      <div id="text" [ngStyle]="textDivStyles">
+      <div id="text" style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
         <!-- Text -->
         {{ if or .IsParagraphBasedAmendment .Motion.Text }}
           <span class="text-prefix-label">{{ .Preamble }}</span>
