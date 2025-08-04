@@ -42,15 +42,16 @@ type motionSlideCommonData struct {
 
 func (m *motionSlideCommonData) templateData(additional map[string]any) map[string]any {
 	data := map[string]any{
-		"Motion":                    m.Motion,
-		"MotionText":                template.HTML(m.Motion.Text),
-		"Reason":                    template.HTML(m.Motion.Reason),
 		"IsParagraphBasedAmendment": !m.Motion.LeadMotionID.Null(),
-		"ShowSidebox":               m.ShowSidebox,
 		"LineLength":                m.LineLength,
 		"LineNumbering":             m.LineNumbering,
-		"ShowText":                  m.ShowText,
+		"Mode":                      m.Mode,
+		"Motion":                    m.Motion,
+		"MotionText":                template.HTML(m.Motion.Text),
 		"Preamble":                  m.Preamble,
+		"Reason":                    template.HTML(m.Motion.Reason),
+		"ShowSidebox":               m.ShowSidebox,
+		"ShowText":                  m.ShowText,
 		"Submitters":                m.Submitters,
 	}
 	maps.Copy(data, additional)
@@ -108,7 +109,24 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 		return motionTextModifiedFinalSlide(ctx, &data)
 	}
 
-	return motionTextOriginalSlide(ctx, &data)
+	return data.templateData(map[string]any{}), nil
+}
+
+func motionTextChangedSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+	changeRecoData, err := motionChangeRecos(ctx, req)
+	return req.templateData(changeRecoData), err
+}
+
+func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+	return req.templateData(map[string]any{}), nil
+}
+
+func motionTextFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+	return req.templateData(map[string]any{}), nil
+}
+
+func motionTextModifiedFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+	return req.templateData(map[string]any{}), nil
 }
 
 func motionSubmitterList(motion *dsmodels.Motion) []string {
@@ -126,11 +144,7 @@ func motionSubmitterList(motion *dsmodels.Motion) []string {
 	return submitters
 }
 
-func motionTextOriginalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
-}
-
-func motionTextChangedSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
 	fetch := req.ProjectionReq.Fetch
 	crIDs := req.Motion.ChangeRecommendationIDs
 	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
@@ -170,16 +184,4 @@ func motionTextChangedSlide(ctx context.Context, req *motionSlideCommonData) (ma
 		"TitleChangeRecos":  titleChanges,
 		"MotionChangeRecos": changeRecos,
 	}), nil
-}
-
-func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
-}
-
-func motionTextFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
-}
-
-func motionTextModifiedFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
 }
