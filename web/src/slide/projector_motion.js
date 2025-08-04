@@ -27,6 +27,9 @@ export class ProjectorMotionText extends HTMLElement {
     this.changeRecos = this.readChangeRecos();
 
     switch (this.mode) {
+      case `diff`:
+        this.renderDiffView();
+        break;
       case `changed`:
         this.renderChangeView();
         break;
@@ -52,7 +55,7 @@ export class ProjectorMotionText extends HTMLElement {
     return changeRecos;
   }
 
-  renderOriginalMotion() {
+  getLineNumberedMotionText() {
     const config = {
       html: this.motionText
     };
@@ -64,8 +67,12 @@ export class ProjectorMotionText extends HTMLElement {
       config.lineLength = this.lineLength;
     }
 
+    return LineNumbering.insert(config);
+  }
+
+  renderOriginalMotion() {
     const container = document.createElement(`div`);
-    container.innerHTML = LineNumbering.insert(config);
+    container.innerHTML = this.getLineNumberedMotionText();
     this.appendChild(container);
   }
 
@@ -80,5 +87,92 @@ export class ProjectorMotionText extends HTMLElement {
       this.firstLine
     );
     this.appendChild(container);
+  }
+
+  renderDiffView() {
+    const motionText = this.getLineNumberedMotionText();
+    const changesToShow = this.changeRecos;
+    const text = [];
+    let lastLineTo = -1;
+    for (let i = 0; i < changesToShow.length; i++) {
+      if (changesToShow[i].lineTo > lastLineTo) {
+        const changeFrom = changesToShow[i - 1] ? changesToShow[i - 1].lineTo + 1 : this.firstLine;
+        text.push(
+          HtmlDiff.extractMotionLineRange(
+            motionText,
+            {
+              from: i === 0 ? this.firstLine : changeFrom,
+              to: changesToShow[i].lineFrom - 1 || null
+            },
+            true,
+            this.lineLength
+          )
+        );
+      }
+      text.push(this.getChangeHeader(changesToShow, i));
+      text.push(HtmlDiff.getChangeDiff(motionText, changesToShow[i], this.lineLength));
+
+      lastLineTo = changesToShow[i].lineTo;
+    }
+
+    text.push(
+      HtmlDiff.getTextRemainderAfterLastChange(motionText, changesToShow, this.lineLength)
+    );
+
+    const container = document.createElement(`div`);
+    container.innerHTML = text.join(``);
+    this.appendChild(container);
+  }
+
+  getChangeHeader(changes, idx) {
+    const lineNumbering = this.getAttribute(`line-numbering`);
+    const currentChange = changes[idx];
+
+    const changeHeader = [];
+    if (HtmlDiff.changeHasCollissions(currentChange, changes)) {
+      let style = `margin-left: 40px`;
+      if (lineNumbering === `outside`) {
+        style = `margin-right: 10px`;
+      } else if (lineNumbering === `inside`) {
+        style = `margin-left: 45px`;
+      }
+
+      changeHeader.push(
+        `<span class="amendment-nr-n-icon"><mat-icon style="${style}">warning</mat-icon>`
+      );
+    } else {
+      let style = ` style="margin-left: 40px"`;
+      if (lineNumbering === `outside`) {
+        style = ``;
+      } else if (lineNumbering === `inside`) {
+        style = ` style="margin-left: 46px"`;
+      }
+
+      changeHeader.push(`<span class="amendment-nr-n-icon"${style}>`);
+    }
+
+    changeHeader.push(`<span class="amendment-nr">`);
+    changeHeader.push(`TODO`);
+    /*
+    if (`amend_nr` in currentChange) {
+      if (typeof currentChange.amend_nr === `string`) {
+        changeHeader.push(currentChange.amend_nr);
+      }
+      if (currentChange.amend_nr === ``) {
+        changeHeader.push(this.translate.instant(`Amendment`));
+      }
+    } else if (currentChange.getChangeType() === ViewUnifiedChangeType.TYPE_AMENDMENT) {
+      const amendment = currentChange;
+      changeHeader.push(amendment.getNumber(), ` - `, amendment.stateName);
+    } else {
+      if (currentChange.isRejected()) {
+        changeHeader.push(this.translate.instant(`Change recommendation - rejected`));
+      } else {
+        changeHeader.push(this.translate.instant(`Change recommendation`));
+      }
+    }
+    */
+    changeHeader.push(`: </span></span>`);
+    return changeHeader.join(``);
   }
 }

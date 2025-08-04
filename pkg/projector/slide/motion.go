@@ -118,7 +118,17 @@ func motionTextChangedSlide(ctx context.Context, req *motionSlideCommonData) (ma
 }
 
 func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
+	data, err := motionChangeRecos(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("could fetch motion change recos: %w", err)
+	}
+	amendments, err := motionAmendments(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("could fetch amendments: %w", err)
+	}
+
+	maps.Copy(data, amendments)
+	return req.templateData(data), nil
 }
 
 func motionTextFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
@@ -144,6 +154,14 @@ func motionSubmitterList(motion *dsmodels.Motion) []string {
 	return submitters
 }
 
+type motionChangeReco struct {
+	ID       int
+	Type     string
+	LineFrom int
+	LineTo   int
+	Text     template.HTML
+}
+
 func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
 	fetch := req.ProjectionReq.Fetch
 	crIDs := req.Motion.ChangeRecommendationIDs
@@ -152,19 +170,11 @@ func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[str
 		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
 	}
 
-	type changeReco struct {
-		ID       int
-		Type     string
-		LineFrom int
-		LineTo   int
-		Text     template.HTML
-	}
-
-	changeRecos := []changeReco{}
-	titleChanges := []changeReco{}
+	changeRecos := []motionChangeReco{}
+	titleChanges := []motionChangeReco{}
 	for _, cr := range crs {
 		if !cr.Rejected && !cr.Internal {
-			newCr := changeReco{
+			newCr := motionChangeReco{
 				ID:       cr.ID,
 				Type:     cr.Type,
 				LineFrom: cr.LineFrom,
@@ -181,7 +191,28 @@ func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[str
 	}
 
 	return req.templateData(map[string]any{
+		"HasTitleChanges":   len(titleChanges) > 0,
 		"TitleChangeRecos":  titleChanges,
 		"MotionChangeRecos": changeRecos,
+	}), nil
+}
+
+type motionAmendment struct {
+	ID          int
+	Paragraphs  string
+	ChangeRecos []motionChangeReco
+}
+
+func motionAmendments(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+	fetch := req.ProjectionReq.Fetch
+	amendmentIDs := req.Motion.AmendmentIDs
+	mQ := fetch.Motion(amendmentIDs...)
+	amendments, err := mQ.Preload(mQ.ChangeRecommendationList()).Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
+	}
+
+	return req.templateData(map[string]any{
+		"Amendments": amendments,
 	}), nil
 }

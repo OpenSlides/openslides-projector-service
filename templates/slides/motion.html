@@ -138,15 +138,30 @@
           <!-- Regular motions or traditional amendments -->
           <div class="motion-text underlined-links line-numbers-{{ .LineNumbering }}">
             {{ if eq .Mode "diff" }}
-              @if (getTitleChangingObject() && crMode === 'diff') {
-              <div>
-                <div class="bold">{{ Loc.Get "Changed title" }}:</div>
-                <div [innerHTML]="getFormattedTitleDiff() | trust: 'html'"></div>
-              </div>
+              {{ if .HasTitleChanges }}
+                <div>
+                  <div class="bold">{{ Loc.Get "Changed title" }}:</div>
+                  <projector-motion-title mode="{{ .Mode }}">
+                    <template id="content">{{ .Motion.Title }}</template>
+                    {{ range .TitleChangeRecos }}
+                      <template
+                        class="change-reco"
+                        data-id="{{ .ID }}"
+                        data-type="{{ .Type }}"
+                        data-line-from="{{ .LineFrom }}"
+                        data-line-to="{{ .LineTo }}"
+                      >
+                        {{ .Text }}
+                      </template>
+                    {{ end }}
+                  </projector-motion-title>
+                </div>
+              {{ end }}
             {{ end }}
             <projector-motion-text
               first-line="{{ .Motion.StartLineNumber }}"
               line-length="{{ .LineLength }}"
+              line-numbering="{{ .LineNumbering }}"
               mode="{{ .Mode }}"
               class="detail-view-text"
             >
@@ -161,6 +176,16 @@
                     data-line-to="{{ .LineTo }}"
                   >
                     {{ .Text }}
+                  </template>
+                {{ end }}
+              {{ end }}
+              {{ if .Amendments }}
+                {{ range .Amendments }}
+                  <template
+                    class="amendment"
+                    data-id="{{ .ID }}"
+                  >
+                    <template class="paragraphs">{{ printf "%s" .AmendmentParagraphs }}</template>
                   </template>
                 {{ end }}
               {{ end }}

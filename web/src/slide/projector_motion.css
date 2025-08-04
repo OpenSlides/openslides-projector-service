@@ -167,6 +167,10 @@
   background-color: #ddd;
 }
 
+.bold {
+  font-weight: bold;
+}
+
 .spacer {
   min-width: 1px;
 }
@@ -201,6 +205,10 @@
   left: -40px;
   height: 1.5em;
   margin-top: 25px;
+}
+
+.amendment-nr-n-icon + p {
+  margin-top: 0;
 }
 
 .amendment-nr {
