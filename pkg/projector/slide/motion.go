@@ -199,7 +199,8 @@ func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[str
 
 type motionAmendment struct {
 	ID          int
-	Paragraphs  string
+	Number      string
+	Paragraphs  map[string]template.HTML
 	ChangeRecos []motionChangeReco
 }
 
@@ -212,7 +213,38 @@ func motionAmendments(ctx context.Context, req *motionSlideCommonData) (map[stri
 		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
 	}
 
+	tmplAmendments := []motionAmendment{}
+	for _, amendment := range amendments {
+		changeRecos := []motionChangeReco{}
+		for _, cr := range amendment.ChangeRecommendationList {
+			if !cr.Rejected && !cr.Internal {
+				newCr := motionChangeReco{
+					ID:       cr.ID,
+					Type:     cr.Type,
+					LineFrom: cr.LineFrom,
+					LineTo:   cr.LineTo,
+					Text:     template.HTML(cr.Text),
+				}
+
+				if cr.LineFrom > 0 {
+					changeRecos = append(changeRecos, newCr)
+				}
+			}
+		}
+		data := motionAmendment{
+			ID:          amendment.ID,
+			Number:      amendment.Number,
+			ChangeRecos: changeRecos,
+		}
+
+		if err := json.Unmarshal(amendment.AmendmentParagraphs, &data.Paragraphs); err != nil {
+			return nil, fmt.Errorf("could not parse amendment paragraphs: %w", err)
+		}
+
+		tmplAmendments = append(tmplAmendments, data)
+	}
+
 	return req.templateData(map[string]any{
-		"Amendments": amendments,
+		"Amendments": tmplAmendments,
 	}), nil
 }

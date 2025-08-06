@@ -24,7 +24,10 @@ export class ProjectorMotionText extends HTMLElement {
     this.firstLine = this.getAttribute(`first-line`) ? +this.getAttribute(`first-line`) : null;
     this.mode = this.getAttribute(`mode`);
     this.motionText = this.querySelector(`#content`).innerHTML;
+    this.lineNumberedMotionText = null;
+
     this.changeRecos = this.readChangeRecos();
+    this.amendmentChanges = this.readAmendmentChanges();
 
     switch (this.mode) {
       case `diff`:
@@ -39,9 +42,9 @@ export class ProjectorMotionText extends HTMLElement {
   }
 
   readChangeRecos() {
-    const changeRecos = [];
+    const changes = [];
     this.querySelectorAll(`template.change-reco`).forEach(crEl => {
-      changeRecos.push({
+      changes.push({
         isTitleChange: false,
         identifier: crEl.getAttribute(`data-id`),
         lineFrom: +crEl.getAttribute(`data-line-from`),
@@ -52,10 +55,48 @@ export class ProjectorMotionText extends HTMLElement {
       });
     });
 
-    return changeRecos;
+    return changes;
+  }
+
+  readAmendmentChanges() {
+    const motionText = this.getLineNumberedMotionText();
+    const motionParagraphs = LineNumbering.splitToParagraphs(motionText);
+    // TODO: Apply change recommendations
+    const changes = [];
+    this.querySelectorAll(`template.amendment`).forEach(amendmentEl => {
+      amendmentEl.content.querySelectorAll(`template.paragraph`).forEach((paragraphEl, pKey) => {
+        const original = motionParagraphs[+paragraphEl.getAttribute(`data-number`)];
+        const newText = paragraphEl.getHTML().trim();
+        const diff = HtmlDiff.diff(original, newText)
+        const affectedLines = HtmlDiff.detectAffectedLineRange(diff);
+        if (affectedLines === null) {
+          return;
+        }
+
+        const affectedDiff = HtmlDiff.formatDiff(
+          HtmlDiff.extractRangeByLineNumbers(diff, affectedLines.from, affectedLines.to)
+        );
+        const affectedConsolidated = HtmlDiff.diffHtmlToFinalText(affectedDiff);
+        changes.push({
+          isTitleChange: false,
+          identifier: amendmentEl.getAttribute(`data-number`),
+          lineFrom: affectedLines.from,
+          lineTo: affectedLines.to,
+          changeId: `a-${amendmentEl.getAttribute(`data-id`)}-${pKey}`,
+          changeType: `unknown`,
+          changeNewText: affectedConsolidated
+        });
+      });
+    });
+
+    return changes;
   }
 
   getLineNumberedMotionText() {
+    if (this.lineNumberedMotionText !== null) {
+      return this.lineNumberedMotionText;
+    }
+
     const config = {
       html: this.motionText
     };
@@ -67,7 +108,8 @@ export class ProjectorMotionText extends HTMLElement {
       config.lineLength = this.lineLength;
     }
 
-    return LineNumbering.insert(config);
+    this.lineNumberedMotionText = LineNumbering.insert(config);
+    return this.lineNumberedMotionText;
   }
 
   renderOriginalMotion() {
@@ -91,7 +133,7 @@ export class ProjectorMotionText extends HTMLElement {
 
   renderDiffView() {
     const motionText = this.getLineNumberedMotionText();
-    const changesToShow = this.changeRecos;
+    const changesToShow = HtmlDiff.sortChangeRequests([...this.changeRecos, ...this.amendmentChanges]);
     const text = [];
     let lastLineTo = -1;
     for (let i = 0; i < changesToShow.length; i++) {

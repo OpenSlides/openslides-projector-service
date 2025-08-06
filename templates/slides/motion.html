@@ -181,11 +181,10 @@
               {{ end }}
               {{ if .Amendments }}
                 {{ range .Amendments }}
-                  <template
-                    class="amendment"
-                    data-id="{{ .ID }}"
-                  >
-                    <template class="paragraphs">{{ printf "%s" .AmendmentParagraphs }}</template>
+                  <template class="amendment" data-id="{{ .ID }}" data-number="{{ .Number }}">
+                    {{ range $index, $element := .Paragraphs }}
+                      <template class="paragraph" data-number="{{ $index }}">{{ $element }}</template>
+                    {{ end }}
                   </template>
                 {{ end }}
               {{ end }}
