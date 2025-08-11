@@ -36,6 +36,9 @@ export class ProjectorMotionText extends HTMLElement {
       case `changed`:
         this.renderChangeView();
         break;
+      case `agreed`:
+        this.renderFinalView();
+        break;
       default:
         this.renderOriginalMotion();
     }
@@ -49,6 +52,7 @@ export class ProjectorMotionText extends HTMLElement {
         identifier: crEl.getAttribute(`data-id`),
         lineFrom: +crEl.getAttribute(`data-line-from`),
         lineTo: +crEl.getAttribute(`data-line-to`),
+        title: crEl.getAttribute(`data-change-title`),
         changeId: `r-${crEl.getAttribute(`data-id`)}`,
         changeType: crEl.getAttribute(`data-type`),
         changeNewText: crEl.getHTML().trim(),
@@ -116,6 +120,7 @@ export class ProjectorMotionText extends HTMLElement {
           const affectedConsolidated = HtmlDiff.diffHtmlToFinalText(affectedDiff);
           changes.push({
             isTitleChange: false,
+            title: amendmentEl.getAttribute(`data-title`),
             identifier: amendmentEl.getAttribute(`data-number`),
             lineFrom: affectedLines.from,
             lineTo: affectedLines.to,
@@ -203,6 +208,21 @@ export class ProjectorMotionText extends HTMLElement {
     this.appendChild(container);
   }
 
+  renderFinalView() {
+    const changesToShow = HtmlDiff.sortChangeRequests([...this.changeRecos, ...this.amendmentChanges]);
+
+    const container = document.createElement(`div`);
+    container.innerHTML = HtmlDiff.getTextWithChanges(
+      this.motionText,
+      changesToShow,
+      this.lineLength,
+      true,
+      null,
+      this.firstLine
+    );
+    this.appendChild(container);
+  }
+
   getChangeHeader(changes, idx) {
     const lineNumbering = this.getAttribute(`line-numbering`);
     const currentChange = changes[idx];
@@ -216,7 +236,9 @@ export class ProjectorMotionText extends HTMLElement {
         style = `margin-left: 45px`;
       }
 
-      changeHeader.push(`<span class="amendment-nr-n-icon"><span class="material-icons" style="${style}">warning</span>`);
+      changeHeader.push(
+        `<span class="amendment-nr-n-icon"><span class="material-icons" style="${style}">warning</span>`
+      );
     } else {
       let style = ` style="margin-left: 40px"`;
       if (lineNumbering === `outside`) {

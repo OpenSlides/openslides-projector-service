@@ -104,7 +104,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	case motionTextDiff:
 		return motionTextDiffSlide(ctx, &data)
 	case motionTextFinal:
-		return motionTextFinalSlide(ctx, &data)
+		return motionTextDiffSlide(ctx, &data)
 	case motionTextModifiedFinal:
 		return motionTextModifiedFinalSlide(ctx, &data)
 	}
@@ -129,10 +129,6 @@ func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[s
 
 	maps.Copy(data, amendments)
 	return req.templateData(data), nil
-}
-
-func motionTextFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
 }
 
 func motionTextModifiedFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
@@ -202,6 +198,7 @@ func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[str
 type motionAmendment struct {
 	ID          int
 	Number      string
+	Title       string
 	ChangeTitle string
 	Paragraphs  map[string]template.HTML
 	ChangeRecos []motionChangeReco
@@ -247,6 +244,7 @@ func motionAmendments(ctx context.Context, req *motionSlideCommonData) (map[stri
 		data := motionAmendment{
 			ID:          amendment.ID,
 			Number:      amendment.Number,
+			Title:       amendment.Title,
 			ChangeTitle: changeTitle,
 			ChangeRecos: changeRecos,
 		}
