@@ -230,25 +230,6 @@ export class ProjectorMotionText extends HTMLElement {
 
     changeHeader.push(`<span class="amendment-nr">`);
     changeHeader.push(currentChange.changeTitle);
-    /*
-    if (`amend_nr` in currentChange) {
-      if (typeof currentChange.amend_nr === `string`) {
-        changeHeader.push(currentChange.amend_nr);
-      }
-      if (currentChange.amend_nr === ``) {
-        changeHeader.push(this.translate.instant(`Amendment`));
-      }
-    } else if (currentChange.getChangeType() === ViewUnifiedChangeType.TYPE_AMENDMENT) {
-      const amendment = currentChange;
-      changeHeader.push(amendment.getNumber(), ` - `, amendment.stateName);
-    } else {
-      if (currentChange.isRejected()) {
-        changeHeader.push(this.translate.instant(`Change recommendation - rejected`));
-      } else {
-        changeHeader.push(this.translate.instant(`Change recommendation`));
-      }
-    }
-    */
     changeHeader.push(`: </span></span>`);
     return changeHeader.join(``);
   }
