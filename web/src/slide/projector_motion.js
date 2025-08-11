@@ -32,9 +32,7 @@ export class ProjectorMotionText extends HTMLElement {
   }
 
   connectedCallback() {
-    this.lineLength = this.getAttribute(`line-length`) ? +this.getAttribute(`line-length`) : null;
-    this.firstLine = this.getAttribute(`first-line`) ? +this.getAttribute(`first-line`) : null;
-    this.mode = this.getAttribute(`mode`);
+    this.readAttributes();
     this.motionText = this.querySelector(`#content`).innerHTML;
     this.lineNumberedMotionText = null;
 
@@ -57,6 +55,12 @@ export class ProjectorMotionText extends HTMLElement {
       default:
         this.renderOriginalMotion();
     }
+  }
+
+  readAttributes() {
+    this.lineLength = this.getAttribute(`line-length`) ? +this.getAttribute(`line-length`) : null;
+    this.firstLine = this.getAttribute(`first-line`) ? +this.getAttribute(`first-line`) : null;
+    this.mode = this.getAttribute(`mode`);
   }
 
   readChangeRecos() {
@@ -269,5 +273,62 @@ export class ProjectorMotionText extends HTMLElement {
     changeHeader.push(currentChange.changeTitle);
     changeHeader.push(`: </span></span>`);
     return changeHeader.join(``);
+  }
+}
+
+export class ProjectorMotionAmendment extends ProjectorMotionText {
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    this.readAttributes();
+    this.changeRecos = this.readChangeRecos();
+
+    const leadMotionEl = this.querySelector(`template#lead-motion-text`);
+    this.motionText = leadMotionEl.getHTML();
+
+    this.lineNumberedMotionText = null;
+    const motionText = this.getLineNumberedMotionText();
+    this.motionParagraphs = LineNumbering.splitToParagraphs(motionText);
+
+    this.changeParagraphs = {};
+    this.querySelectorAll(`template.paragraph`).forEach(p => {
+      this.changeParagraphs[p.getAttribute(`data-number`)] = p.getHTML();
+    });
+
+    this.render();
+  }
+
+  render() {
+    const paragraphNumbers = Object.keys(this.changeParagraphs)
+      .map(x => +x)
+      .sort((a, b) => a - b);
+
+    const amendmentParagraphs = paragraphNumbers
+      .map(paraNo =>
+        HtmlDiff.getAmendmentParagraphsLines(
+          paraNo,
+          this.motionParagraphs[paraNo],
+          this.changeParagraphs[paraNo.toString()],
+          this.lineLength,
+          this.mode === `diff` ? this.changeRecos : undefined
+        )
+      )
+      .filter(para => para !== null);
+
+    const text = [];
+    for (const p of amendmentParagraphs) {
+      if (p.diffLineFrom === p.diffLineFrom) {
+        text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom}</h3>`);
+      } else {
+        text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom} - ${p.diffLineTo}</h3>`);
+      }
+      text.push(p.text);
+    }
+
+    const container = document.createElement(`div`);
+    container.innerHTML = text.join(``);
+    this.appendChild(container);
   }
 }

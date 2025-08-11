@@ -11,6 +11,7 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
+	"github.com/rs/zerolog/log"
 )
 
 type motionSlideMode string
@@ -54,6 +55,18 @@ func (m *motionSlideCommonData) templateData(additional map[string]any) map[stri
 		"ShowText":                  m.ShowText,
 		"Submitters":                m.Submitters,
 	}
+
+	if !m.Motion.LeadMotionID.Null() && len(m.Motion.AmendmentParagraphs) > 0 {
+		amendmentParagrapphs := map[string]template.HTML{}
+		if err := json.Unmarshal(m.Motion.AmendmentParagraphs, &amendmentParagrapphs); err != nil {
+			log.Err(err).Msg("error parsing amendment paragraphs")
+		} else {
+			data["AmendmentParagraphs"] = amendmentParagrapphs
+			if lMotion, ok := m.Motion.LeadMotion.Value(); ok {
+				data["LeadMotionText"] = template.HTML(lMotion.Text)
+			}
+		}
+	}
 	maps.Copy(data, additional)
 	return data
 }
@@ -66,6 +79,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	mQ := req.Fetch.Motion(*req.ContentObjectID)
 	motion, err := mQ.Preload(mQ.SubmitterList().MeetingUser().User()).
 		Preload(mQ.SubmitterList().MeetingUser().StructureLevelList()).
+		Preload(mQ.LeadMotion()).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load motion block %w", err)

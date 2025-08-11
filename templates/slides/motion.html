@@ -95,38 +95,62 @@
     <section id="text-wrapper">
       <div id="text" style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
         <!-- Text -->
-        {{ if or .IsParagraphBasedAmendment .Motion.Text }}
+        {{ if .Motion.Text }}
           <span class="text-prefix-label">{{ .Preamble }}</span>
         {{ end }}
 
         {{ if .IsParagraphBasedAmendment }}
           <!-- Amendment text -->
           <section class="text-holder">
-            @if (getAmendedParagraphs().length === 0 && !data.data.text) {
-            <div class="alert alert-info">
-              <span>{{ Loc.Get "No changes at the text." }}</span>
-            </div>
-            } @if (data.data.text) {
-            <div
-              class="motion-text underlined-links line-numbers-{{ .LineNumbering }}"
-              [innerHtml]="getTextBasedAmendmentLines() | trust: 'html'"
-            ></div>
-            } @for (paragraph of getAmendedParagraphs(); track paragraph) {
-            <div class="motion-text motion-text-diff amendment-view underlined-links line-numbers-{{ .LineNumbering }}">
-              @if (paragraph.diffLineTo === paragraph.diffLineFrom) {
-              <h3 class="amendment-line-header">
-                <span>{{ Loc.Get "Line" }}</span>
-                {-{ paragraph.diffLineFrom }}:
-              </h3>
-              } @if (paragraph.diffLineTo !== paragraph.diffLineFrom) {
-              <h3 class="amendment-line-header">
-                <span>{{ Loc.Get "Line" }}</span>
-                {-{ paragraph.diffLineFrom }} - {-{ paragraph.diffLineTo }}:
-              </h3>
-              }
-              <div class="detail-view-text" [innerHtml]="paragraph.text | trust: 'html'"></div>
-            </div>
-            }
+            {{ if .Motion.Text }}
+              <div class="motion-text underlined-links line-numbers-{{ .LineNumbering }}">
+                <projector-motion-text
+                  first-line="1"
+                  line-length="{{ .LineLength }}"
+                  line-numbering="{{ .LineNumbering }}"
+                  class="detail-view-text"
+                >
+                  <template id="content">{{ .MotionText }}</template>
+                </projector-motion-text>
+              </div>
+            {{ else if .AmendmentParagraphs }}
+              <div
+                class="motion-text motion-text-diff amendment-view underlined-links line-numbers-{{ .LineNumbering }}"
+              >
+                <projector-motion-amendment
+                  first-line="{{ .Motion.StartLineNumber }}"
+                  line-length="{{ .LineLength }}"
+                  line-numbering="{{ .LineNumbering }}"
+                  mode="{{ .Mode }}"
+                  class="detail-view-text"
+                >
+                  <template id="lead-motion-text">{{ .LeadMotionText }}</template>
+                  {{ range $paragraphNo, $text := .AmendmentParagraphs }}
+                    <template class="paragraph" data-number="{{ $paragraphNo }}">{{ $text }}</template>
+                  {{ end }}
+                  {{ range .MotionChangeRecos }}
+                    <template
+                      class="change-reco"
+                      data-id="{{ .ID }}"
+                      data-type="{{ .Type }}"
+                      data-line-from="{{ .LineFrom }}"
+                      data-line-to="{{ .LineTo }}"
+                      {{ if .Rejected }}
+                        data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
+                      {{ else }}
+                        data-change-title="{{ Loc.Get "Change recommendation" }}"
+                      {{ end }}
+                    >
+                      {{ .Text }}
+                    </template>
+                  {{ end }}
+                </projector-motion-amendment>
+              </div>
+            {{ else }}
+              <div class="alert alert-info">
+                <span>{{ Loc.Get "No changes at the text." }}</span>
+              </div>
+            {{ end }}
           </section>
         {{ else }}
           <!-- Regular motions or traditional amendments -->
