@@ -6,9 +6,21 @@ export class ProjectorMotionTitle extends HTMLElement {
   }
 
   connectedCallback() {
-    const content = this.querySelector(`#content`).innerHTML;
+    this.mode = this.getAttribute(`mode`);
+    const crEl = this.querySelector(`template.change-reco`);
+
+    const title = this.querySelector(`#content`).innerHTML;
     const container = document.createElement(`span`);
-    container.innerHTML = content;
+    if (crEl) {
+      const changedTitle = crEl.getHTML().trim();
+      if ([`changed`, `agreed`, `modified_final_version`].indexOf(this.mode) !== -1) {
+        container.innerHTML = changedTitle;
+      } else if (this.mode === `diff`) {
+        container.innerHTML = HtmlDiff.diff(title, changedTitle);
+      }
+    } else {
+      container.innerHTML = title;
+    }
 
     this.appendChild(container);
   }

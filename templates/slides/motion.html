@@ -27,15 +27,9 @@
         {{ end }}
         <projector-motion-title mode="{{ .Mode }}">
           <template id="content">{{ .Motion.Title }}</template>
-          {{ if .TitleChangeRecos }}
+          {{ if ne .Mode "diff" }}
             {{ range .TitleChangeRecos }}
-              <template
-                class="change-reco"
-                data-id="{{ .ID }}"
-                data-type="{{ .Type }}"
-                data-line-from="{{ .LineFrom }}"
-                data-line-to="{{ .LineTo }}"
-              >
+              <template class="change-reco" data-id="{{ .ID }}" data-type="{{ .Type }}">
                 {{ .Text }}
               </template>
             {{ end }}
@@ -144,13 +138,7 @@
                   <projector-motion-title mode="{{ .Mode }}">
                     <template id="content">{{ .Motion.Title }}</template>
                     {{ range .TitleChangeRecos }}
-                      <template
-                        class="change-reco"
-                        data-id="{{ .ID }}"
-                        data-type="{{ .Type }}"
-                        data-line-from="{{ .LineFrom }}"
-                        data-line-to="{{ .LineTo }}"
-                      >
+                      <template class="change-reco" data-id="{{ .ID }}" data-type="{{ .Type }}">
                         {{ .Text }}
                       </template>
                     {{ end }}

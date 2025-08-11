@@ -132,8 +132,31 @@ func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[s
 }
 
 func motionTextModifiedFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
+	fetch := req.ProjectionReq.Fetch
+	crIDs := req.Motion.ChangeRecommendationIDs
+	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
+	}
+
+	titleChanges := []motionChangeReco{}
+	for _, cr := range crs {
+		if !cr.Internal && !cr.Rejected {
+			newCr := motionChangeReco{
+				ID:   cr.ID,
+				Type: cr.Type,
+				Text: template.HTML(cr.Text),
+			}
+
+			if cr.LineFrom == 0 {
+				titleChanges = append(titleChanges, newCr)
+			}
+		}
+	}
+
 	return req.templateData(map[string]any{
-		"MotionText": template.HTML(req.Motion.ModifiedFinalVersion),
+		"TitleChangeRecos": titleChanges,
+		"MotionText":       template.HTML(req.Motion.ModifiedFinalVersion),
 	}), nil
 }
 
