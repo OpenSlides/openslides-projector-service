@@ -132,7 +132,9 @@ func motionTextDiffSlide(ctx context.Context, req *motionSlideCommonData) (map[s
 }
 
 func motionTextModifiedFinalSlide(ctx context.Context, req *motionSlideCommonData) (map[string]any, error) {
-	return req.templateData(map[string]any{}), nil
+	return req.templateData(map[string]any{
+		"MotionText": template.HTML(req.Motion.ModifiedFinalVersion),
+	}), nil
 }
 
 func motionSubmitterList(motion *dsmodels.Motion) []string {

@@ -39,6 +39,9 @@ export class ProjectorMotionText extends HTMLElement {
       case `agreed`:
         this.renderFinalView();
         break;
+      case `modified_final_version`:
+        this.renderOriginalMotion();
+        break;
       default:
         this.renderOriginalMotion();
     }
