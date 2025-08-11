@@ -174,6 +174,11 @@
                     data-type="{{ .Type }}"
                     data-line-from="{{ .LineFrom }}"
                     data-line-to="{{ .LineTo }}"
+                    {{ if .Rejected }}
+                      data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
+                    {{ else }}
+                      data-change-title="{{ Loc.Get "Change recommendation" }}"
+                    {{ end }}
                   >
                     {{ .Text }}
                   </template>
@@ -181,7 +186,12 @@
               {{ end }}
               {{ if .Amendments }}
                 {{ range .Amendments }}
-                  <template class="amendment" data-id="{{ .ID }}" data-number="{{ .Number }}">
+                  <template
+                    class="amendment"
+                    data-id="{{ .ID }}"
+                    data-number="{{ .Number }}"
+                    data-change-title="{{ .ChangeTitle }}"
+                  >
                     {{ range .ChangeRecos }}
                       <template
                         class="amendment-change-reco"

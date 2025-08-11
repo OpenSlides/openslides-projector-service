@@ -159,6 +159,7 @@ type motionChangeReco struct {
 	Type     string
 	LineFrom int
 	LineTo   int
+	Rejected bool
 	Text     template.HTML
 }
 
@@ -173,12 +174,13 @@ func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[str
 	changeRecos := []motionChangeReco{}
 	titleChanges := []motionChangeReco{}
 	for _, cr := range crs {
-		if !cr.Rejected && !cr.Internal {
+		if !cr.Internal {
 			newCr := motionChangeReco{
 				ID:       cr.ID,
 				Type:     cr.Type,
 				LineFrom: cr.LineFrom,
 				LineTo:   cr.LineTo,
+				Rejected: cr.Rejected,
 				Text:     template.HTML(cr.Text),
 			}
 
@@ -200,6 +202,7 @@ func motionChangeRecos(ctx context.Context, req *motionSlideCommonData) (map[str
 type motionAmendment struct {
 	ID          int
 	Number      string
+	ChangeTitle string
 	Paragraphs  map[string]template.HTML
 	ChangeRecos []motionChangeReco
 }
@@ -208,13 +211,17 @@ func motionAmendments(ctx context.Context, req *motionSlideCommonData) (map[stri
 	fetch := req.ProjectionReq.Fetch
 	amendmentIDs := req.Motion.AmendmentIDs
 	mQ := fetch.Motion(amendmentIDs...)
-	amendments, err := mQ.Preload(mQ.ChangeRecommendationList()).Get(ctx)
+	amendments, err := mQ.Preload(mQ.ChangeRecommendationList()).Preload(mQ.State()).Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
 	}
 
 	tmplAmendments := []motionAmendment{}
 	for _, amendment := range amendments {
+		if amendment.State.MergeAmendmentIntoFinal != "do_merge" {
+			continue
+		}
+
 		changeRecos := []motionChangeReco{}
 		for _, cr := range amendment.ChangeRecommendationList {
 			if !cr.Rejected && !cr.Internal {
@@ -231,9 +238,16 @@ func motionAmendments(ctx context.Context, req *motionSlideCommonData) (map[stri
 				}
 			}
 		}
+
+		changeTitle := req.ProjectionReq.Locale.Get("Amendment")
+		if amendment.Number != "" {
+			changeTitle = amendment.Number
+		}
+
 		data := motionAmendment{
 			ID:          amendment.ID,
 			Number:      amendment.Number,
+			ChangeTitle: changeTitle,
 			ChangeRecos: changeRecos,
 		}
 

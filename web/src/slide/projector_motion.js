@@ -51,7 +51,8 @@ export class ProjectorMotionText extends HTMLElement {
         lineTo: +crEl.getAttribute(`data-line-to`),
         changeId: `r-${crEl.getAttribute(`data-id`)}`,
         changeType: crEl.getAttribute(`data-type`),
-        changeNewText: crEl.getHTML().trim()
+        changeNewText: crEl.getHTML().trim(),
+        changeTitle: crEl.getAttribute(`data-change-title`)
       });
     });
 
@@ -120,7 +121,8 @@ export class ProjectorMotionText extends HTMLElement {
             lineTo: affectedLines.to,
             changeId: `a-${amendmentEl.getAttribute(`data-id`)}-${pKey}`,
             changeType: `unknown`,
-            changeNewText: affectedConsolidated
+            changeNewText: affectedConsolidated,
+            changeTitle: amendmentEl.getAttribute(`data-change-title`)
           });
         }
       });
@@ -227,7 +229,7 @@ export class ProjectorMotionText extends HTMLElement {
     }
 
     changeHeader.push(`<span class="amendment-nr">`);
-    changeHeader.push(`TODO`);
+    changeHeader.push(currentChange.changeTitle);
     /*
     if (`amend_nr` in currentChange) {
       if (typeof currentChange.amend_nr === `string`) {
