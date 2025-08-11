@@ -61,31 +61,68 @@ export class ProjectorMotionText extends HTMLElement {
   readAmendmentChanges() {
     const motionText = this.getLineNumberedMotionText();
     const motionParagraphs = LineNumbering.splitToParagraphs(motionText);
-    // TODO: Apply change recommendations
+
     const changes = [];
     this.querySelectorAll(`template.amendment`).forEach(amendmentEl => {
-      amendmentEl.content.querySelectorAll(`template.paragraph`).forEach((paragraphEl, pKey) => {
+      const paragraphs = {};
+      amendmentEl.content.querySelectorAll(`template.paragraph`).forEach(paragraphEl => {
         const original = motionParagraphs[+paragraphEl.getAttribute(`data-number`)];
-        const newText = paragraphEl.getHTML().trim();
-        const diff = HtmlDiff.diff(original, newText)
-        const affectedLines = HtmlDiff.detectAffectedLineRange(diff);
-        if (affectedLines === null) {
+        if (original === undefined) {
           return;
         }
 
-        const affectedDiff = HtmlDiff.formatDiff(
-          HtmlDiff.extractRangeByLineNumbers(diff, affectedLines.from, affectedLines.to)
-        );
-        const affectedConsolidated = HtmlDiff.diffHtmlToFinalText(affectedDiff);
-        changes.push({
-          isTitleChange: false,
-          identifier: amendmentEl.getAttribute(`data-number`),
-          lineFrom: affectedLines.from,
-          lineTo: affectedLines.to,
-          changeId: `a-${amendmentEl.getAttribute(`data-id`)}-${pKey}`,
-          changeType: `unknown`,
-          changeNewText: affectedConsolidated
+        paragraphs[+paragraphEl.getAttribute(`data-number`)] = paragraphEl.getHTML().trim();
+      });
+
+      motionParagraphs.forEach((paragraph, pKey) => {
+        const original = paragraph;
+
+        let paragraphHasChanges = false;
+        if (paragraphs[pKey] !== undefined) {
+          // Add line numbers to newText, relative to the baseParagraph, by creating a diff
+          // to the line numbered base version any applying it right away
+          const diff = HtmlDiff.diff(paragraph, paragraphs[pKey]);
+          paragraph = HtmlDiff.diffHtmlToFinalText(diff);
+          paragraphHasChanges = true;
+        }
+
+        const affected = LineNumbering.getRange(paragraph);
+        amendmentEl.content.querySelectorAll(`template.amendment-change-reco`).forEach(crEl => {
+          const lineFrom = +crEl.getAttribute(`data-line-from`);
+          const lineTo = +crEl.getAttribute(`data-line-to`);
+
+          if (lineFrom >= affected.from && lineFrom <= affected.to) {
+            paragraph = HtmlDiff.replaceLines(paragraph, crEl.getHTML().trim(), lineFrom, lineTo);
+
+            // Reapply relative line numbers
+            const diff = HtmlDiff.diff(motionParagraphs[pKey], paragraph);
+            paragraph = HtmlDiff.diffHtmlToFinalText(diff);
+
+            paragraphHasChanges = true;
+          }
         });
+
+        if (paragraphHasChanges) {
+          const diff = HtmlDiff.diff(original, paragraph);
+          const affectedLines = HtmlDiff.detectAffectedLineRange(diff);
+          if (affectedLines === null) {
+            return;
+          }
+
+          const affectedDiff = HtmlDiff.formatDiff(
+            HtmlDiff.extractRangeByLineNumbers(diff, affectedLines.from, affectedLines.to)
+          );
+          const affectedConsolidated = HtmlDiff.diffHtmlToFinalText(affectedDiff);
+          changes.push({
+            isTitleChange: false,
+            identifier: amendmentEl.getAttribute(`data-number`),
+            lineFrom: affectedLines.from,
+            lineTo: affectedLines.to,
+            changeId: `a-${amendmentEl.getAttribute(`data-id`)}-${pKey}`,
+            changeType: `unknown`,
+            changeNewText: affectedConsolidated
+          });
+        }
       });
     });
 
@@ -157,9 +194,7 @@ export class ProjectorMotionText extends HTMLElement {
       lastLineTo = changesToShow[i].lineTo;
     }
 
-    text.push(
-      HtmlDiff.getTextRemainderAfterLastChange(motionText, changesToShow, this.lineLength)
-    );
+    text.push(HtmlDiff.getTextRemainderAfterLastChange(motionText, changesToShow, this.lineLength));
 
     const container = document.createElement(`div`);
     container.innerHTML = text.join(``);
@@ -179,9 +214,7 @@ export class ProjectorMotionText extends HTMLElement {
         style = `margin-left: 45px`;
       }
 
-      changeHeader.push(
-        `<span class="amendment-nr-n-icon"><mat-icon style="${style}">warning</mat-icon>`
-      );
+      changeHeader.push(`<span class="amendment-nr-n-icon"><mat-icon style="${style}">warning</mat-icon>`);
     } else {
       let style = ` style="margin-left: 40px"`;
       if (lineNumbering === `outside`) {

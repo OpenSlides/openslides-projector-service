@@ -182,6 +182,17 @@
               {{ if .Amendments }}
                 {{ range .Amendments }}
                   <template class="amendment" data-id="{{ .ID }}" data-number="{{ .Number }}">
+                    {{ range .ChangeRecos }}
+                      <template
+                        class="amendment-change-reco"
+                        data-id="{{ .ID }}"
+                        data-type="{{ .Type }}"
+                        data-line-from="{{ .LineFrom }}"
+                        data-line-to="{{ .LineTo }}"
+                      >
+                        {{ .Text }}
+                      </template>
+                    {{ end }}
                     {{ range $index, $element := .Paragraphs }}
                       <template class="paragraph" data-number="{{ $index }}">{{ $element }}</template>
                     {{ end }}
