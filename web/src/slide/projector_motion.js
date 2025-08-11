@@ -203,7 +203,7 @@ export class ProjectorMotionText extends HTMLElement {
             motionText,
             {
               from: i === 0 ? this.firstLine : changeFrom,
-              to: changesToShow[i].lineFrom - 1 || null
+              to: changesToShow[i].lineFrom - 1
             },
             true,
             this.lineLength
