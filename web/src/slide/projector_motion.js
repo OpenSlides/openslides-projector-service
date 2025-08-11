@@ -216,7 +216,7 @@ export class ProjectorMotionText extends HTMLElement {
         style = `margin-left: 45px`;
       }
 
-      changeHeader.push(`<span class="amendment-nr-n-icon"><mat-icon style="${style}">warning</mat-icon>`);
+      changeHeader.push(`<span class="amendment-nr-n-icon"><span class="material-icons" style="${style}">warning</span>`);
     } else {
       let style = ` style="margin-left: 40px"`;
       if (lineNumbering === `outside`) {
