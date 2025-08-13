@@ -351,7 +351,7 @@ func (req *motionSlideCommonData) motionParseRecommendationExtension(ctx context
 	for _, refMotion := range req.Motion.RecommendationExtensionReferenceIDs {
 		title, err := viewmodels.GetTitleInformationByContentObject(ctx, req.ProjectionReq.Fetch, refMotion)
 		if err != nil {
-			return "", fmt.Errorf("Could not fetch recommendation motion: %w", err)
+			return "", fmt.Errorf("could not fetch recommendation motion: %w", err)
 		}
 
 		ext = strings.ReplaceAll(ext, fmt.Sprintf("[%s]", refMotion), title.Number)
