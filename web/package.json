@@ -22,9 +22,10 @@
     "prettier-plugin-go-template": "^0.0.15"
   },
   "dependencies": {
+    "@openslides/motion-diff": "^0.1.0",
     "eventsource": "^3.0.5",
     "material-icons": "^1.13.14",
-    "pdfjs-dist": "^5.3.31",
+    "pdfjs-dist": "5.3.31",
     "qrcode": "^1.5.4"
   }
 }
