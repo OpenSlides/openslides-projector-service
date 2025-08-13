@@ -13,7 +13,7 @@ export class ProjectorMotionTitle extends HTMLElement {
     const container = document.createElement(`span`);
     if (crEl) {
       const changedTitle = crEl.getHTML().trim();
-      if ([`changed`, `agreed`, `modified_final_version`].indexOf(this.mode) !== -1) {
+      if ([`changed`, `agreed`, `modified_final_version`].includes(this.mode)) {
         container.innerHTML = changedTitle;
       } else if (this.mode === `diff`) {
         container.innerHTML = HtmlDiff.diff(title, changedTitle);
