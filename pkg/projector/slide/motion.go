@@ -177,32 +177,32 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	return data.templateData(map[string]any{}), nil
 }
 
-func (req *motionSlideCommonData) motionTextChangedSlide(ctx context.Context) (map[string]any, error) {
-	changeRecoData, err := req.motionChangeRecos(ctx)
+func (m *motionSlideCommonData) motionTextChangedSlide(ctx context.Context) (map[string]any, error) {
+	changeRecoData, err := m.motionChangeRecos(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch motion change recos: %w", err)
 	}
 
-	return req.templateData(changeRecoData), err
+	return m.templateData(changeRecoData), err
 }
 
-func (req *motionSlideCommonData) motionTextDiffSlide(ctx context.Context) (map[string]any, error) {
-	data, err := req.motionChangeRecos(ctx)
+func (m *motionSlideCommonData) motionTextDiffSlide(ctx context.Context) (map[string]any, error) {
+	data, err := m.motionChangeRecos(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch motion change recos: %w", err)
 	}
-	amendments, err := req.motionAmendments(ctx)
+	amendments, err := m.motionAmendments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch amendments: %w", err)
 	}
 
 	maps.Copy(data, amendments)
-	return req.templateData(data), nil
+	return m.templateData(data), nil
 }
 
-func (req *motionSlideCommonData) motionTextModifiedFinalSlide(ctx context.Context) (map[string]any, error) {
-	fetch := req.ProjectionReq.Fetch
-	crIDs := req.Motion.ChangeRecommendationIDs
+func (m *motionSlideCommonData) motionTextModifiedFinalSlide(ctx context.Context) (map[string]any, error) {
+	fetch := m.ProjectionReq.Fetch
+	crIDs := m.Motion.ChangeRecommendationIDs
 	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch change recommendations slide data: %w", err)
@@ -223,9 +223,9 @@ func (req *motionSlideCommonData) motionTextModifiedFinalSlide(ctx context.Conte
 		}
 	}
 
-	return req.templateData(map[string]any{
+	return m.templateData(map[string]any{
 		"TitleChangeRecos": titleChanges,
-		"MotionText":       template.HTML(req.Motion.ModifiedFinalVersion),
+		"MotionText":       template.HTML(m.Motion.ModifiedFinalVersion),
 	}), nil
 }
 
@@ -253,9 +253,9 @@ type motionChangeReco struct {
 	Text     template.HTML
 }
 
-func (req *motionSlideCommonData) motionChangeRecos(ctx context.Context) (map[string]any, error) {
-	fetch := req.ProjectionReq.Fetch
-	crIDs := req.Motion.ChangeRecommendationIDs
+func (m *motionSlideCommonData) motionChangeRecos(ctx context.Context) (map[string]any, error) {
+	fetch := m.ProjectionReq.Fetch
+	crIDs := m.Motion.ChangeRecommendationIDs
 	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch change recommendations slide data: %w", err)
@@ -282,7 +282,7 @@ func (req *motionSlideCommonData) motionChangeRecos(ctx context.Context) (map[st
 		}
 	}
 
-	return req.templateData(map[string]any{
+	return m.templateData(map[string]any{
 		"HasTitleChanges":   len(titleChanges) > 0,
 		"TitleChangeRecos":  titleChanges,
 		"MotionChangeRecos": changeRecos,
@@ -298,9 +298,9 @@ type motionAmendment struct {
 	ChangeRecos []motionChangeReco
 }
 
-func (req *motionSlideCommonData) motionAmendments(ctx context.Context) (map[string]any, error) {
-	fetch := req.ProjectionReq.Fetch
-	amendmentIDs := req.Motion.AmendmentIDs
+func (m *motionSlideCommonData) motionAmendments(ctx context.Context) (map[string]any, error) {
+	fetch := m.ProjectionReq.Fetch
+	amendmentIDs := m.Motion.AmendmentIDs
 	mQ := fetch.Motion(amendmentIDs...)
 	amendments, err := mQ.Preload(mQ.ChangeRecommendationList()).Preload(mQ.State()).Get(ctx)
 	if err != nil {
@@ -330,7 +330,7 @@ func (req *motionSlideCommonData) motionAmendments(ctx context.Context) (map[str
 			}
 		}
 
-		changeTitle := req.ProjectionReq.Locale.Get("Amendment")
+		changeTitle := m.ProjectionReq.Locale.Get("Amendment")
 		if amendment.Number != "" {
 			changeTitle = amendment.Number
 		}
@@ -350,15 +350,15 @@ func (req *motionSlideCommonData) motionAmendments(ctx context.Context) (map[str
 		tmplAmendments = append(tmplAmendments, data)
 	}
 
-	return req.templateData(map[string]any{
+	return m.templateData(map[string]any{
 		"Amendments": tmplAmendments,
 	}), nil
 }
 
-func (req *motionSlideCommonData) motionParseRecommendationExtension(ctx context.Context) (string, error) {
-	ext := req.Motion.RecommendationExtension
-	for _, refMotion := range req.Motion.RecommendationExtensionReferenceIDs {
-		title, err := viewmodels.GetTitleInformationByContentObject(ctx, req.ProjectionReq.Fetch, refMotion)
+func (m *motionSlideCommonData) motionParseRecommendationExtension(ctx context.Context) (string, error) {
+	ext := m.Motion.RecommendationExtension
+	for _, refMotion := range m.Motion.RecommendationExtensionReferenceIDs {
+		title, err := viewmodels.GetTitleInformationByContentObject(ctx, m.ProjectionReq.Fetch, refMotion)
 		if err != nil {
 			return "", fmt.Errorf("could not fetch recommendation motion: %w", err)
 		}
