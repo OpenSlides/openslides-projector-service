@@ -3,6 +3,7 @@
   .insert {
     color: green !important;
     text-decoration: underline;
+
     a {
       color: green;
     }
@@ -12,6 +13,7 @@
   .delete {
     color: red !important;
     text-decoration: line-through;
+
     a {
       color: red;
     }
@@ -30,6 +32,7 @@
   .highlight {
     background-color: #ff0;
   }
+
   &.line-numbers-outside {
     padding-left: 40px;
     position: relative;
@@ -102,6 +105,7 @@
       display: none;
     }
   }
+
   & {
     .os-split-before {
       margin-top: 0;
@@ -123,13 +127,48 @@
   opacity: 0.5;
 }
 
-/* TODO
 .motion-text,
 .motion-text-diff,
 .reason-text {
-    .detail-view-text {
-    }
-} */
+  h1 {
+    color: inherit;
+    font-weight: 400 !important;
+  }
+
+  h2 {
+    font-weight: 700 !important;
+  }
+
+  h3 {
+    font-weight: 600;
+  }
+
+  h4 {
+    margin: 10px 10px 15px 0;
+    display: block;
+    font-weight: 600;
+    font-size: 1em;
+  }
+
+  h5 {
+    margin: 15px 10px 10px 0;
+    display: block;
+    font-weight: 500;
+    font-size: 1em;
+    font-style: italic;
+  }
+
+  h6 {
+    font-size: 1em;
+    font-style: normal;
+    font-weight: normal;
+  }
+
+  a {
+    word-wrap: break-word;
+    overflow-wrap: anywhere !important;
+  }
+}
 
 #sidebox {
   width: 260px;
@@ -154,6 +193,7 @@
   tr.topline td {
     border-top: 2px solid white;
   }
+
   td.min {
     width: 1%;
     white-space: nowrap;
