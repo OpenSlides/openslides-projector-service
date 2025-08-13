@@ -129,7 +129,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	req.Fetch.Meeting_MotionsPreamble(motion.MeetingID).Lazy(&data.Preamble)
 	req.Fetch.Meeting_MotionsHideMetadataBackground(motion.MeetingID).Lazy(&data.HideMetaBackground)
 	if err := req.Fetch.Execute(ctx); err != nil {
-		return nil, fmt.Errorf("could fetch motion slide data: %w", err)
+		return nil, fmt.Errorf("could not fetch motion slide data: %w", err)
 	}
 
 	if data.ShowRecommendation && motion.RecommendationExtension != "" {
@@ -180,11 +180,11 @@ func (req *motionSlideCommonData) motionTextChangedSlide(ctx context.Context) (m
 func (req *motionSlideCommonData) motionTextDiffSlide(ctx context.Context) (map[string]any, error) {
 	data, err := req.motionChangeRecos(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could fetch motion change recos: %w", err)
+		return nil, fmt.Errorf("could not fetch motion change recos: %w", err)
 	}
 	amendments, err := req.motionAmendments(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could fetch amendments: %w", err)
+		return nil, fmt.Errorf("could not fetch amendments: %w", err)
 	}
 
 	maps.Copy(data, amendments)
@@ -196,7 +196,7 @@ func (req *motionSlideCommonData) motionTextModifiedFinalSlide(ctx context.Conte
 	crIDs := req.Motion.ChangeRecommendationIDs
 	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
+		return nil, fmt.Errorf("could not fetch change recommendations slide data: %w", err)
 	}
 
 	titleChanges := []motionChangeReco{}
@@ -249,7 +249,7 @@ func (req *motionSlideCommonData) motionChangeRecos(ctx context.Context) (map[st
 	crIDs := req.Motion.ChangeRecommendationIDs
 	crs, err := fetch.MotionChangeRecommendation(crIDs...).Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
+		return nil, fmt.Errorf("could not fetch change recommendations slide data: %w", err)
 	}
 
 	changeRecos := []motionChangeReco{}
@@ -295,7 +295,7 @@ func (req *motionSlideCommonData) motionAmendments(ctx context.Context) (map[str
 	mQ := fetch.Motion(amendmentIDs...)
 	amendments, err := mQ.Preload(mQ.ChangeRecommendationList()).Preload(mQ.State()).Get(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("could fetch change recommendations slide data: %w", err)
+		return nil, fmt.Errorf("could not fetch change recommendations slide data: %w", err)
 	}
 
 	tmplAmendments := []motionAmendment{}
