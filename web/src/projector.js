@@ -1,6 +1,8 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
+import { OsGrid, OsGridEntry } from './components/grid.js';
+import { OsIconContainer } from './components/icon-container.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
 import { QrCode } from './components/qr-code.js';
@@ -8,6 +10,9 @@ import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
 import { ProjectorMotionAmendment, ProjectorMotionText, ProjectorMotionTitle } from './slide/projector_motion.js';
 
 customElements.define('projector-countdown', ProjectorCountdown);
+customElements.define('os-grid', OsGrid);
+customElements.define('os-grid-entry', OsGridEntry);
+customElements.define('os-icon-container', OsIconContainer);
 customElements.define('projector-motion-amendment', ProjectorMotionAmendment);
 customElements.define('projector-motion-block', ProjectorMotionBlock);
 customElements.define('projector-motion-title', ProjectorMotionTitle);
