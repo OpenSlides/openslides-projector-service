@@ -179,6 +179,10 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 
 func (req *motionSlideCommonData) motionTextChangedSlide(ctx context.Context) (map[string]any, error) {
 	changeRecoData, err := req.motionChangeRecos(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch motion change recos: %w", err)
+	}
+
 	return req.templateData(changeRecoData), err
 }
 
