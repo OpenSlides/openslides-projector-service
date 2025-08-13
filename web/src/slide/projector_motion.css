@@ -181,7 +181,8 @@
 
 #text {
   position: relative;
-  margin-top: 40px;
+  margin-top: calc(var(--projector-scroll) * -100px);
+  padding-top: 40px;
   font-size: 100%;
 }
 

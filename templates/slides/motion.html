@@ -9,10 +9,10 @@
         {{ .Submitters }}
       {{ end }}
       <!-- Recommendation -->
-      {{ if and .Recommender .RecommendationLabel }}
+      {{ if and .Recommender .Recommendation }}
         <div>
           <h3>{{ .Recommender }}</h3>
-          {{ .RecommendationLabel }}
+          {{ .Recommendation }}
         </div>
       {{ end }}
     </div>
@@ -37,18 +37,15 @@
         </projector-motion-title>
       </h1>
       <!-- recommendation referencing motions -->
-      {{ if .ShowSidebox }}
-        @if (data.data.show_sidebox && data.data.recommendation_referencing_motions) {
+      {{ if and .ShowSidebox .ReferencedRecoMotions }}
         <h2 class="projector_h2">
           <span>{{ Loc.Get "Referring motions" }}</span>
           :
-          <os-comma-separated-listing [list]="referencingMotions">
-            <ng-template let-information>{-{ getNumberOrTitle(information) }}</ng-template>
-          </os-comma-separated-listing>
+          {{ .ReferencedRecoMotions }}
         </h2>
       {{ end }}
       <!-- Metainfo as table -->
-      {{ if and (not .ShowSidebox) (or .Submitters (and .Recommender .RecommendationLabel) .RecommendationMotions) }}
+      {{ if and (not .ShowSidebox) (or .Submitters (and .Recommender .Recommendation) .ReferencedRecoMotions) }}
         <table
           cellpadding="0"
           cellspacing="0"
@@ -66,24 +63,22 @@
             </tr>
           {{ end }}
           <!-- Recommendation -->
-          {{ if and .Recommender .RecommendationLabel }}
+          {{ if and .Recommender .Recommendation }}
             <tr class="topline">
               <td class="min">
                 <b>{{ .Recommender }}:</b>
               </td>
-              <td>{{ .RecommendationLabel }}</td>
+              <td>{{ .Recommendation }}</td>
             </tr>
           {{ end }}
           <!-- recommendation referencing motions -->
-          {{ if .RecommendationMotions }}
+          {{ if .ReferencedRecoMotions }}
             <tr class="topline">
               <td class="min">
                 <b>{{ Loc.Get "Referring motions" }}:</b>
               </td>
               <td>
-                <os-comma-separated-listing [list]="referencingMotions">
-                  <ng-template let-information>{-{ getNumberOrTitle(information) }}</ng-template>
-                </os-comma-separated-listing>
+                {{ .ReferencedRecoMotions }}
               </td>
             </tr>
           {{ end }}
@@ -226,7 +221,7 @@
           </div>
         {{ end }}
         <!-- Reason -->
-        {{ if .Motion.Reason }}
+        {{ if .Reason }}
           <div class="reason-text">
             <h3>{{ Loc.Get "Reason" }}</h3>
             <div class="detail-view-text">{{ .Reason }}</div>
