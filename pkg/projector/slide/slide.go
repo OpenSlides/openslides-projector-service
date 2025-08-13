@@ -41,13 +41,22 @@ type SlideRouter struct {
 
 func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gotext.Locale) *SlideRouter {
 	routes := make(map[string]slideHandler)
+	routes["agenda_item_list"] = AgendaItemListSlideHandler
 	routes["assignment"] = AssignmentSlideHandler
-	routes["current_los"] = CurrentListOfSpeakersSlideHandler
+	routes["current_los"] = ListOfSpeakersSlideHandler
 	routes["current_speaker_chyron"] = CurrentSpeakerChyronSlideHandler
+	routes["current_speaking_structure_level"] = CurrentSpeakingStructureLevelSlideHandler
+	routes["current_structure_level_list"] = CurrentStructureLevelListSlideHandler
+	routes["home"] = HomeSlideHandler
+	routes["list_of_speakers"] = ListOfSpeakersSlideHandler
+	routes["meeting_mediafile"] = MeetingMediafileSlideHandler
+	routes["motion"] = MotionSlideHandler
+	routes["motion_block"] = MotionBlockSlideHandler
 	routes["poll"] = PollSlideHandler
 	routes["projector_countdown"] = ProjectorCountdownSlideHandler
 	routes["projector_message"] = ProjectorMessageSlideHandler
 	routes["topic"] = TopicSlideHandler
+	routes["wifi_access_data"] = WifiAccessDataSlideHandler
 
 	return &SlideRouter{
 		ctx:    ctx,
@@ -85,11 +94,20 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 }
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
+	onError := func(err error, msg string) {
+		log.Error().Err(err).Msg(msg)
+
+		updateChannel <- &projectionUpdate{
+			ID:      id,
+			Content: "",
+		}
+	}
+
 	r.db.NewContext(ctx, func(fetch *dsmodels.Fetch) {
 		projection, err := fetch.Projection(id).First(ctx)
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Error().Err(err).Msg("getting projection from db")
+				onError(err, "getting projection from db")
 			}
 
 			return
@@ -118,7 +136,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 			}
 
 			if err != nil {
-				log.Error().Err(err).Msg("failed executing projection handler")
+				onError(err, "failed executing projection handler")
 				return
 			}
 
@@ -127,17 +145,21 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				templateName = val.(string)
 			}
 
-			tmpl, err := template.ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
+			tmplName := fmt.Sprintf("%s.html", templateName)
+			tmpl, err := template.New(tmplName).Funcs(template.FuncMap{
+				"Loc": func() *gotext.Locale {
+					return r.locale
+				},
+			}).ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
 			if err != nil {
-				log.Error().Err(err).Msgf("could not load %s template", projectionType)
+				onError(err, fmt.Sprintf("could not load %s template", projectionType))
 				return
 			}
 
 			var content bytes.Buffer
-			projectionContent["Loc"] = r.locale
-			err = tmpl.Execute(&content, projectionContent)
+			err = tmpl.Lookup(tmplName).Execute(&content, projectionContent)
 			if err != nil {
-				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
+				onError(err, fmt.Sprintf("could not execute %s template", projectionType))
 				return
 			}
 

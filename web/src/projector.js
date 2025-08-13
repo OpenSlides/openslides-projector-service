@@ -1,14 +1,24 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
-import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { OsGrid, OsGridEntry } from './components/grid.js';
 import { OsIconContainer } from './components/icon-container.js';
+import { ProjectorCountdown } from './slide/projector_countdown.js';
+import { PdfViewer } from './components/pdf-viewer.js';
+import { QrCode } from './components/qr-code.js';
+import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
+import { ProjectorMotionAmendment, ProjectorMotionText, ProjectorMotionTitle } from './slide/projector_motion.js';
 
-customElements.define("projector-countdown", ProjectorCountdown);
-customElements.define("os-grid", OsGrid);
-customElements.define("os-grid-entry", OsGridEntry);
-customElements.define("os-icon-container", OsIconContainer);
+customElements.define('projector-countdown', ProjectorCountdown);
+customElements.define('os-grid', OsGrid);
+customElements.define('os-grid-entry', OsGridEntry);
+customElements.define('os-icon-container', OsIconContainer);
+customElements.define('projector-motion-amendment', ProjectorMotionAmendment);
+customElements.define('projector-motion-block', ProjectorMotionBlock);
+customElements.define('projector-motion-title', ProjectorMotionTitle);
+customElements.define('projector-motion-text', ProjectorMotionText);
+customElements.define('pdf-viewer', PdfViewer);
+customElements.define('qr-code', QrCode);
 
 window.serverTime = () => new Date();
 
@@ -33,36 +43,59 @@ export function Projector(host, id, auth = () => ``) {
         ...init,
         headers: {
           ...init.headers,
-          Authentication: auth(),
-        },
-      })
-    },
-  })
-  eventSource.addEventListener(`settings`, (e) => {
-    console.debug(`settings`, e.data);
+          Authentication: auth()
+        }
+      });
+    }
+  });
+
+  eventSource.addEventListener(`settings`, e => {
+    const projectorContainer = container.querySelector(`#projector-container`);
+    const settings = JSON.parse(e.data);
+    const cssProperties = {
+      '--projector-color': settings.Color,
+      '--projector-background-color': settings.BackgroundColor,
+      '--projector-header-background-color': settings.HeaderBackgroundColor,
+      '--projector-header-font-color': settings.HeaderFontColor,
+      '--projector-header-h1-color': settings.HeaderH1Color,
+      '--projector-chyron-background-color': settings.ChyronBackgroundColor,
+      '--projector-chyron-background-color2': settings.ChyronBackgroundColor2,
+      '--projector-chyron-font-color': settings.ChyronFontColor,
+      '--projector-chyron-font-color2': settings.ChyronFontColor2,
+      '--projector-width': settings.Width,
+      '--projector-aspect-ratio-numerator': settings.AspectRatioNumerator,
+      '--projector-aspect-ratio-denominator': settings.AspectRatioDenominator,
+      '--projector-scroll': settings.Scroll
+    };
+
+    for (let prop in cssProperties) {
+      if (cssProperties[prop] !== undefined) {
+        projectorContainer.style.setProperty(prop, cssProperties[prop]);
+      }
+    }
   });
 
   eventSource.addEventListener(`deleted`, () => {
     console.debug(`deleted`);
   });
 
-  eventSource.addEventListener(`connected`, (e) => {
+  eventSource.addEventListener(`connected`, e => {
     const timeOffset = +e.data - Math.floor(Date.now() / 1000);
     window.serverTime = () => {
-      return new Date(Date.now() - (timeOffset * 1000));
+      return new Date(Date.now() - timeOffset * 1000);
     };
     clock.update();
 
     console.debug(`connected`);
   });
 
-  eventSource.addEventListener(`projector-replace`, (e) => {
+  eventSource.addEventListener(`projector-replace`, e => {
     container.innerHTML = JSON.parse(e.data);
     sizeListener.update();
     clock.update();
   });
 
-  eventSource.addEventListener(`projection-updated`, (e) => {
+  eventSource.addEventListener(`projection-updated`, e => {
     const data = JSON.parse(e.data);
     for (let id of Object.keys(data)) {
       let el = container.querySelector(`.slide[data-id="${id}"]`);
@@ -76,7 +109,7 @@ export function Projector(host, id, auth = () => ``) {
     }
   });
 
-  eventSource.addEventListener(`projection-deleted`, (e) => {
+  eventSource.addEventListener(`projection-deleted`, e => {
     console.debug(`projection-deleted`, e.data);
 
     container.querySelector(`.slide[data-id="${e.data}"]`)?.remove();
@@ -87,7 +120,6 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   return () => {
-    clearInterval(timeInterval);
     sizeListener.unregister();
     clock.unregister();
     eventSource.close();

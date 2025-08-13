@@ -1,0 +1,233 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_motion.css" />
+
+<div class="content">
+  {{ if .ShowSidebox }}
+    <div id="sidebox" class="{{ if not .HideMetadataBackground }}metatable-background{{ end }}">
+      <!-- Submitters -->
+      {{ if .Submitters }}
+        <h3>{{ Loc.Get "Submitters" }}</h3>
+        {{ .Submitters }}
+      {{ end }}
+      <!-- Recommendation -->
+      {{ if and .Recommender .Recommendation }}
+        <div>
+          <h3>{{ .Recommender }}</h3>
+          {{ .Recommendation }}
+        </div>
+      {{ end }}
+    </div>
+  {{ end }}
+  <div style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
+    <!-- Title -->
+    <div class="spacer"></div>
+    <div class="{{ if .ShowSidebox }}slidetitle{{ end }}">
+      <h1 class="projector_h1">
+        {{ if .Motion.Number }}
+          <span>{{ .Motion.Number }}:</span>
+        {{ end }}
+        <projector-motion-title mode="{{ .Mode }}">
+          <template id="content">{{ .Motion.Title }}</template>
+          {{ if ne .Mode "diff" }}
+            {{ range .TitleChangeRecos }}
+              <template class="change-reco" data-id="{{ .ID }}" data-type="{{ .Type }}">
+                {{ .Text }}
+              </template>
+            {{ end }}
+          {{ end }}
+        </projector-motion-title>
+      </h1>
+      <!-- recommendation referencing motions -->
+      {{ if and .ShowSidebox .ReferencedRecoMotions }}
+        <h2 class="projector_h2">
+          <span>{{ Loc.Get "Referring motions" }}</span>
+          :
+          {{ .ReferencedRecoMotions }}
+        </h2>
+      {{ end }}
+      <!-- Metainfo as table -->
+      {{ if and (not .ShowSidebox) (or .Submitters (and .Recommender .Recommendation) .ReferencedRecoMotions) }}
+        <table
+          cellpadding="0"
+          cellspacing="0"
+          class="metatable spacer-top-20 {{ if not .HideMetadataBackground }}metatable-background{{ end }}"
+        >
+          <!-- Submitters -->
+          {{ if .Submitters }}
+            <tr>
+              <td class="min">
+                <b>{{ Loc.Get "Submitters" }}</b>
+              </td>
+              <td>
+                {{ .Submitters }}
+              </td>
+            </tr>
+          {{ end }}
+          <!-- Recommendation -->
+          {{ if and .Recommender .Recommendation }}
+            <tr class="topline">
+              <td class="min">
+                <b>{{ .Recommender }}:</b>
+              </td>
+              <td>{{ .Recommendation }}</td>
+            </tr>
+          {{ end }}
+          <!-- recommendation referencing motions -->
+          {{ if .ReferencedRecoMotions }}
+            <tr class="topline">
+              <td class="min">
+                <b>{{ Loc.Get "Referring motions" }}:</b>
+              </td>
+              <td>
+                {{ .ReferencedRecoMotions }}
+              </td>
+            </tr>
+          {{ end }}
+        </table>
+      {{ end }}
+    </div>
+  </div>
+  {{ if .ShowText }}
+    <section id="text-wrapper">
+      <div id="text" style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
+        <!-- Text -->
+        {{ if .Motion.Text }}
+          <span class="text-prefix-label">{{ .Preamble }}</span>
+        {{ end }}
+
+        {{ if .IsParagraphBasedAmendment }}
+          <!-- Amendment text -->
+          <section class="text-holder">
+            {{ if .Motion.Text }}
+              <div class="motion-text underlined-links line-numbers-{{ .LineNumbering }}">
+                <projector-motion-text
+                  first-line="1"
+                  line-length="{{ .LineLength }}"
+                  line-numbering="{{ .LineNumbering }}"
+                  class="detail-view-text"
+                >
+                  <template id="content">{{ .MotionText }}</template>
+                </projector-motion-text>
+              </div>
+            {{ else if .AmendmentParagraphs }}
+              <div
+                class="motion-text motion-text-diff amendment-view underlined-links line-numbers-{{ .LineNumbering }}"
+              >
+                <projector-motion-amendment
+                  first-line="{{ .Motion.StartLineNumber }}"
+                  line-length="{{ .LineLength }}"
+                  line-numbering="{{ .LineNumbering }}"
+                  mode="{{ .Mode }}"
+                  class="detail-view-text"
+                >
+                  <template id="lead-motion-text">{{ .LeadMotionText }}</template>
+                  {{ range $paragraphNo, $text := .AmendmentParagraphs }}
+                    <template class="paragraph" data-number="{{ $paragraphNo }}">{{ $text }}</template>
+                  {{ end }}
+                  {{ range .MotionChangeRecos }}
+                    <template
+                      class="change-reco"
+                      data-id="{{ .ID }}"
+                      data-type="{{ .Type }}"
+                      data-line-from="{{ .LineFrom }}"
+                      data-line-to="{{ .LineTo }}"
+                      {{ if .Rejected }}
+                        data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
+                      {{ else }}
+                        data-change-title="{{ Loc.Get "Change recommendation" }}"
+                      {{ end }}
+                    >
+                      {{ .Text }}
+                    </template>
+                  {{ end }}
+                </projector-motion-amendment>
+              </div>
+            {{ else }}
+              <div class="alert alert-info">
+                <span>{{ Loc.Get "No changes at the text." }}</span>
+              </div>
+            {{ end }}
+          </section>
+        {{ else }}
+          <!-- Regular motions or traditional amendments -->
+          <div class="motion-text underlined-links line-numbers-{{ .LineNumbering }}">
+            {{ if eq .Mode "diff" }}
+              {{ if .HasTitleChanges }}
+                <div>
+                  <div class="bold">{{ Loc.Get "Changed title" }}:</div>
+                  <projector-motion-title mode="{{ .Mode }}">
+                    <template id="content">{{ .Motion.Title }}</template>
+                    {{ range .TitleChangeRecos }}
+                      <template class="change-reco" data-id="{{ .ID }}" data-type="{{ .Type }}">
+                        {{ .Text }}
+                      </template>
+                    {{ end }}
+                  </projector-motion-title>
+                </div>
+              {{ end }}
+            {{ end }}
+            <projector-motion-text
+              first-line="{{ .Motion.StartLineNumber }}"
+              line-length="{{ .LineLength }}"
+              line-numbering="{{ .LineNumbering }}"
+              mode="{{ .Mode }}"
+              class="detail-view-text"
+            >
+              <template id="content">{{ .MotionText }}</template>
+              {{ if .MotionChangeRecos }}
+                {{ range .MotionChangeRecos }}
+                  <template
+                    class="change-reco"
+                    data-id="{{ .ID }}"
+                    data-type="{{ .Type }}"
+                    data-line-from="{{ .LineFrom }}"
+                    data-line-to="{{ .LineTo }}"
+                    {{ if .Rejected }}
+                      data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
+                    {{ else }}
+                      data-change-title="{{ Loc.Get "Change recommendation" }}"
+                    {{ end }}
+                  >
+                    {{ .Text }}
+                  </template>
+                {{ end }}
+              {{ end }}
+              {{ if .Amendments }}
+                {{ range .Amendments }}
+                  <template
+                    class="amendment"
+                    data-id="{{ .ID }}"
+                    data-number="{{ .Number }}"
+                    data-title="{{ .Number }}: {{ .Title }}"
+                    data-change-title="{{ .ChangeTitle }}"
+                  >
+                    {{ range .ChangeRecos }}
+                      <template
+                        class="amendment-change-reco"
+                        data-id="{{ .ID }}"
+                        data-type="{{ .Type }}"
+                        data-line-from="{{ .LineFrom }}"
+                        data-line-to="{{ .LineTo }}"
+                      >
+                        {{ .Text }}
+                      </template>
+                    {{ end }}
+                    {{ range $index, $element := .Paragraphs }}
+                      <template class="paragraph" data-number="{{ $index }}">{{ $element }}</template>
+                    {{ end }}
+                  </template>
+                {{ end }}
+              {{ end }}
+            </projector-motion-text>
+          </div>
+        {{ end }}
+        <!-- Reason -->
+        {{ if .Reason }}
+          <div class="reason-text">
+            <h3>{{ Loc.Get "Reason" }}</h3>
+            <div class="detail-view-text">{{ .Reason }}</div>
+          </div>
+        {{ end }}
+      </div>
+    </section>
+  {{ end }}
+</div>

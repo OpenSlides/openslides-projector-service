@@ -136,13 +136,14 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 		f.Projector_ShowTitle(p.projector.ID).Lazy(&p.pSettings.ShowTitle)
 		f.Projector_ShowLogo(p.projector.ID).Lazy(&p.pSettings.ShowLogo)
 		f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
+
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
 
 		var logo dsfetch.Maybe[int]
-		f.Meeting_LogoProjectorMainID(p.projector.ID).Lazy(&logo)
+		f.Meeting_LogoProjectorMainID(p.projector.MeetingID).Lazy(&logo)
 		var header dsfetch.Maybe[int]
-		f.Meeting_LogoProjectorHeaderID(p.projector.ID).Lazy(&header)
+		f.Meeting_LogoProjectorHeaderID(p.projector.MeetingID).Lazy(&header)
 
 		var themeId int
 		f.Organization_ThemeID(1).Lazy(&themeId)

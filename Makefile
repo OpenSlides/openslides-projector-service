@@ -19,6 +19,9 @@ gofmt:
 gogenertate:
 	go generate ./...
 
+nodelinter: | install-web-asset-deps
+	cd web && npm run lint
+
 install-web-asset-deps:
 	cd web && npm i
 

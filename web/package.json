@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "projector.js",
   "scripts": {
+    "lint": "eslint src/ && prettier --check . ../templates",
+    "lint-fix": "eslint src/ --fix && prettier --write . ../templates",
     "build": "node build.mjs",
     "build-watch": "node build.mjs -- --watch"
   },
@@ -10,10 +12,20 @@
   "license": "MIT",
   "description": "",
   "devDependencies": {
-    "esbuild": "0.25.0"
+    "@eslint/css": "^0.10.0",
+    "@eslint/js": "^9.31.0",
+    "esbuild": "0.25.0",
+    "esbuild-plugin-copy": "^2.1.1",
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-go-template": "^0.0.15"
   },
   "dependencies": {
+    "@openslides/motion-diff": "^0.1.0",
     "eventsource": "^3.0.5",
-    "material-icons": "^1.13.14"
+    "material-icons": "^1.13.14",
+    "pdfjs-dist": "5.3.31",
+    "qrcode": "^1.5.4"
   }
 }

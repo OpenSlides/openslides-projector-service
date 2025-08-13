@@ -1,36 +1,36 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_assignment.css" />
 
 <div class="content">
-    <div class="slidetitle">
-        <h1>
-            {{ .Assignment.Title }}
-        </h1>
-        <h2>
-            {{ .Loc.Get "Election" }}
-        </h2>
+  <div class="slidetitle">
+    <h1>
+      {{ .Assignment.Title }}
+    </h1>
+    <h2>
+      {{ Loc.Get "Election" }}
+    </h2>
+  </div>
+  {{ if .Description }}
+    <div class="detail-view-text">
+      {{ .Description }}
     </div>
-    {{if .Description }}
-        <div class="detail-view-text">
-            {{.Description}}
-        </div>
-    {{end}}
-    <h3>{{ .Loc.Get "Candidates" }}</h3>
+  {{ end }}
+  <h3>{{ Loc.Get "Candidates" }}</h3>
 
-    {{if .Assignment.NumberPollCandidates }}
-        <ol>
-    {{else}}
-        <ul>
-    {{end}}
+  {{ define "candidates" }}
+    {{ range . }}
+      <li>
+        {{ .Name }}
+      </li>
+    {{ end }}
+  {{ end }}
 
-        {{range .Candidates}}
-            <li>
-                {{ .Name }}
-            </li>
-        {{end}}
-
-    {{if .Assignment.NumberPollCandidates }}
-        </ol>
-    {{else}}
-        </ul>
-    {{end}}
+  {{ if .Assignment.NumberPollCandidates }}
+    <ol>
+      {{ template "candidates" .Candidates }}
+    </ol>
+  {{ else }}
+    <ul>
+      {{ template "candidates" .Candidates }}
+    </ul>
+  {{ end }}
 </div>

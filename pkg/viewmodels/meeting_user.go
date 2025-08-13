@@ -8,7 +8,7 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func MeetingUser_FullName(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {
+func MeetingUser_FullName(mu *dsmodels.MeetingUser) string {
 	name := User_ShortName(mu.User)
 	additional := []string{}
 	if mu.User.Pronoun != "" {
@@ -25,10 +25,10 @@ func MeetingUser_FullName(ctx context.Context, mu *dsmodels.MeetingUser) (string
 	}
 
 	if len(additional) == 0 {
-		return name, nil
+		return name
 	}
 
-	return fmt.Sprintf("%s (%s)", name, strings.Join(additional, " · ")), nil
+	return fmt.Sprintf("%s (%s)", name, strings.Join(additional, " · "))
 }
 
 func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {

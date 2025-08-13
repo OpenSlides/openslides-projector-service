@@ -1,0 +1,264 @@
+.motion-text {
+  ins,
+  .insert {
+    color: green !important;
+    text-decoration: underline;
+
+    a {
+      color: green;
+    }
+  }
+
+  del,
+  .delete {
+    color: red !important;
+    text-decoration: line-through;
+
+    a {
+      color: red;
+    }
+  }
+
+  li {
+    padding-bottom: 10px;
+  }
+
+  ol,
+  ul {
+    margin-left: 15px;
+    margin-bottom: 0;
+  }
+
+  .highlight {
+    background-color: #ff0;
+  }
+
+  &.line-numbers-outside {
+    padding-left: 40px;
+    position: relative;
+
+    .os-line-number {
+      display: inline-block;
+      font-size: 0;
+      line-height: 0;
+      width: 22px;
+      height: 22px;
+      position: absolute;
+      left: 0;
+      text-align: left;
+      padding-right: 18px;
+
+      &:after {
+        content: attr(data-line-number);
+        position: absolute;
+        top: 13px;
+        vertical-align: top;
+        color: gray;
+        font-size: 12px;
+        font-weight: normal;
+      }
+
+      &.selectable:hover:before,
+      &.selected:before {
+        position: absolute;
+        top: 4px;
+        left: 20px;
+        display: inline-block;
+        cursor: pointer;
+        content: '';
+        width: 16px;
+        height: 16px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" fill="%23337ab7"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+        background-size: 16px 16px;
+      }
+    }
+  }
+
+  &.line-numbers-inline {
+    .os-line-break {
+      display: none;
+    }
+
+    .os-line-number {
+      display: inline-block;
+
+      &:after {
+        display: inline-block;
+        content: attr(data-line-number);
+        vertical-align: top;
+        font-size: 14px;
+        font-weight: normal;
+        color: gray;
+        margin-top: -3px;
+        margin-left: 0;
+        margin-right: 0;
+      }
+    }
+  }
+
+  &.line-numbers-none {
+    .os-line-break {
+      display: none;
+    }
+
+    .os-line-number {
+      display: none;
+    }
+  }
+
+  & {
+    .os-split-before {
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .os-split-after {
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    li.os-split-before {
+      list-style: none;
+    }
+  }
+}
+
+.paragraph-context {
+  opacity: 0.5;
+}
+
+.motion-text,
+.motion-text-diff,
+.reason-text {
+  h1 {
+    color: inherit;
+    font-weight: 400 !important;
+  }
+
+  h2 {
+    font-weight: 700 !important;
+  }
+
+  h3 {
+    font-weight: 600;
+  }
+
+  h4 {
+    margin: 10px 10px 15px 0;
+    display: block;
+    font-weight: 600;
+    font-size: 1em;
+  }
+
+  h5 {
+    margin: 15px 10px 10px 0;
+    display: block;
+    font-weight: 500;
+    font-size: 1em;
+    font-style: italic;
+  }
+
+  h6 {
+    font-size: 1em;
+    font-style: normal;
+    font-weight: normal;
+  }
+
+  a {
+    word-wrap: break-word;
+    overflow-wrap: anywhere !important;
+  }
+}
+
+#sidebox {
+  width: 260px;
+  right: 0;
+  border-radius: 7px 0 0 7px;
+  padding: 3px 7px 10px 10px;
+  position: fixed;
+  z-index: 5;
+  word-break: break-word;
+
+  h3 {
+    margin-top: 10px;
+    margin-bottom: 0px;
+  }
+}
+
+.metatable {
+  width: 100%;
+  font-size: 120%;
+  margin-top: 20px;
+
+  tr.topline td {
+    border-top: 2px solid white;
+  }
+
+  td.min {
+    width: 1%;
+    white-space: nowrap;
+    font-weight: 500;
+    padding: 0 10px 0 7px;
+    vertical-align: top;
+  }
+}
+
+.metatable-background {
+  background-color: #ddd;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.spacer {
+  min-width: 1px;
+}
+
+#text-wrapper {
+  overflow: hidden;
+}
+
+#text {
+  position: relative;
+  margin-top: calc(var(--projector-scroll) * -100px);
+  padding-top: 40px;
+  font-size: 100%;
+}
+
+/* override the absolute position of outside linenumbers on motion slide */
+.motion-text {
+  &.line-numbers-outside {
+    .os-line-number {
+      &:after {
+        top: 17px !important;
+        font-size: 16px !important;
+      }
+    }
+  }
+}
+
+.amendment-nr-n-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  left: -40px;
+  height: 1.5em;
+  margin-top: 25px;
+}
+
+.amendment-nr-n-icon + p {
+  margin-top: 0;
+}
+
+.amendment-nr {
+  position: relative;
+  font-style: italic;
+  background-color: rgb(224, 224, 224);
+  padding-right: 4px;
+}
+
+.os-linebreak {
+  display: none !important;
+}

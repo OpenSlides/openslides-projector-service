@@ -1,0 +1,51 @@
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="/system/projector/static/slide/projector_current_structure_level_list.css"
+/>
+
+<div class="content">
+  <div class="slidetitle">
+    <h1>
+      {{ Loc.Get "Speaking times" }}
+    </h1>
+    <h2>
+      {{ if .ContentTitle.AgendaItemNumber }}
+        {{ .ContentTitle.AgendaItemNumber }}
+      {{ end }}
+      {{ if and .ContentTitle.AgendaItemNumber .ContentTitle.Title }}
+        ·
+      {{ end }}
+      {{ if .ContentTitle.Title }}
+        {{ .ContentTitle.Title }}
+      {{ end }}
+    </h2>
+  </div>
+
+  <div class="struture-level-list-slide">
+    {{ range .StructureLevels }}
+      <div class="struture-level-list-countdown">
+        <div class="level-time-list">
+          <span class="align-right">
+            <hr
+              class="structure-level-color"
+              {{ if .Color }}style="background-color: {{ .Color }}"{{ end }}
+            />
+          </span>
+          <projector-countdown
+            id="structure-level-{{ .ID }}"
+            countdown-time="{{ printf "%.0f" .CountdownTime }}"
+            running="{{ .Running }}"
+          ></projector-countdown>
+        </div>
+        <div class="structure-level-name">
+          {{ if .Name }}
+            <div class="description">
+              {{ .Name }}
+            </div>
+          {{ end }}
+        </div>
+      </div>
+    {{ end }}
+  </div>
+</div>

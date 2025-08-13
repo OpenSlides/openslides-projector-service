@@ -20,10 +20,10 @@ export class OsGridEntry extends HTMLElement {
     var rect = this.getBoundingClientRect();
 
     return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && /* or $(window).height() */
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth) /* or $(window).width() */
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) /* or $(window).height() */ &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth) /* or $(window).width() */
     );
   }
 }

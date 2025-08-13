@@ -9,8 +9,8 @@ export class ProjectorCountdown extends HTMLElement {
   }
 
   /**
-    * Updates the countdown time and string format it.
-    */
+   * Updates the countdown time and string format it.
+   */
   get countdownTimeFormatted() {
     this.seconds = this.secondsRemaining;
 
@@ -37,7 +37,7 @@ export class ProjectorCountdown extends HTMLElement {
   }
 
   connectedCallback() {
-    this.defaultTime = +this.getAttribute(`default-time`) || 0;
+    this.defaultTime = this.getAttribute(`default-time`) === null ? null : +this.getAttribute(`default-time`);
     this.countdownTime = +this.getAttribute(`countdown-time`) || 0;
     this.warningTime = +this.getAttribute(`warning-time`) || 0;
     this.running = this.getAttribute(`running`) === `true`;

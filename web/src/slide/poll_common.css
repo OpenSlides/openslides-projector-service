@@ -1,24 +1,23 @@
 .yes {
-    color: var(--theme-yes);
+  color: var(--theme-yes);
 }
 
 .no {
-    color: var(--theme-no);
+  color: var(--theme-no);
 }
 
 .abstain {
-    color: var(--theme-abstain);
+  color: var(--theme-abstain);
 }
 
 .bg-yes {
-    background-color: var(--theme-yes);
+  background-color: var(--theme-yes);
 }
 
 .bg-no {
-    background-color: var(--theme-no);
+  background-color: var(--theme-no);
 }
 
 .bg-abstain {
-    background-color: var(--theme-abstain);
+  background-color: var(--theme-abstain);
 }
-
