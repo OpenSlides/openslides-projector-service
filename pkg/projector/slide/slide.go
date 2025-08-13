@@ -92,11 +92,20 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 }
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
+	onError := func(err error, msg string) {
+		log.Error().Err(err).Msg(msg)
+
+		updateChannel <- &projectionUpdate{
+			ID:      id,
+			Content: "",
+		}
+	}
+
 	r.db.NewContext(ctx, func(fetch *dsmodels.Fetch) {
 		projection, err := fetch.Projection(id).First(ctx)
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				log.Error().Err(err).Msg("getting projection from db")
+				onError(err, "getting projection from db")
 			}
 
 			return
@@ -125,7 +134,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 			}
 
 			if err != nil {
-				log.Error().Err(err).Msg("failed executing projection handler")
+				onError(err, "failed executing projection handler")
 				return
 			}
 
@@ -141,14 +150,14 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				},
 			}).ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
 			if err != nil {
-				log.Error().Err(err).Msgf("could not load %s template", projectionType)
+				onError(err, fmt.Sprintf("could not load %s template", projectionType))
 				return
 			}
 
 			var content bytes.Buffer
 			err = tmpl.Lookup(tmplName).Execute(&content, projectionContent)
 			if err != nil {
-				log.Error().Err(err).Msgf("could not execute %s template", projectionType)
+				onError(err, fmt.Sprintf("could not execute %s template", projectionType))
 				return
 			}
 
