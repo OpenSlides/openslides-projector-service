@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY cmd cmd
 COPY pkg pkg
-COPY templates /root/templates
+COPY templates templates
 COPY web web
 COPY locale locale
 COPY Makefile Makefile
