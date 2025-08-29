@@ -49,17 +49,18 @@ type ProjectorSettings struct {
 }
 
 type projector struct {
-	ctxCancel      context.CancelFunc
-	db             *database.Datastore
-	slideRouter    *slide.SlideRouter
-	projector      *dsmodels.Projector
-	pSettings      *ProjectorSettings
-	listeners      []chan *ProjectorUpdateEvent
-	locale         *gotext.Locale
-	Content        string
-	Projections    map[int]template.HTML
-	AddListener    chan chan *ProjectorUpdateEvent
-	RemoveListener chan (<-chan *ProjectorUpdateEvent)
+	ctxCancel       context.CancelFunc
+	db              *database.Datastore
+	slideRouter     *slide.SlideRouter
+	projector       *dsmodels.Projector
+	pSettings       *ProjectorSettings
+	listeners       []chan *ProjectorUpdateEvent
+	locale          *gotext.Locale
+	Content         string
+	Projections     map[int]template.HTML
+	ProjectionsHash map[int]uint64
+	AddListener     chan chan *ProjectorUpdateEvent
+	RemoveListener  chan (<-chan *ProjectorUpdateEvent)
 }
 
 type ProjectorUpdateEvent struct {
@@ -79,15 +80,16 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 	langName, _ := lang.Base()
 	locale := gotext.NewLocale("locale", langName.String())
 	p := &projector{
-		ctxCancel:      cancel,
-		db:             db,
-		projector:      &data,
-		pSettings:      &ProjectorSettings{},
-		slideRouter:    slide.New(ctx, db, ds, locale),
-		locale:         locale,
-		Projections:    make(map[int]template.HTML),
-		AddListener:    make(chan chan *ProjectorUpdateEvent),
-		RemoveListener: make(chan (<-chan *ProjectorUpdateEvent)),
+		ctxCancel:       cancel,
+		db:              db,
+		projector:       &data,
+		pSettings:       &ProjectorSettings{},
+		slideRouter:     slide.New(ctx, db, ds, locale),
+		locale:          locale,
+		Projections:     make(map[int]template.HTML),
+		ProjectionsHash: make(map[int]uint64),
+		AddListener:     make(chan chan *ProjectorUpdateEvent),
+		RemoveListener:  make(chan (<-chan *ProjectorUpdateEvent)),
 	}
 
 	p.locale.AddDomain("default")
@@ -214,10 +216,17 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 	updatedProjections := map[int]string{}
 	for _, projectionId := range updated {
 		if projection, ok := projections[projectionId]; ok {
-			p.Projections[projectionId] = template.HTML(projection)
-			updatedProjections[projectionId] = projection
+			newHash := djb2(projection)
+			oldHash, exists := p.ProjectionsHash[projectionId]
+
+			if !exists || oldHash != newHash {
+				p.Projections[projectionId] = template.HTML(projection)
+				p.ProjectionsHash[projectionId] = newHash
+				updatedProjections[projectionId] = projection
+			}
 		} else {
 			delete(p.Projections, projectionId)
+			delete(p.ProjectionsHash, projectionId)
 			defer p.sendToAll(&ProjectorUpdateEvent{"projection-deleted", strconv.Itoa(projectionId)})
 		}
 	}
@@ -229,10 +238,9 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 		} else {
 			p.sendToAll(&ProjectorUpdateEvent{"projection-updated", string(eventContent)})
 		}
-	}
-
-	if err := p.updateFullContent(); err != nil {
-		log.Error().Err(err).Msg("failed to generate projector content")
+		if err := p.updateFullContent(); err != nil {
+			log.Error().Err(err).Msg("failed to generate projector content")
+		}
 	}
 }
 
@@ -317,4 +325,12 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 	}()
 
 	return updateChannel, projections, nil
+}
+
+func djb2(str string) uint64 {
+	var hash uint64 = 5381
+	for i := 0; i < len(str); i++ {
+		hash = ((hash << 5) + hash) + uint64(str[i])
+	}
+	return hash
 }
