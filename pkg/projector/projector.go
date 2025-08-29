@@ -214,6 +214,7 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 	}
 
 	updatedProjections := map[int]string{}
+	deletionOccured := false
 	for _, projectionId := range updated {
 		if projection, ok := projections[projectionId]; ok {
 			newHash := djb2(projection)
@@ -228,6 +229,7 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 			delete(p.Projections, projectionId)
 			delete(p.ProjectionsHash, projectionId)
 			defer p.sendToAll(&ProjectorUpdateEvent{"projection-deleted", strconv.Itoa(projectionId)})
+			deletionOccured = true
 		}
 	}
 
@@ -238,6 +240,9 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 		} else {
 			p.sendToAll(&ProjectorUpdateEvent{"projection-updated", string(eventContent)})
 		}
+	}
+
+	if len(updatedProjections) > 0 || deletionOccured {
 		if err := p.updateFullContent(); err != nil {
 			log.Error().Err(err).Msg("failed to generate projector content")
 		}
