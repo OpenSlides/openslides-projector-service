@@ -55,6 +55,11 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 		return ListOfSpeakersLists{}, fmt.Errorf("could not load speakers: %w", err)
 	}
 
+	settingVal, err := fetch.Meeting_ListOfSpeakersDefaultStructureLevelTime(los.MeetingID).Value(ctx)
+	if err != nil {
+		return ListOfSpeakersLists{}, fmt.Errorf("could not fetch default_structure_level_time: %w", err)
+	}
+
 	waitingSpeakers := []SpeakerListItem{}
 	interposedQuestions := []SpeakerListItem{}
 	var currentSpeaker *SpeakerListItem
@@ -64,13 +69,24 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 		if meetingUser, isSet := speaker.MeetingUser.Value(); isSet {
 			user := meetingUser.User
 			name = User_ShortName(user)
-			if len(meetingUser.StructureLevelList) != 0 {
-				structureLevelNames := []string{}
-				for _, sl := range meetingUser.StructureLevelList {
-					structureLevelNames = append(structureLevelNames, sl.Name)
-				}
 
-				name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
+			if settingVal == 0 {
+				if len(meetingUser.StructureLevelList) != 0 {
+					structureLevelNames := []string{}
+					for _, sl := range meetingUser.StructureLevelList {
+						structureLevelNames = append(structureLevelNames, sl.Name)
+					}
+
+					name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
+				}
+			} else if settingVal > 0 {
+				slID, ok := speaker.StructureLevelListOfSpeakersID.Value()
+				if ok {
+					slData, err := fetch.StructureLevel(slID).First(ctx)
+					if err == nil {
+						name = fmt.Sprintf("%s (%s)", name, slData.Name)
+					}
+				}
 			}
 		}
 
