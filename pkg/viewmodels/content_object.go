@@ -54,9 +54,8 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 	// AgendaItemNumber
 	switch result.Collection {
 	case "assignment":
-	case "motion":
 	case "motion_block":
-	case "topic":
+	case "topic", "motion":
 		agendaItemID, err := GetContentObjectField[int](ctx, fetch, "agenda_item_id", fqid)
 		if err != nil {
 			return TitleInformation{}, fmt.Errorf("could not fetch agenda item id: %w", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
@@ -29,7 +30,24 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 	}
 
 	losQ := req.Fetch.ListOfSpeakers(*losID)
-	los, err := losQ.Preload(losQ.SpeakerList().MeetingUser().User()).First(ctx)
+	los, err := losQ.
+		Preload(
+			losQ.SpeakerList().
+				MeetingUser().
+				StructureLevelList(),
+		).
+		Preload(
+			losQ.SpeakerList().
+				StructureLevelListOfSpeakers().
+				StructureLevel(),
+		).
+		Preload(
+			losQ.SpeakerList().
+				MeetingUser().
+				User(),
+		).
+		First(ctx)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not load list of speakers: %w", err)
 	}
@@ -87,11 +105,24 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 		}
 	}
 
-	// TODO: Also include agenda item number and number
-	// coTitle := los.ContentObject().Get("title")
-	// if coTitle != nil {
-	// agendaItem = coTitle.(string)
-	// }
+	co, err := viewmodels.GetTitleInformationByContentObject(ctx, req.Fetch, los.ContentObjectID)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch coTitle information")
+	}
+	switch co.Collection {
+	case "motion", "topic":
+		slideAgendaItem = strings.Join(func() []string {
+			parts := []string{}
+			for _, s := range []string{co.AgendaItemNumber, co.Number, co.Title} {
+				if strings.TrimSpace(s) != "" {
+					parts = append(parts, s)
+				}
+			}
+			return parts
+		}(), " · ")
+	default:
+		slideAgendaItem = co.Title
+	}
 
 	return map[string]any{
 		"Options":        options,
