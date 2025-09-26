@@ -55,7 +55,7 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 		return ListOfSpeakersLists{}, fmt.Errorf("could not load speakers: %w", err)
 	}
 
-	settingVal, err := fetch.Meeting_ListOfSpeakersDefaultStructureLevelTime(los.MeetingID).Value(ctx)
+	defaultSlTime, err := fetch.Meeting_ListOfSpeakersDefaultStructureLevelTime(los.MeetingID).Value(ctx)
 	if err != nil {
 		return ListOfSpeakersLists{}, fmt.Errorf("could not fetch default_structure_level_time: %w", err)
 	}
@@ -70,7 +70,7 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 			user := meetingUser.User
 			name = User_ShortName(user)
 
-			if settingVal == 0 {
+			if defaultSlTime == 0 {
 				if len(meetingUser.StructureLevelList) != 0 {
 					structureLevelNames := []string{}
 					for _, sl := range meetingUser.StructureLevelList {
@@ -79,7 +79,7 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 
 					name = fmt.Sprintf("%s (%s)", name, strings.Join(structureLevelNames, ", "))
 				}
-			} else if settingVal > 0 {
+			} else if defaultSlTime > 0 {
 				slID, ok := speaker.StructureLevelListOfSpeakersID.Value()
 				if ok {
 					slData, err := fetch.StructureLevel(slID).First(ctx)
