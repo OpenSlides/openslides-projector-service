@@ -109,19 +109,28 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch coTitle information")
 	}
+
+	var parts []string
+
 	switch co.Collection {
-	case "motion", "topic":
-		slideAgendaItem = strings.Join(func() []string {
-			parts := []string{}
-			for _, s := range []string{co.AgendaItemNumber, co.Number, co.Title} {
-				if strings.TrimSpace(s) != "" {
-					parts = append(parts, s)
-				}
-			}
-			return parts
-		}(), " · ")
+	case "motion":
+		if strings.TrimSpace(co.Number) != "" {
+			parts = append(parts, co.Number)
+		}
+		fallthrough
 	default:
-		slideAgendaItem = co.Title
+		if strings.TrimSpace(co.Title) != "" {
+			parts = append(parts, co.Title)
+		}
+		if strings.TrimSpace(co.AgendaItemNumber) != "" {
+			parts = append(parts, co.AgendaItemNumber)
+		}
+	}
+
+	if len(parts) > 1 {
+		slideAgendaItem = strings.Join(parts, " · ")
+	} else if len(parts) == 1 {
+		slideAgendaItem = parts[0]
 	}
 
 	return map[string]any{
