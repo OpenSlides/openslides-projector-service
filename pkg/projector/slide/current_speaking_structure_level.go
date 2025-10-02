@@ -3,7 +3,9 @@ package slide
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
@@ -27,25 +29,68 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 	}
 
 	l := req.Fetch.ListOfSpeakers(*losID)
-	los, err := l.Preload(l.StructureLevelListOfSpeakersList().StructureLevel()).First(ctx)
+	los, err := l.Preload(l.SpeakerList().StructureLevelListOfSpeakers().StructureLevel()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load list of speakers %w", err)
 	}
 
-	for _, sllos := range los.StructureLevelListOfSpeakersList {
-		if sllos.CurrentStartTime == 0 {
-			continue
+	var currentSpeaker *dsmodels.Speaker
+	for _, speaker := range los.SpeakerList {
+		if speaker.BeginTime != 0 && speaker.EndTime == 0 {
+			currentSpeaker = &speaker
+			break
 		}
-
-		countdownTime := sllos.RemainingTime + float64(sllos.CurrentStartTime)
-
-		return map[string]any{
-			"ID":            sllos.StructureLevelID,
-			"Name":          sllos.StructureLevel.Name,
-			"Color":         sllos.StructureLevel.Color,
-			"CountdownTime": countdownTime,
-		}, nil
 	}
 
-	return nil, nil
+	if currentSpeaker == nil {
+		return nil, nil
+	}
+
+	var currentSpeakerInfo speakerInfo
+	currentSpeakerInfo.Running = currentSpeaker.PauseTime == 0
+
+	if currentSpeaker.SpeechState == "intervention" {
+		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not load intervention time: %w", err)
+		}
+
+		if currentSpeaker.PauseTime == 0 {
+			currentSpeakerInfo.CountdownTime = float64(currentSpeaker.BeginTime) + float64(defaultInterventionTime) + float64(currentSpeaker.TotalPause)
+		} else {
+			now := int(time.Now().Unix())
+			elapsed := now - currentSpeaker.BeginTime - currentSpeaker.TotalPause
+			remaining := float64(defaultInterventionTime) - float64(elapsed)
+			currentSpeakerInfo.CountdownTime = remaining
+		}
+		if currentSpeaker.StructureLevelListOfSpeakers != nil {
+			sllos, ok := currentSpeaker.StructureLevelListOfSpeakers.Value()
+			if ok {
+				currentSpeakerInfo.ID = sllos.StructureLevelID
+				currentSpeakerInfo.Name = sllos.StructureLevel.Name
+				currentSpeakerInfo.Color = sllos.StructureLevel.Color
+			}
+		}
+
+		currentSpeakerInfo.Name += "\nIntervention"
+	} else {
+		sllos, ok := currentSpeaker.StructureLevelListOfSpeakers.Value()
+		if ok {
+			currentSpeakerInfo.ID = sllos.StructureLevelID
+			currentSpeakerInfo.Name = sllos.StructureLevel.Name
+			currentSpeakerInfo.Color = sllos.StructureLevel.Color
+			currentSpeakerInfo.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
+		}
+	}
+	return map[string]any{
+		"SpeakerInfo": currentSpeakerInfo,
+	}, nil
+}
+
+type speakerInfo struct {
+	ID            int     `json:"id"`
+	Name          string  `json:"name"`
+	Color         string  `json:"color"`
+	CountdownTime float64 `json:"remaining_time"`
+	Running       bool    `json:"running"`
 }
