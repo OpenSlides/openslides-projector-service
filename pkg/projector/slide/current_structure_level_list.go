@@ -3,7 +3,9 @@ package slide
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
@@ -29,6 +31,7 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 	l := req.Fetch.ListOfSpeakers(*losID)
 	los, err := l.Preload(l.StructureLevelListOfSpeakersList().SpeakerList()).
 		Preload(l.StructureLevelListOfSpeakersList().StructureLevel()).
+		Preload(l.SpeakerList().StructureLevelListOfSpeakers().StructureLevel()).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load list of speakers %w", err)
@@ -73,6 +76,55 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 			CountdownTime: countdownTime,
 			Running:       countdownRunning,
 		})
+	}
+
+	var interventionSpeakers []dsmodels.Speaker
+	for _, speaker := range los.SpeakerList {
+		if speaker.SpeechState == "intervention" && speaker.EndTime == 0 {
+			interventionSpeakers = append(interventionSpeakers, speaker)
+		}
+	}
+
+	if len(interventionSpeakers) > 0 {
+		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
+		name := "\nIntervention"
+		if err != nil {
+			return nil, fmt.Errorf("couldn not load intervention time %w", err)
+		}
+		interventionEntry := structureLevelEntry{
+			Name:          name,
+			CountdownTime: float64(defaultInterventionTime),
+		}
+
+		var currentInterventionSpeaker *dsmodels.Speaker
+		for _, s := range interventionSpeakers {
+			if s.BeginTime != 0 && s.EndTime == 0 {
+				currentInterventionSpeaker = &s
+			}
+		}
+
+		if currentInterventionSpeaker != nil {
+			running := currentInterventionSpeaker.PauseTime == 0
+			interventionEntry.Running = running
+
+			if currentInterventionSpeaker.PauseTime == 0 {
+				interventionEntry.CountdownTime = float64(currentInterventionSpeaker.BeginTime) + float64(defaultInterventionTime) + float64(currentInterventionSpeaker.TotalPause)
+			} else {
+				now := int(time.Now().Unix())
+				elapsed := now - currentInterventionSpeaker.BeginTime - currentInterventionSpeaker.TotalPause
+				remaining := float64(defaultInterventionTime) - float64(elapsed)
+				interventionEntry.CountdownTime = remaining
+			}
+			if currentInterventionSpeaker.StructureLevelListOfSpeakers != nil {
+				sllos, ok := currentInterventionSpeaker.StructureLevelListOfSpeakers.Value()
+				if ok {
+					interventionEntry.ID = sllos.StructureLevelID
+					interventionEntry.Color = sllos.StructureLevel.Color
+				}
+			}
+		}
+
+		structureLevels = append(structureLevels, interventionEntry)
 	}
 
 	titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, req.Fetch, los.ContentObjectID)
