@@ -3,7 +3,6 @@ package slide
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
@@ -44,6 +43,7 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 		SpeechState   string  `json:"speech_state"`
 		CountdownTime float64 `json:"remaining_time"`
 		Running       bool    `json:"current_start_time"`
+		Intervention  bool
 	}
 	structureLevels := []structureLevelEntry{}
 	for _, sllos := range los.StructureLevelListOfSpeakersList {
@@ -87,18 +87,17 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 
 	if len(interventionSpeakers) > 0 {
 		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
-		name := "\nIntervention"
 		if err != nil {
 			return nil, fmt.Errorf("couldn not load intervention time %w", err)
 		}
 		interventionEntry := structureLevelEntry{
-			Name:          name,
 			CountdownTime: float64(defaultInterventionTime),
+			Intervention:  true,
 		}
 
 		var currentInterventionSpeaker *dsmodels.Speaker
 		for _, s := range interventionSpeakers {
-			if s.BeginTime != 0 && s.EndTime == 0 {
+			if viewmodels.Speaker_IsCurrent(&s) {
 				currentInterventionSpeaker = &s
 			}
 		}
@@ -107,14 +106,8 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 			running := currentInterventionSpeaker.PauseTime == 0
 			interventionEntry.Running = running
 
-			if currentInterventionSpeaker.PauseTime == 0 {
-				interventionEntry.CountdownTime = float64(currentInterventionSpeaker.BeginTime) + float64(defaultInterventionTime) + float64(currentInterventionSpeaker.TotalPause)
-			} else {
-				now := int(time.Now().Unix())
-				elapsed := now - currentInterventionSpeaker.BeginTime - currentInterventionSpeaker.TotalPause
-				remaining := float64(defaultInterventionTime) - float64(elapsed)
-				interventionEntry.CountdownTime = remaining
-			}
+			interventionEntry.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentInterventionSpeaker, defaultInterventionTime)
+
 			if currentInterventionSpeaker.StructureLevelListOfSpeakers != nil {
 				sllos, ok := currentInterventionSpeaker.StructureLevelListOfSpeakers.Value()
 				if ok {

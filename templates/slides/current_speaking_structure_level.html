@@ -26,6 +26,11 @@
             {{ .Name }}
           </div>
         {{ end }}
+        {{ if .Intervention }}
+          <div class="intervention">
+            {{ Loc.Get "Intervention" }}
+          </div>
+        {{ end }}
       </div>
     </div>
   {{ end }}
