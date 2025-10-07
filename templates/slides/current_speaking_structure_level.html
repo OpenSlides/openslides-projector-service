@@ -5,26 +5,33 @@
 />
 
 <div class="content current-speaking-structure-level overlay">
-  <div class="current-speaking-structure-level-countdown">
-    <div class="level-time-list">
-      <span class="align-right">
-        <hr
-          class="structure-level-color"
-          {{ if .Color }}style="background-color: {{ .Color }}"{{ end }}
-        />
-      </span>
-      <projector-countdown
-        id="structure-level-{{ .ID }}"
-        countdown-time="{{ printf "%.0f" .CountdownTime }}"
-        running="true"
-      ></projector-countdown>
+  {{ with .SpeakerInfo }}
+    <div class="current-speaking-structure-level-countdown">
+      <div class="level-time-list">
+        <span class="align-right">
+          <hr
+            class="structure-level-color"
+            {{ if .Color }}style="background-color: {{ .Color }}"{{ end }}
+          />
+        </span>
+        <projector-countdown
+          id="structure-level-{{ .ID }}"
+          countdown-time="{{ printf "%.0f" .CountdownTime }}"
+          running="{{ .Running }}"
+        ></projector-countdown>
+      </div>
+      <div class="structure-level-name">
+        {{ if .Name }}
+          <div class="description">
+            {{ .Name }}
+          </div>
+        {{ end }}
+        {{ if .Intervention }}
+          <div class="intervention">
+            {{ Loc.Get "Intervention" }}
+          </div>
+        {{ end }}
+      </div>
     </div>
-    <div class="structure-level-name">
-      {{ if .Name }}
-        <div class="description">
-          {{ .Name }}
-        </div>
-      {{ end }}
-    </div>
-  </div>
+  {{ end }}
 </div>

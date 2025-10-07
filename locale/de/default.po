@@ -3,3 +3,9 @@ msgstr "Wahl"
 
 msgid "List of speakers"
 msgstr "Redeliste"
+
+msgid "Intervention"
+msgstr "Kurzintervention"
+
+msgid "Speaking times"
+msgstr "Redezeiten"
