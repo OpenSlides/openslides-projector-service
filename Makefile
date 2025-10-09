@@ -25,6 +25,13 @@ nodelinter: | install-web-asset-deps
 install-web-asset-deps:
 	cd web && npm i
 
+build-live-all:
+	make build-watch-web-assets &
+	make build-live
+
+build-live:
+	go run github.com/githubnemo/CompileDaemon@v1.4.0 -log-prefix=false -include="*.html" -build="go build -o projector-service ./cmd/projectord/main.go" -command="./projector-service"
+
 build-web-assets: | install-web-asset-deps
 	cd web && npm run build
 
