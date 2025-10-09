@@ -59,36 +59,38 @@
       </h2>
     </div>
   {{ end }}
-  <div class="detail-view-text">
-    {{ if .Speakers.CurrentSpeaker }}
-      <div class="speaker current">
-        {{ template "speaker" .Speakers.CurrentSpeaker }}
+  <div class="scroll-inner">
+    <div class="detail-view-text">
+      {{ if .Speakers.CurrentSpeaker }}
+        <div class="speaker current">
+          {{ template "speaker" .Speakers.CurrentSpeaker }}
+        </div>
+      {{ end }}
+
+      {{ if .Speakers.CurrentInterposedQuestion }}
+        <div class="speaker current interposed-question">
+          {{ template "speaker" .Speakers.CurrentInterposedQuestion }}
+        </div>
+      {{ end }}
+
+
+      <div class="interposed-questions">
+        <ol class="next-speakers">
+          {{ range .Speakers.WaitingInterposedQuestions }}
+            <li class="speaker">
+              {{ template "speaker" . }}
+            </li>
+          {{ end }}
+        </ol>
       </div>
-    {{ end }}
 
-    {{ if .Speakers.CurrentInterposedQuestion }}
-      <div class="speaker current interposed-question">
-        {{ template "speaker" .Speakers.CurrentInterposedQuestion }}
-      </div>
-    {{ end }}
-
-
-    <div class="interposed-questions">
       <ol class="next-speakers">
-        {{ range .Speakers.WaitingInterposedQuestions }}
+        {{ range .Speakers.WaitingSpeakers }}
           <li class="speaker">
             {{ template "speaker" . }}
           </li>
         {{ end }}
       </ol>
     </div>
-
-    <ol class="next-speakers">
-      {{ range .Speakers.WaitingSpeakers }}
-        <li class="speaker">
-          {{ template "speaker" . }}
-        </li>
-      {{ end }}
-    </ol>
   </div>
 </div>

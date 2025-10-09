@@ -1,4 +1,4 @@
-FROM golang:1.24.3-alpine as base
+FROM golang:1.25.1-alpine as base
 WORKDIR /root/openslides-projector-service
 
 RUN apk add git curl make
@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY cmd cmd
 COPY pkg pkg
-COPY templates /root/templates
+COPY templates templates
 COPY web web
 COPY locale locale
 COPY Makefile Makefile
@@ -35,14 +35,19 @@ CMD go vet ./... && go test -test.short ./...
 
 # Development build.
 FROM base as development
-WORKDIR /root
+WORKDIR /root/openslides-projector-service
+
+RUN apk add nodejs npm
 
 COPY --from=builder-web /static ./static
+COPY web web
+RUN cd web && npm ci
+COPY Makefile Makefile
 
-RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
+RUN ["go", "install", "github.com/githubnemo/CompileDaemon@v1.4.0"]
 EXPOSE 9051
 
-CMD CompileDaemon -log-prefix=false -include="*.html" -build="go build -o projector-service ./openslides-projector-service/cmd/projectord/main.go" -command="./projector-service"
+CMD make build-live-all
 
 
 # Productive build
