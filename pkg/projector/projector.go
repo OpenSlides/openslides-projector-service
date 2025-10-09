@@ -46,6 +46,7 @@ type ProjectorSettings struct {
 	ShowTitle              bool
 	ShowLogo               bool
 	ShowClock              bool
+	Theme                  dsmodels.Theme
 }
 
 type projector struct {
@@ -140,10 +141,14 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
+
 		var logo dsfetch.Maybe[int]
 		f.Meeting_LogoProjectorMainID(p.projector.MeetingID).Lazy(&logo)
 		var header dsfetch.Maybe[int]
 		f.Meeting_LogoProjectorHeaderID(p.projector.MeetingID).Lazy(&header)
+
+		var themeId int
+		f.Organization_ThemeID(1).Lazy(&themeId)
 
 		err := f.Execute(ctx)
 		var doesNotExist dsfetch.DoesNotExistError
@@ -162,6 +167,12 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 
 		if val, set := header.Value(); set {
 			p.pSettings.HeaderImage = val
+		}
+
+		p.pSettings.Theme, err = f.Theme(themeId).First(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to load theme")
+			return
 		}
 
 		encodedData, err := json.Marshal(p.pSettings)
