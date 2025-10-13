@@ -88,7 +88,7 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 	if len(interventionSpeakers) > 0 {
 		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("couldn not load intervention time %w", err)
+			return nil, fmt.Errorf("could not load intervention time %w", err)
 		}
 		interventionEntry := structureLevelEntry{
 			CountdownTime: float64(defaultInterventionTime),
