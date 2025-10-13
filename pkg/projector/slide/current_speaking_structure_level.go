@@ -27,25 +27,54 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 	}
 
 	l := req.Fetch.ListOfSpeakers(*losID)
-	los, err := l.Preload(l.StructureLevelListOfSpeakersList().StructureLevel()).First(ctx)
+	los, err := l.Preload(l.SpeakerList().StructureLevelListOfSpeakers().StructureLevel()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load list of speakers %w", err)
 	}
 
-	for _, sllos := range los.StructureLevelListOfSpeakersList {
-		if sllos.CurrentStartTime == 0 {
-			continue
-		}
-
-		countdownTime := sllos.RemainingTime + float64(sllos.CurrentStartTime)
-
-		return map[string]any{
-			"ID":            sllos.StructureLevelID,
-			"Name":          sllos.StructureLevel.Name,
-			"Color":         sllos.StructureLevel.Color,
-			"CountdownTime": countdownTime,
-		}, nil
+	currentSpeaker, err := viewmodels.ListOfSpeakers_CurrentSpeaker(ctx, &los)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch current speaker %w", err)
 	}
 
-	return nil, nil
+	if currentSpeaker == nil {
+		return nil, nil
+	}
+
+	type speakerInfo struct {
+		ID            int
+		Name          string
+		Color         string
+		CountdownTime float64
+		Running       bool
+		Intervention  bool
+	}
+
+	var currentSpeakerInfo speakerInfo
+	currentSpeakerInfo.Running = currentSpeaker.PauseTime == 0
+	sllos, ok := currentSpeaker.StructureLevelListOfSpeakers.Value()
+	if ok {
+		currentSpeakerInfo.ID = sllos.StructureLevelID
+		currentSpeakerInfo.Name = sllos.StructureLevel.Name
+		currentSpeakerInfo.Color = sllos.StructureLevel.Color
+		currentSpeakerInfo.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
+	}
+
+	if currentSpeaker.SpeechState != "intervention" && sllos.StructureLevelID == 0 {
+		return nil, nil
+	}
+
+	if currentSpeaker.SpeechState == "intervention" {
+		currentSpeakerInfo.Intervention = true
+		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not load intervention time: %w", err)
+		}
+
+		currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentSpeaker, defaultInterventionTime)
+	}
+
+	return map[string]any{
+		"SpeakerInfo": currentSpeakerInfo,
+	}, nil
 }
