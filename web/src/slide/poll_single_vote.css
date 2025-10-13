@@ -70,14 +70,22 @@
 }
 
 .votes-area {
-  /* display: inline-flex; */
-  gap: 0 5px;
-  width: 100%;
+  column-width: 12em;
+  gap: 4px 12px;
+  height: 0;
 
   .vote-entry {
     min-height: 29px;
-    display: flex;
-    align-items: center;
+    os-icon-container {
+      display: flex;
+      align-items: center;
+      span {
+        margin-right: 8px;
+      }
+    }
+    &:not(:last-child) {
+      border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+    }
   }
 
   .votes-column {
@@ -86,8 +94,5 @@
     flex-grow: 1;
     min-width: 0;
 
-    :not(:last-child) {
-      border-bottom: 1px solid rgba(128, 128, 128, 0.2);
-    }
   }
 }

@@ -2,101 +2,101 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_single_vote.css" />
 
 <div class="content full-height poll-single-vote">
-  <div class="single-votes-slidetitle">
-    <h1>{{ .Title }}</h1>
-    {{ if .Subtitle }}
-      <h2 class="poll-title">{{ .Subtitle }}</h2>
-    {{ end }}
-  </div>
-
-  <div class="poll-bar-wrapper">
-    <div class="poll-bar">
-      {{ if .PollOption.Yes }}
-        <div class="bg-yes" style="flex: {{ .PollOption.Yes }} 0 auto"></div>
-      {{ end }}
-      {{ if .PollOption.No }}
-        <div class="bg-no" style="flex: {{ .PollOption.No }} 0 auto"></div>
-      {{ end }}
-      {{ if and .PollOption.Abstain (ne .Poll.OnehundredPercentBase "YN") }}
-        <div class="bg-abstain" style="flex: {{ .PollOption.Abstain }} 0 auto"></div>
+  <div class="single-votes-header">
+    <div class="single-votes-slidetitle">
+      <h1>{{ .Title }}</h1>
+      {{ if .Subtitle }}
+        <h2 class="poll-title">{{ .Subtitle }}</h2>
       {{ end }}
     </div>
-    <div class="data-area">
-      <div class="general-data">
-        <div>
-          {{ .Loc.Get "Valid votes" }}:
-          {{ .Poll.Votesvalid }}
-          {{ if ne .Poll.OnehundredPercentBase "YN" }}
-            {-{ .Poll.votesvalid | pollPercentBase: polldata }-}
-          {{ end }}
-        </div>
-        <div>
-          {{ .Loc.Get "Entitled users" }}:
-          {{ .NumEntitledUsers }}
-          {{ if eq .Poll.OnehundredPercentBase "entitled" }}
-            {-{ .Poll.entitled_users_at_stop.length | pollPercentBase: polldata }}
-          {{ end }}
-        </div>
+
+    <div class="poll-bar-wrapper">
+      <div class="poll-bar">
+        {{ if .PollOption.Yes }}
+          <div class="bg-yes" style="flex: {{ .PollOption.Yes }} 0 auto"></div>
+        {{ end }}
+        {{ if .PollOption.No }}
+          <div class="bg-no" style="flex: {{ .PollOption.No }} 0 auto"></div>
+        {{ end }}
+        {{ if and .PollOption.Abstain (ne .Poll.OnehundredPercentBase "YN") }}
+          <div class="bg-abstain" style="flex: {{ .PollOption.Abstain }} 0 auto"></div>
+        {{ end }}
       </div>
-      {{ if .PollMethod.Yes }}
-        <os-icon-container icon="check_circle" iconClass="yes">
-          <span class="yes">
-            {{ .Loc.Get "Yes" }}:
-            {{ .PollOption.Yes }}
-            {-{ .Poll.options[0]?.yes ?? 0 | pollPercentBase: polldata }}
-          </span>
-        </os-icon-container>
-      {{ end }}
-      {{ if .PollMethod.No }}
-        <os-icon-container icon="cancel" iconClass="no">
-          <span class="no">
-            {{ .Loc.Get "No" }}:
-            {{ .PollOption.No }}
-            {-{ .Poll.options[0]?.no ?? 0 | pollPercentBase: polldata }}
-          </span>
-        </os-icon-container>
-      {{ end }}
-      {{ if .PollMethod.Abstain }}
-        <os-icon-container icon="circle" iconClass="abstain">
-          <span class="abstain">
-            {{ .Loc.Get "Abstain" }}:
-            {{ .PollOption.Abstain }}
+      <div class="data-area">
+        <div class="general-data">
+          <div>
+            {{ Loc.Get "Valid votes" }}:
+            {{ .Poll.Votesvalid }}
             {{ if ne .Poll.OnehundredPercentBase "YN" }}
-              {-{ .Poll.options[0]?.abstain ?? 0 | pollPercentBase: polldata }}
+              <!--{ .Poll.votesvalid | pollPercentBase: polldata }-->
             {{ end }}
-          </span>
-        </os-icon-container>
-      {{ end }}
+          </div>
+          <div>
+            {{ Loc.Get "Entitled users" }}:
+            {{ .NumEntitledUsers }}
+            {{ if eq .Poll.OnehundredPercentBase "entitled" }}
+              <!--{ .Poll.entitled_users_at_stop.length | pollPercentBase: polldata }-->
+            {{ end }}
+          </div>
+        </div>
+        {{ if .PollMethod.Yes }}
+          <os-icon-container icon="check_circle" iconClass="yes">
+            <span class="yes">
+              {{ Loc.Get "Yes" }}:
+              {{ .PollOption.Yes }}
+              <!--{ .Poll.options[0]?.yes ?? 0 | pollPercentBase: polldata }-->
+            </span>
+          </os-icon-container>
+        {{ end }}
+        {{ if .PollMethod.No }}
+          <os-icon-container icon="cancel" iconClass="no">
+            <span class="no">
+              {{ Loc.Get "No" }}:
+              {{ .PollOption.No }}
+              <!--{ .Poll.options[0]?.no ?? 0 | pollPercentBase: polldata }-->
+            </span>
+          </os-icon-container>
+        {{ end }}
+        {{ if .PollMethod.Abstain }}
+          <os-icon-container icon="circle" iconClass="abstain">
+            <span class="abstain">
+              {{ Loc.Get "Abstain" }}:
+              {{ .PollOption.Abstain }}
+              {{ if ne .Poll.OnehundredPercentBase "YN" }}
+                <!--{ .Poll.options[0]?.abstain ?? 0 | pollPercentBase: polldata }-->
+              {{ end }}
+            </span>
+          </os-icon-container>
+        {{ end }}
+      </div>
     </div>
   </div>
 
-  <div class="content-wrapper">
-    <os-grid class="votes-area">
-      {{ range .Votes }}
-        <os-grid-entry class="vote-entry">
-          {{ if eq .Value "Y" }}
-            <os-icon-container icon="check_circle" iconClass="yes">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </os-icon-container>
-          {{ else if eq .Value "N" }}
-            <os-icon-container icon="cancel" iconClass="no">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </os-icon-container>
-          {{ else if eq .Value "A" }}
-            <os-icon-container icon="circle" iconClass="abstain">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </os-icon-container>
-          {{ else }}
-            <os-icon-container icon="radio_button_unchecked" iconClass="no-content">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </os-icon-container>
-          {{ end }}
-        </os-grid-entry>
-      {{ end }}
-    </os-grid>
+  <div class="content-wrapper votes-area">
+    {{ range .Votes }}
+      <div class="vote-entry">
+        {{ if eq .Value "Y" }}
+          <os-icon-container icon="check_circle" iconClass="yes">
+            {{ .FirstName }}
+            {{ .LastName }}
+          </os-icon-container>
+        {{ else if eq .Value "N" }}
+          <os-icon-container icon="cancel" iconClass="no">
+            {{ .FirstName }}
+            {{ .LastName }}
+          </os-icon-container>
+        {{ else if eq .Value "A" }}
+          <os-icon-container icon="circle" iconClass="abstain">
+            {{ .FirstName }}
+            {{ .LastName }}
+          </os-icon-container>
+        {{ else }}
+          <os-icon-container icon="radio_button_unchecked" iconClass="no-content">
+            {{ .FirstName }}
+            {{ .LastName }}
+          </os-icon-container>
+        {{ end }}
+      </div>
+    {{ end }}
   </div>
 </div>
