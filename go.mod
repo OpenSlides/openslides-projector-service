@@ -7,7 +7,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/leonelquinteros/gotext v1.7.2
 	github.com/rs/zerolog v1.34.0
-	golang.org/x/text v0.29.0
+	golang.org/x/text v0.30.0
 )
 
 require (
