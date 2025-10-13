@@ -70,7 +70,9 @@
         {{ if .Projector.ShowTitle }}
           <div id="eventdata">
             <div class="event-name ellipsis-overflow">{{ .Projector.MeetingName }}</div>
-            <div class="event-description">{{ .Projector.MeetingDescription }}</div>
+            {{ if .Projector.MeetingDescription }}
+              <div class="event-description">{{ .Projector.MeetingDescription }}</div>
+            {{ end }}
           </div>
         {{ end }}
 
