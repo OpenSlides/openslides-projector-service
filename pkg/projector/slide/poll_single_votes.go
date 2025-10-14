@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
 
@@ -92,6 +93,14 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	slideData.TotalYes, _ = pollOption.Yes.Value()
 	slideData.TotalNo, _ = pollOption.No.Value()
 	slideData.TotalAbstain, _ = pollOption.Abstain.Value()
+	slideData.TotalVotesvalid, _ = poll.Votesvalid.Value()
+	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
+	if !onehundredPercentBase.IsZero() {
+		slideData.PercYes = slideData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		slideData.PercNo = slideData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		slideData.PercAbstain = slideData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		slideData.PercVotesvalid = slideData.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+	}
 
 	return map[string]any{
 		"_template":        "poll_single_vote",
