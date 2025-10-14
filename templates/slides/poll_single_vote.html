@@ -26,9 +26,9 @@
         <div class="general-data">
           <div>
             {{ Loc.Get "Valid votes" }}:
-            {{ .Data.Votesvalid }}
+            {{ .Data.TotalVotesvalid }}
             {{ if ne .Poll.OnehundredPercentBase "YN" }}
-              <!--{ .Poll.votesvalid | pollPercentBase: polldata }-->
+              ({{ .Data.PercVotesvalid }} %)
             {{ end }}
           </div>
           <div>
