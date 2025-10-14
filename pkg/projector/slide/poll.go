@@ -8,6 +8,7 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
+	"github.com/shopspring/decimal"
 )
 
 type pollSlideOptions struct {
@@ -44,16 +45,35 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	}, nil
 }
 
+type pollSingleVotesSlideVoteEntry struct {
+	Value     string
+	FirstName string
+	LastName  string
+}
+
+type pollSingleVotesSlideVoteEntryGroup struct {
+	TotalYes     decimal.Decimal
+	TotalNo      decimal.Decimal
+	TotalAbstain decimal.Decimal
+	Votes        map[int]*pollSingleVotesSlideVoteEntry
+}
+
+type pollSingleVotesSlideData struct {
+	TotalYes     decimal.Decimal
+	TotalNo      decimal.Decimal
+	TotalAbstain decimal.Decimal
+	PercYes      decimal.Decimal
+	PercNo       decimal.Decimal
+	PercAbstain  decimal.Decimal
+	Votesvalid   decimal.Decimal
+	GroupedVotes pollSingleVotesSlideVoteEntryGroup
+}
+
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	pQ := req.Fetch.Poll()
 	poll, err := req.Fetch.Poll(*req.ContentObjectID).Preload(pQ.OptionList().VoteList()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll id %w", err)
-	}
-
-	title, err := viewmodels.GetContentObjectField[string](ctx, req.Fetch, "title", poll.ContentObjectID)
-	if err != nil {
-		return nil, fmt.Errorf("could not load poll content object title %w", err)
 	}
 
 	pollOption := dsmodels.Option{}
@@ -76,9 +96,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	type voteEntry struct {
-		Value     string
-		FirstName string
-		LastName  string
+		pollSingleVotesSlideVoteEntry
 	}
 
 	voteEntries := map[int]*voteEntry{}
@@ -88,10 +106,13 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			return nil, fmt.Errorf("could not load entitled user: %w", err)
 		}
 
-		voteEntries[entry.UserID] = &voteEntry{
+		vote := pollSingleVotesSlideVoteEntry{
 			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 			LastName:  user.LastName,
 			Value:     "",
+		}
+		voteEntries[entry.UserID] = &voteEntry{
+			pollSingleVotesSlideVoteEntry: vote,
 		}
 	}
 
@@ -101,10 +122,16 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 	}
 
+	slideData := pollSingleVotesSlideData{}
+	slideData.TotalYes, _ = pollOption.Yes.Value()
+	slideData.TotalNo, _ = pollOption.No.Value()
+	slideData.TotalAbstain, _ = pollOption.Abstain.Value()
+
 	return map[string]any{
 		"_template":        "poll_single_vote",
 		"_fullHeight":      true,
-		"Title":            title,
+		"Data":             slideData,
+		"Title":            poll.Title,
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
 		"PollOption":       pollOption,

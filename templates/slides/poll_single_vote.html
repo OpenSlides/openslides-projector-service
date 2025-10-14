@@ -12,21 +12,21 @@
 
     <div class="poll-bar-wrapper">
       <div class="poll-bar">
-        {{ if .PollOption.Yes }}
-          <div class="bg-yes" style="flex: {{ .PollOption.Yes }} 0 auto"></div>
+        {{ if .Data.TotalYes.IsPositive }}
+          <div class="bg-yes" style="flex: {{ .Data.TotalYes }} 0 auto"></div>
         {{ end }}
-        {{ if .PollOption.No }}
-          <div class="bg-no" style="flex: {{ .PollOption.No }} 0 auto"></div>
+        {{ if .Data.TotalNo.IsPositive }}
+          <div class="bg-no" style="flex: {{ .Data.TotalNo }} 0 auto"></div>
         {{ end }}
-        {{ if and .PollOption.Abstain (ne .Poll.OnehundredPercentBase "YN") }}
-          <div class="bg-abstain" style="flex: {{ .PollOption.Abstain }} 0 auto"></div>
+        {{ if and .Data.TotalAbstain.IsPositive (ne .Poll.OnehundredPercentBase "YN") }}
+          <div class="bg-abstain" style="flex: {{ .Data.TotalAbstain }} 0 auto"></div>
         {{ end }}
       </div>
       <div class="data-area">
         <div class="general-data">
           <div>
             {{ Loc.Get "Valid votes" }}:
-            {{ .Poll.Votesvalid }}
+            {{ .Data.Votesvalid }}
             {{ if ne .Poll.OnehundredPercentBase "YN" }}
               <!--{ .Poll.votesvalid | pollPercentBase: polldata }-->
             {{ end }}
@@ -41,31 +41,37 @@
         </div>
         {{ if .PollMethod.Yes }}
           <os-icon-container icon="check_circle" iconClass="yes">
-            <span class="yes">
-              {{ Loc.Get "Yes" }}:
-              {{ .PollOption.Yes }}
-              <!--{ .Poll.options[0]?.yes ?? 0 | pollPercentBase: polldata }-->
-            </span>
+            <div class="total-result-wrapper">
+              <span class="yes number">
+                {{ Loc.Get "Yes" }}:
+                {{ .Data.TotalYes }}
+              </span>
+              <div class="yes percent">({{ .Data.PercYes }} %)</div>
+            </div>
           </os-icon-container>
         {{ end }}
         {{ if .PollMethod.No }}
           <os-icon-container icon="cancel" iconClass="no">
-            <span class="no">
-              {{ Loc.Get "No" }}:
-              {{ .PollOption.No }}
-              <!--{ .Poll.options[0]?.no ?? 0 | pollPercentBase: polldata }-->
-            </span>
+            <div class="total-result-wrapper">
+              <span class="no number">
+                {{ Loc.Get "No" }}:
+                {{ .Data.TotalNo }}
+              </span>
+              <div class="no percent">({{ .Data.PercNo }} %)</div>
+            </div>
           </os-icon-container>
         {{ end }}
         {{ if .PollMethod.Abstain }}
           <os-icon-container icon="circle" iconClass="abstain">
-            <span class="abstain">
-              {{ Loc.Get "Abstain" }}:
-              {{ .PollOption.Abstain }}
-              {{ if ne .Poll.OnehundredPercentBase "YN" }}
-                <!--{ .Poll.options[0]?.abstain ?? 0 | pollPercentBase: polldata }-->
+            <div class="total-result-wrapper">
+              <span class="abstain number">
+                {{ Loc.Get "Abstain" }}:
+                {{ .Data.TotalAbstain }}
+              </span>
+              {{ if eq .Poll.OnehundredPercentBase "YNA" }}
+                <div class="abstain percent">({{ .Data.PercAbstain }} %)</div>
               {{ end }}
-            </span>
+            </div>
           </os-icon-container>
         {{ end }}
       </div>

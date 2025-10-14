@@ -62,7 +62,8 @@ export function Projector(host, id, auth = () => ``) {
       '--projector-width': settings.Width,
       '--projector-aspect-ratio-numerator': settings.AspectRatioNumerator,
       '--projector-aspect-ratio-denominator': settings.AspectRatioDenominator,
-      '--projector-scroll': settings.Scroll
+      '--projector-scroll': settings.Scroll,
+      '--projector-scale': settings.Scale
     };
 
     for (let prop in cssProperties) {

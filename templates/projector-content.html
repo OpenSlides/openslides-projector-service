@@ -46,6 +46,11 @@
     {{else}}
         --projector-scroll: 0;
     {{end}}
+    {{if .Projector.Scale}}
+        --projector-scale: {{.Projector.Scale}};
+    {{else}}
+        --projector-scale: 0;
+    {{end}}
 }
 </style>
 
