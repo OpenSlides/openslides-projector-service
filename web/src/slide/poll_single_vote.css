@@ -127,6 +127,9 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        &.not-present {
+          text-decoration: line-through;
+        }
       }
     }
     &:not(:last-child) {

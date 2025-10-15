@@ -145,7 +145,7 @@
             {{ $iconClass = "abstain" }}
           {{ end }}
           <os-icon-container icon="{{ $iconName }}" iconClass="{{ $iconClass }}">
-            <span class="vote-name">
+            <span class="vote-name {{ if not .Present }}not-present{{ end }}">
               {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
               {{ .FirstName }}
             </span>
