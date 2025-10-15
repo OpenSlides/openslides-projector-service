@@ -120,6 +120,52 @@
     }
   }
 
+  .vote-entry:has(+ .structure-level) {
+    border-bottom: 0;
+    margin-bottom: 1px;
+  }
+
+  .structure-level {
+    margin-bottom: 1px !important;
+    height: 29px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.7);
+    h3 {
+      padding-top: 1.5px;
+      padding-bottom: 1.5px;
+      margin-top: 0;
+      margin-bottom: 0 !important;
+      line-height: 1;
+      font-size: 18px;
+      font-weight: 500;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .results {
+      display: inline-flex;
+      os-icon-container {
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        width: fit-content;
+        padding-right: 3px;
+        .material-icons {
+          font-size: 18px;
+          line-height: 1;
+        }
+        .amount {
+          font-size: 18px;
+          margin: auto 5px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
   .votes-column {
     display: flex;
     flex-direction: column;

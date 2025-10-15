@@ -18,10 +18,41 @@ type pollSingleVotesSlideVoteEntry struct {
 }
 
 type pollSingleVotesSlideVoteEntryGroup struct {
-	TotalYes     decimal.Decimal
-	TotalNo      decimal.Decimal
-	TotalAbstain decimal.Decimal
+	Title        string
 	Votes        map[int]*pollSingleVotesSlideVoteEntry
+}
+
+func (e *pollSingleVotesSlideVoteEntryGroup) TotalYes() int {
+	sum := 0
+	for _, v := range e.Votes {
+		if v.Value == "Y" {
+			sum += 1
+		}
+	}
+
+	return sum
+}
+
+func (e *pollSingleVotesSlideVoteEntryGroup) TotalNo() int {
+	sum := 0
+	for _, v := range e.Votes {
+		if v.Value == "N" {
+			sum += 1
+		}
+	}
+
+	return sum
+}
+
+func (e *pollSingleVotesSlideVoteEntryGroup) TotalAbstain() int {
+	sum := 0
+	for _, v := range e.Votes {
+		if v.Value == "A" {
+			sum += 1
+		}
+	}
+
+	return sum
 }
 
 type pollSingleVotesSlideData struct {
@@ -33,12 +64,15 @@ type pollSingleVotesSlideData struct {
 	PercNo          decimal.Decimal
 	PercAbstain     decimal.Decimal
 	PercVotesvalid  decimal.Decimal
-	GroupedVotes    pollSingleVotesSlideVoteEntryGroup
+	GroupedVotes    map[int]*pollSingleVotesSlideVoteEntryGroup
 }
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	pQ := req.Fetch.Poll()
-	poll, err := req.Fetch.Poll(*req.ContentObjectID).Preload(pQ.OptionList().VoteList()).First(ctx)
+	poll, err := req.Fetch.Poll(*req.ContentObjectID).
+		Preload(pQ.OptionList().VoteList()).
+		Preload(pQ.EntitledGroupList().MeetingUserList().User()).
+		Preload(pQ.EntitledGroupList().MeetingUserList().StructureLevelList()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll id %w", err)
 	}
@@ -62,34 +96,51 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Abstain": strings.Contains(poll.Pollmethod, "A"),
 	}
 
-	type voteEntry struct {
-		pollSingleVotesSlideVoteEntry
-	}
-
-	voteEntries := map[int]*voteEntry{}
-	for _, entry := range entitledUsersAtStop {
-		user, err := req.Fetch.User(entry.UserID).First(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load entitled user: %w", err)
-		}
-
-		vote := pollSingleVotesSlideVoteEntry{
-			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
-			LastName:  user.LastName,
-			Value:     "",
-		}
-		voteEntries[entry.UserID] = &voteEntry{
-			pollSingleVotesSlideVoteEntry: vote,
+	meetingUserMap := map[int]dsmodels.MeetingUser{}
+	for _, group := range poll.EntitledGroupList {
+		for _, mu := range group.MeetingUserList {
+			meetingUserMap[mu.UserID] = mu
 		}
 	}
 
+	voteMap := map[int]string{}
 	for _, entry := range pollOption.VoteList {
 		if val, ok := entry.UserID.Value(); ok {
-			voteEntries[val].Value = entry.Value
+			voteMap[val] = entry.Value
 		}
 	}
 
 	slideData := pollSingleVotesSlideData{}
+	voteEntryGroups := map[int]*pollSingleVotesSlideVoteEntryGroup{}
+	for _, entry := range entitledUsersAtStop {
+		user := meetingUserMap[entry.UserID].User
+		vote := pollSingleVotesSlideVoteEntry{
+			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
+			LastName:  user.LastName,
+			Value:     voteMap[user.ID],
+		}
+
+		structureLevel := &dsmodels.StructureLevel{
+			ID:   0,
+			Name: "",
+		}
+		if mu, ok := meetingUserMap[entry.UserID]; ok {
+			if len(mu.StructureLevelList) > 0 {
+				structureLevel = &mu.StructureLevelList[0]
+			}
+		}
+
+		if _, ok := voteEntryGroups[structureLevel.ID]; !ok {
+			voteEntryGroups[structureLevel.ID] = &pollSingleVotesSlideVoteEntryGroup{
+				Title: structureLevel.Name,
+				Votes: map[int]*pollSingleVotesSlideVoteEntry{},
+			}
+		}
+
+		voteEntryGroups[structureLevel.ID].Votes[entry.UserID] = &vote
+	}
+
+	slideData.GroupedVotes = voteEntryGroups
 	slideData.TotalYes, _ = pollOption.Yes.Value()
 	slideData.TotalNo, _ = pollOption.No.Value()
 	slideData.TotalAbstain, _ = pollOption.Abstain.Value()
@@ -111,6 +162,5 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"PollMethod":       pollMethod,
 		"PollOption":       pollOption,
 		"NumEntitledUsers": numEntitledUsers,
-		"Votes":            voteEntries,
 	}, nil
 }

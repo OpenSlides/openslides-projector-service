@@ -79,38 +79,63 @@
   </div>
 
   <div class="content-wrapper votes-area">
-    {{ range .Votes }}
-      <div class="vote-entry">
-        {{ if eq .Value "Y" }}
-          <os-icon-container icon="check_circle" iconClass="yes">
-            <span class="vote-name">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </span>
-          </os-icon-container>
-        {{ else if eq .Value "N" }}
-          <os-icon-container icon="cancel" iconClass="no">
-            <span class="vote-name">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </span>
-          </os-icon-container>
-        {{ else if eq .Value "A" }}
-          <os-icon-container icon="circle" iconClass="abstain">
-            <span class="vote-name">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </span>
-          </os-icon-container>
-        {{ else }}
-          <os-icon-container icon="radio_button_unchecked" iconClass="no-content">
-            <span class="vote-name">
-              {{ .FirstName }}
-              {{ .LastName }}
-            </span>
-          </os-icon-container>
-        {{ end }}
+    {{ $hasYes := .PollMethod.Yes }}
+    {{ $hasNo := .PollMethod.No }}
+    {{ $hasAbstain := .PollMethod.Abstain }}
+    {{ range .Data.GroupedVotes }}
+      <div class="structure-level">
+        <h3>{{ .Title }}</h3>
+        <div class="results">
+          {{ if $hasYes }}
+            <os-icon-container icon="check_circle" iconClass="yes">
+              <span class="amount">{{ .TotalYes }}</span>
+            </os-icon-container>
+          {{ end }}
+          {{ if $hasNo }}
+            <os-icon-container icon="cancel" iconClass="no">
+              <span class="amount">{{ .TotalNo }}</span>
+            </os-icon-container>
+          {{ end }}
+          {{ if $hasAbstain }}
+            <os-icon-container icon="circle" iconClass="abstain">
+              <span class="amount">{{ .TotalAbstain }}</span>
+            </os-icon-container>
+          {{ end }}
+        </div>
       </div>
+      {{ range .Votes }}
+        <div class="vote-entry">
+          {{ if eq .Value "Y" }}
+            <os-icon-container icon="check_circle" iconClass="yes">
+              <span class="vote-name">
+                {{ .FirstName }}
+                {{ .LastName }}
+              </span>
+            </os-icon-container>
+          {{ else if eq .Value "N" }}
+            <os-icon-container icon="cancel" iconClass="no">
+              <span class="vote-name">
+                {{ .FirstName }}
+                {{ .LastName }}
+              </span>
+            </os-icon-container>
+          {{ else if eq .Value "A" }}
+            <os-icon-container icon="circle" iconClass="abstain">
+              <span class="vote-name">
+                {{ .FirstName }}
+                {{ .LastName }}
+              </span>
+            </os-icon-container>
+          {{ else }}
+            <os-icon-container icon="radio_button_unchecked" iconClass="no-content">
+              <span class="vote-name">
+                {{ .FirstName }}
+                {{ .LastName }}
+              </span>
+            </os-icon-container>
+          {{ end }}
+        </div>
+      {{ end }}
     {{ end }}
   </div>
 </div>
