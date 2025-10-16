@@ -1,7 +1,67 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_common.css" />
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_chart.css" />
+
 <div class="content">
   <div class="slidetitle">
     <h1>
       {{ .Poll.Title }}
     </h1>
+  </div>
+
+  {{ if .Data.ResultTitle }}
+    <h3 class="result-title">{{ .Data.ResultTitle }}</h3>
+  {{ end }}
+  <div class="result-wrapper extra-grid-slide">
+    <table class="result-table">
+      <tbody>
+        {{ range .Data.Options }}
+          <tr {{ if .Color }}style="color: var({{ .Color }})"{{ end }}>
+            <td class="label-column">
+              <os-icon-container icon="{{ .Icon }}">
+                <span class="option-name">{{ .Name }}</span>
+              </os-icon-container>
+            </td>
+            <td>
+              <div class="result-cell-definition">
+                {{ .TotalVotes }}
+              </div>
+            </td>
+            <td>
+              {{ if .PercVotes }}
+                <div class="result-cell-definition">{{ .PercVotes }} %</div>
+              {{ end }}
+            </td>
+          </tr>
+        {{ end }}
+        <tr class="valid-votes-row">
+          <td>{{ Loc.Get "Valid votes" }}</td>
+          <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+          {{ if .Data.PercValidvotes }}
+            <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
+          {{ end }}
+        </tr>
+        <!-- TODO: END FOR LOOP -->
+        {{ if eq .Poll.OnehundredPercentBase "entitled" }}
+          <tr class="entitled-users-row">
+            <td>{{ Loc.Get "Entitled users" }}</td>
+            <td class="result-cell-definition">{-{ poll.entitled_users_at_stop.length | pollPercentBase: poll }}</td>
+            <td class="result-cell-definition">{-{ poll.entitled_users_at_stop.length }}</td>
+          </tr>
+        {{ end }}
+        {{ if eq .Poll.OnehundredPercentBase "entitled_present" }}
+          <tr class="entitled-users-row">
+            <td>{{ Loc.Get "Entitled present users" }}</td>
+            <td class="result-cell-definition">{-{ entitledUsersPresentCount | pollPercentBase: poll }}</td>
+            <td class="result-cell-definition">{-{ entitledUsersPresentCount }}</td>
+          </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    <!-- Chart -->
+    {{ if .Data.ChartData }}
+      <div class="doughnut-chart-slide">
+        <projector-poll-chart>{{ .Data.ChartData }}</projector-poll-chart>
+      </div>
+    {{ end }}
   </div>
 </div>

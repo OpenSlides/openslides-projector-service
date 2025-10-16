@@ -7,6 +7,7 @@ import { PdfViewer } from './components/pdf-viewer.js';
 import { QrCode } from './components/qr-code.js';
 import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
 import { ProjectorMotionAmendment, ProjectorMotionText, ProjectorMotionTitle } from './slide/projector_motion.js';
+import { ProjectorPollChart } from './slide/poll_chart.js';
 
 customElements.define('projector-countdown', ProjectorCountdown);
 customElements.define('os-icon-container', OsIconContainer);
@@ -14,6 +15,7 @@ customElements.define('projector-motion-amendment', ProjectorMotionAmendment);
 customElements.define('projector-motion-block', ProjectorMotionBlock);
 customElements.define('projector-motion-title', ProjectorMotionTitle);
 customElements.define('projector-motion-text', ProjectorMotionText);
+customElements.define('projector-poll-chart', ProjectorPollChart);
 customElements.define('pdf-viewer', PdfViewer);
 customElements.define('qr-code', QrCode);
 

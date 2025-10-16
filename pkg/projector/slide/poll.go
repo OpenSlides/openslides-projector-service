@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 
 	"github.com/shopspring/decimal"
 )
@@ -13,20 +14,24 @@ type pollSlideOptions struct {
 }
 
 type pollSlideProjectionOptionData struct {
-	Color      string
+	Color      template.CSS
 	Icon       string
 	Name       string
 	TotalVotes decimal.Decimal
-	PercVotes  decimal.Decimal
+	PercVotes  string
 }
 
 type pollSlideChartProjectionData struct {
 	TotalValidvotes decimal.Decimal
-	PercValidvotes  decimal.Decimal
+	PercValidvotes  string
+	ResultTitle     string
+	ChartData       string
 	Options         []pollSlideProjectionOptionData
 }
 
 func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
+	pollID := *req.ContentObjectID
+
 	var options pollSlideOptions
 	if len(req.Projection.Options) > 0 {
 		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
@@ -34,23 +39,28 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		}
 	}
 
-	poll, err := req.Fetch.Poll(*req.ContentObjectID).First(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not load poll id %w", err)
+	var pollState string
+	var pollTitle string
+	var pollLiveVotingEnabled bool
+	req.Fetch.Poll_State(pollID).Lazy(&pollState)
+	req.Fetch.Poll_Title(pollID).Lazy(&pollTitle)
+	req.Fetch.Poll_LiveVotingEnabled(pollID).Lazy(&pollLiveVotingEnabled)
+	if err := req.Fetch.Execute(ctx); err != nil {
+		return nil, fmt.Errorf("could not load poll base info %w", err)
 	}
 
-	if poll.State != "published" && (poll.State != "started" && poll.LiveVotingEnabled) {
+	if pollState != "published" && (pollState != "started" && pollLiveVotingEnabled) {
 		state := req.Locale.Get("No results yet")
-		if poll.State == "finished" {
+		if pollState == "finished" {
 			state = req.Locale.Get("Counting of votes is in progress ...")
 		}
 
-		if poll.State == "started" && !poll.LiveVotingEnabled {
+		if pollState == "started" && !pollLiveVotingEnabled {
 			state = req.Locale.Get("Voting in progress")
 		}
 
 		return map[string]any{
-			"Title": poll.Title,
+			"Title": pollTitle,
 			"State": state,
 		}, nil
 	}
@@ -59,13 +69,16 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return pollSingleVotesSlideHandler(ctx, req)
 	}
 
-	template := "poll_chart"
-	data := pollSlideChartProjectionData{}
+	poll, err := req.Fetch.Poll(pollID).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not load poll %w", err)
+	}
+
+	if len(poll.OptionIDs) == 1 {
+		return pollChartSlideHandler(ctx, req)
+	}
 
 	return map[string]any{
-		"_template":   template,
 		"_fullHeight": true,
-		"Poll":        poll,
-		"Data":        data,
 	}, nil
 }

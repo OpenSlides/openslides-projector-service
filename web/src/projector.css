@@ -210,3 +210,7 @@ ul {
 .hiddenCanvasElement {
   position: absolute;
 }
+
+projector-poll-chart {
+  display: none;
+}
