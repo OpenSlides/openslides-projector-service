@@ -182,6 +182,12 @@
           font-weight: 500;
         }
       }
+
+      os-icon-container:last-of-type {
+        .amount {
+          margin-right: 0;
+        }
+      }
     }
   }
 
