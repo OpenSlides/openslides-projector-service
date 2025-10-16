@@ -183,7 +183,7 @@
         }
       }
 
-      os-icon-container:last-of-type {
+      :last-child {
         .amount {
           margin-right: 0;
         }
