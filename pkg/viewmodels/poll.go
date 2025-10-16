@@ -26,25 +26,25 @@ func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) dec
 
 	switch poll.OnehundredPercentBase {
 	case "Y":
-		total, _ := poll.Votesvalid.Value()
+		total := poll.Votesvalid
 		if globalOption, isSet := poll.GlobalOption.Value(); isSet {
-			abstain, _ := globalOption.Abstain.Value()
-			no, _ := globalOption.No.Value()
+			abstain := globalOption.Abstain
+			no := globalOption.No
 			total = total.Sub(no).Sub(abstain)
 		}
 		return total
 	case "YN":
-		yes, _ := option.Yes.Value()
-		no, _ := option.No.Value()
+		yes := option.Yes
+		no := option.No
 		return yes.Add(no)
 	case "YNA":
-		yes, _ := option.Yes.Value()
-		no, _ := option.No.Value()
-		abstain, _ := option.Abstain.Value()
+		yes := option.Yes
+		no := option.No
+		abstain := option.Abstain
 
 		return yes.Add(no).Add(abstain)
 	case "valid":
-		valid, _ := poll.Votesvalid.Value()
+		valid := poll.Votesvalid
 		return valid
 	case "entitled":
 		entitled, err := Poll_EntitledUsers(poll)
@@ -67,7 +67,7 @@ func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) dec
 		}
 		return decimal.NewFromInt(present)
 	case "cast":
-		cast, _ := poll.Votescast.Value()
+		cast := poll.Votescast
 		return cast
 	}
 

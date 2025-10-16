@@ -177,10 +177,10 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	slideData.GroupedVotes = voteEntryGroups
-	slideData.TotalYes, _ = pollOption.Yes.Value()
-	slideData.TotalNo, _ = pollOption.No.Value()
-	slideData.TotalAbstain, _ = pollOption.Abstain.Value()
-	slideData.TotalVotesvalid, _ = poll.Votesvalid.Value()
+	slideData.TotalYes = pollOption.Yes
+	slideData.TotalNo = pollOption.No
+	slideData.TotalAbstain = pollOption.Abstain
+	slideData.TotalVotesvalid = poll.Votesvalid
 	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
 	if !onehundredPercentBase.IsZero() {
 		slideData.PercYes = slideData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
