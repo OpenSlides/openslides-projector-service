@@ -4,29 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
-
-	"github.com/shopspring/decimal"
 )
 
 type pollSlideOptions struct {
 	SingleVotes bool `json:"single_votes"`
-}
-
-type pollSlideProjectionOptionData struct {
-	Color      template.CSS
-	Icon       string
-	Name       string
-	TotalVotes decimal.Decimal
-	PercVotes  string
-}
-
-type pollSlideChartProjectionData struct {
-	TotalValidvotes decimal.Decimal
-	PercValidvotes  string
-	ResultTitle     string
-	ChartData       string
-	Options         []pollSlideProjectionOptionData
 }
 
 func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {

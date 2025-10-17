@@ -4,12 +4,31 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"slices"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
+
+type pollSlideProjectionOptionData struct {
+	Color       template.CSS
+	Icon        string
+	Name        string
+	TotalVotes  decimal.Decimal
+	PercVotes   string
+	DisplayPerc bool
+}
+
+type pollSlideChartProjectionData struct {
+	TotalValidvotes decimal.Decimal
+	PercValidvotes  string
+	ResultTitle     string
+	ChartData       string
+	EntitledUsers   int
+	Options         []pollSlideProjectionOptionData
+}
 
 func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	pollID := *req.ContentObjectID
@@ -35,43 +54,40 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 		if strings.Contains(poll.Pollmethod, "Y") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Color:      "--theme-yes",
-				Icon:       "check_circle",
-				Name:       req.Locale.Get("Yes"),
-				TotalVotes: opt.Yes,
-				PercVotes:  opt.Yes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String(),
+				Color:       "--theme-yes",
+				Icon:        "check_circle",
+				Name:        req.Locale.Get("Yes"),
+				TotalVotes:  opt.Yes,
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y"),
 			})
 		}
 
 		if strings.Contains(poll.Pollmethod, "N") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Color:      "--theme-no",
-				Icon:       "cancel",
-				Name:       req.Locale.Get("No"),
-				TotalVotes: opt.No,
-				PercVotes:  opt.No.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String(),
+				Color:       "--theme-no",
+				Icon:        "cancel",
+				Name:        req.Locale.Get("No"),
+				TotalVotes:  opt.No,
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N"),
 			})
 		}
 
 		if strings.Contains(poll.Pollmethod, "A") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Color:      "--theme-abstain",
-				Icon:       "circle",
-				Name:       req.Locale.Get("Abstain"),
-				TotalVotes: opt.Abstain,
-				PercVotes:  opt.Abstain.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String(),
+				Color:       "--theme-abstain",
+				Icon:        "circle",
+				Name:        req.Locale.Get("Abstain"),
+				TotalVotes:  opt.Abstain,
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A"),
 			})
 		}
-
-		data.TotalValidvotes = poll.Votesvalid
-		data.PercValidvotes = poll.Votesvalid.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String()
 	} else {
 		for _, opt := range poll.OptionList {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Icon:       "circle",
-				Name:       opt.Text,
-				TotalVotes: opt.Yes,
-				PercVotes:  opt.Yes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String(),
+				Icon:        "circle",
+				Name:        opt.Text,
+				TotalVotes:  opt.Yes,
+				DisplayPerc: true,
 			})
 		}
 
@@ -86,11 +102,15 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	}
 
 	chartData := []chartDataEntry{}
-	for _, option := range data.Options {
+	for i, option := range data.Options {
 		chartData = append(chartData, chartDataEntry{
 			Color: string(option.Color),
 			Val:   option.TotalVotes.InexactFloat64(),
 		})
+
+		if !onehundredPercentBase.IsZero() && option.DisplayPerc {
+			data.Options[i].PercVotes = option.TotalVotes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
+		}
 	}
 
 	chartDataJSON, err := json.Marshal(chartData)
@@ -98,6 +118,11 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		return nil, fmt.Errorf("could not marshal chart data json %w", err)
 	}
 	data.ChartData = string(chartDataJSON)
+
+	data.TotalValidvotes = poll.Votesvalid
+	if !onehundredPercentBase.IsZero() {
+		data.PercValidvotes = poll.Votesvalid.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
+	}
 
 	return map[string]any{
 		"_template":   "poll_chart",
