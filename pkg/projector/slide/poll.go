@@ -86,7 +86,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	}
 
 	pQ := req.Fetch.Poll()
-	poll, err = req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
+	poll, err = req.Fetch.Poll(pollID).Preload(pQ.OptionList()).Preload(pQ.GlobalOption()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
@@ -126,12 +126,62 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	data.DisplayPercAbstain = strings.Contains(poll.OnehundredPercentBase, "A") ||
 		poll.OnehundredPercentBase == "cast" ||
 		poll.OnehundredPercentBase == "valid"
-	fmt.Println(poll.OnehundredPercentBase)
 
 	pollMethod := map[string]bool{
 		"Yes":     strings.Contains(poll.Pollmethod, "Y"),
 		"No":      strings.Contains(poll.Pollmethod, "N"),
 		"Abstain": strings.Contains(poll.Pollmethod, "A"),
+	}
+
+	data.Sums = append(data.Sums, pollSlideTableSum{
+		Name:  req.Locale.Get("Valid votes"),
+		Total: poll.Votesvalid,
+	})
+
+	if poll.GlobalOption != nil && !poll.GlobalOption.Null() {
+		globalOption, _ := poll.GlobalOption.Value()
+		if poll.GlobalYes && !globalOption.Yes.IsZero() {
+			data.Sums = append(data.Sums, pollSlideTableSum{
+				Name:  req.Locale.Get("General approval"),
+				Total: globalOption.Yes,
+			})
+		}
+
+		if poll.GlobalNo && !globalOption.No.IsZero() {
+			data.Sums = append(data.Sums, pollSlideTableSum{
+				Name:  req.Locale.Get("General rejection"),
+				Total: globalOption.No,
+			})
+		}
+
+		if poll.GlobalAbstain && !globalOption.Abstain.IsZero() {
+			data.Sums = append(data.Sums, pollSlideTableSum{
+				Name:  req.Locale.Get("General abstain"),
+				Total: globalOption.Abstain,
+			})
+		}
+	}
+
+	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
+	if !onehundredPercentBase.IsZero() {
+		for i, sum := range data.Sums {
+			data.Sums[i].Perc = sum.Total.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
+		}
+	}
+
+	switch poll.OnehundredPercentBase {
+	case "entitled":
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled users"),
+			Total: onehundredPercentBase,
+			Perc:  "100",
+		})
+	case "entitled_present":
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled present users"),
+			Total: onehundredPercentBase,
+			Perc:  "100",
+		})
 	}
 
 	return map[string]any{

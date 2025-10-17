@@ -76,32 +76,22 @@
             {{ end }}
           </tr>
         {{ end }}
-        <!--
-        <tr class="sums">
-          <td></td>
-          <td class="voting-option">
-            <span class="candidate-name">General rejection</span>
-          </td>
-          <td class="result">
-            <span>(100 %)</span>
-          </td>
-          <td class="result">
-            <span>4,5</span>
-          </td>
-        </tr>
-        <tr class="sums">
-          <td></td>
-          <td class="voting-option">
-            <span class="candidate-name">Valid votes</span>
-          </td>
-          <td class="result">
-            <span>(100 %)</span>
-          </td>
-          <td class="result">
-            <span>4,5</span>
-          </td>
-        </tr>
-        -->
+        {{ range .Data.Sums }}
+          <tr class="sums">
+            <td></td>
+            <td class="voting-option">
+              <span class="candidate-name">{{ .Name }}</span>
+            </td>
+            <td class="result">
+              {{ if .Perc }}
+                <span>({{ .Perc }} %)</span>
+              {{ end }}
+            </td>
+            <td class="result">
+              <span>{{ .Total }}</span>
+            </td>
+          </tr>
+        {{ end }}
       </tbody>
     </table>
   {{ end }}
