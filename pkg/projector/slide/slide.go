@@ -117,15 +117,15 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 		defer func() {
 			/*
-			if r := recover(); r != nil {
-				var ok bool
-				err, ok := r.(error)
-				if !ok {
-					err = fmt.Errorf("pkg: %v", r)
-				}
+				if r := recover(); r != nil {
+					var ok bool
+					err, ok := r.(error)
+					if !ok {
+						err = fmt.Errorf("pkg: %v", r)
+					}
 
-				onError(err, fmt.Sprintf("panic in slide handler: %s (%d)", projectionType, id))
-			}
+					onError(err, fmt.Sprintf("panic in slide handler: %s (%d)", projectionType, id))
+				}
 			*/
 		}()
 
@@ -162,6 +162,9 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 			tmplName := fmt.Sprintf("%s.html", templateName)
 			tmpl, err := template.New(tmplName).Funcs(template.FuncMap{
+				"RenderIndex": func(i int) int {
+					return i + 1
+				},
 				"Loc": func() *gotext.Locale {
 					return r.locale
 				},

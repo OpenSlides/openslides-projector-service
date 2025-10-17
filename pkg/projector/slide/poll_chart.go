@@ -44,41 +44,47 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
 	if len(poll.OptionList) == 1 {
 		opt := poll.OptionList[0]
-		coID, hasCoID := opt.ContentObjectID.Value()
-		if opt.Text != "" {
-			data.ResultTitle = opt.Text
-		} else if hasCoID && strings.HasPrefix(coID, "user") {
-			data.ResultTitle = fmt.Sprintf("%s %s", "FIRST NAME", "LAST NAME")
-			// TODO: Structure Level
+
+		optTitle, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &opt, nil)
+		if err != nil {
+			return nil, fmt.Errorf("could not load poll option name: %w", err)
 		}
+
+		data.ResultTitle = optTitle
 
 		if strings.Contains(poll.Pollmethod, "Y") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Color:       "--theme-yes",
-				Icon:        "check_circle",
-				Name:        req.Locale.Get("Yes"),
-				TotalVotes:  opt.Yes,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y"),
+				Color:      "--theme-yes",
+				Icon:       "check_circle",
+				Name:       req.Locale.Get("Yes"),
+				TotalVotes: opt.Yes,
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y") ||
+					poll.OnehundredPercentBase == "cast" ||
+					poll.OnehundredPercentBase == "valid",
 			})
 		}
 
 		if strings.Contains(poll.Pollmethod, "N") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Color:       "--theme-no",
-				Icon:        "cancel",
-				Name:        req.Locale.Get("No"),
-				TotalVotes:  opt.No,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N"),
+				Color:      "--theme-no",
+				Icon:       "cancel",
+				Name:       req.Locale.Get("No"),
+				TotalVotes: opt.No,
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N") ||
+					poll.OnehundredPercentBase == "cast" ||
+					poll.OnehundredPercentBase == "valid",
 			})
 		}
 
 		if strings.Contains(poll.Pollmethod, "A") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Color:       "--theme-abstain",
-				Icon:        "circle",
-				Name:        req.Locale.Get("Abstain"),
-				TotalVotes:  opt.Abstain,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A"),
+				Color:      "--theme-abstain",
+				Icon:       "circle",
+				Name:       req.Locale.Get("Abstain"),
+				TotalVotes: opt.Abstain,
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A") ||
+					poll.OnehundredPercentBase == "cast" ||
+					poll.OnehundredPercentBase == "valid",
 			})
 		}
 	} else {

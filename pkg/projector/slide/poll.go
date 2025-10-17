@@ -5,10 +5,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
+	"github.com/shopspring/decimal"
 )
 
 type pollSlideOptions struct {
 	SingleVotes bool `json:"single_votes"`
+}
+
+type pollSlideTableOption struct {
+	Name         string
+	TotalYes     decimal.Decimal
+	TotalNo      decimal.Decimal
+	TotalAbstain decimal.Decimal
+	PercYes      decimal.Decimal
+	PercNo       decimal.Decimal
+	PercAbstain  decimal.Decimal
+}
+
+type pollSlideTableSum struct {
+	Name  string
+	Total decimal.Decimal
+	Perc  string
+}
+
+type pollSlideTable struct {
+	DisplayPercAbstain bool
+	Options            []pollSlideTableOption
+	Sums               []pollSlideTableSum
 }
 
 func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -60,7 +85,61 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return pollChartSlideHandler(ctx, req)
 	}
 
+	pQ := req.Fetch.Poll()
+	poll, err = req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not load poll %w", err)
+	}
+
+	userMap, err := viewmodels.User_MeetingUserMap(ctx, req.Fetch, poll.MeetingID)
+	if err != nil {
+		return nil, fmt.Errorf("could not load user map %w", err)
+	}
+	data := pollSlideTable{
+		Options: []pollSlideTableOption{},
+		Sums:    []pollSlideTableSum{},
+	}
+
+	for _, option := range poll.OptionList {
+		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, &option)
+		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option, userMap)
+		if err != nil {
+			return nil, err
+		}
+
+		optData := pollSlideTableOption{
+			Name:         name,
+			TotalYes:     option.Yes,
+			TotalNo:      option.No,
+			TotalAbstain: option.Abstain,
+		}
+
+		if !onehundredPercentBase.IsZero() {
+			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			optData.PercAbstain = optData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		}
+
+		data.Options = append(data.Options, optData)
+	}
+
+	data.DisplayPercAbstain = strings.Contains(poll.OnehundredPercentBase, "A") ||
+		poll.OnehundredPercentBase == "cast" ||
+		poll.OnehundredPercentBase == "valid"
+	fmt.Println(poll.OnehundredPercentBase)
+
+	pollMethod := map[string]bool{
+		"Yes":     strings.Contains(poll.Pollmethod, "Y"),
+		"No":      strings.Contains(poll.Pollmethod, "N"),
+		"Abstain": strings.Contains(poll.Pollmethod, "A"),
+	}
+
 	return map[string]any{
 		"_fullHeight": true,
+		"Title":       pollTitle,
+		"Data":        data,
+		"Base":        poll.OnehundredPercentBase,
+		"Method":      poll.Pollmethod,
+		"Methods":     pollMethod,
 	}, nil
 }
