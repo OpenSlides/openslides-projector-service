@@ -45,34 +45,46 @@
               </div>
             </td>
             {{ if $.Methods.Yes }}
-              <td class="result yes">
-                {{ if ne $.Base "disabled" }}
-                  <span>({{ $o.PercYes }} %)</span>
-                {{ end }}
-              </td>
-              <td class="result yes">
-                <span>{{ $o.TotalYes }}</span>
-              </td>
+              {{ if $o.TotalYes.IsNegative }}
+                <td colspan="2" class="result yes">majority</td>
+              {{ else }}
+                <td class="result yes">
+                  {{ if ne $.Base "disabled" }}
+                    <span>({{ $o.PercYes }} %)</span>
+                  {{ end }}
+                </td>
+                <td class="result yes">
+                  <span>{{ $o.TotalYes }}</span>
+                </td>
+              {{ end }}
             {{ end }}
             {{ if $.Methods.No }}
-              <td class="result {{ if eq $.Method "N" }}yes{{ else }}no{{ end }}">
-                {{ if ne $.Base "disabled" }}
-                  <span>({{ $o.PercNo }} %)</span>
-                {{ end }}
-              </td>
-              <td class="result {{ if eq $.Method "N" }}yes{{ else }}no{{ end }}">
-                <span>{{ $o.TotalNo }}</span>
-              </td>
+              {{ if $o.TotalNo.IsNegative }}
+                <td colspan="2" class="result no">majority</td>
+              {{ else }}
+                <td class="result {{ if eq $.Method "N" }}yes{{ else }}no{{ end }}">
+                  {{ if ne $.Base "disabled" }}
+                    <span>({{ $o.PercNo }} %)</span>
+                  {{ end }}
+                </td>
+                <td class="result {{ if eq $.Method "N" }}yes{{ else }}no{{ end }}">
+                  <span>{{ $o.TotalNo }}</span>
+                </td>
+              {{ end }}
             {{ end }}
             {{ if $.Methods.Abstain }}
-              <td class="result abstain">
-                {{ if and $.Data.DisplayPercAbstain (ne $.Base "disabled") }}
-                  <span>({{ $o.PercAbstain }} %)</span>
-                {{ end }}
-              </td>
-              <td class="result abstain">
-                <span>{{ $o.TotalAbstain }}</span>
-              </td>
+              {{ if $o.TotalAbstain.IsNegative }}
+                <td colspan="2" class="result abstain">majority</td>
+              {{ else }}
+                <td class="result abstain">
+                  {{ if and $.Data.DisplayPercAbstain (ne $.Base "disabled") }}
+                    <span>({{ $o.PercAbstain }} %)</span>
+                  {{ end }}
+                </td>
+                <td class="result abstain">
+                  <span>{{ $o.TotalAbstain }}</span>
+                </td>
+              {{ end }}
             {{ end }}
           </tr>
         {{ end }}

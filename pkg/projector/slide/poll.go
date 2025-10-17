@@ -133,11 +133,6 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		"Abstain": strings.Contains(poll.Pollmethod, "A"),
 	}
 
-	data.Sums = append(data.Sums, pollSlideTableSum{
-		Name:  req.Locale.Get("Valid votes"),
-		Total: poll.Votesvalid,
-	})
-
 	if poll.GlobalOption != nil && !poll.GlobalOption.Null() {
 		globalOption, _ := poll.GlobalOption.Value()
 		if poll.GlobalYes && !globalOption.Yes.IsZero() {
@@ -160,6 +155,25 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 				Total: globalOption.Abstain,
 			})
 		}
+	}
+
+	data.Sums = append(data.Sums, pollSlideTableSum{
+		Name:  req.Locale.Get("Valid votes"),
+		Total: poll.Votesvalid,
+	})
+
+	if !poll.Votesinvalid.IsZero() {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Invalid votes"),
+			Total: poll.Votesvalid,
+		})
+	}
+
+	if !poll.Votescast.IsZero() && poll.Type == "analog" {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Total votes cast"),
+			Total: poll.Votescast,
+		})
 	}
 
 	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
