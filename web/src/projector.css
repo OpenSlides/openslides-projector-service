@@ -55,6 +55,9 @@ body {
 }
 
 #eventdata {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
   height: 50px;
   overflow: hidden;
   line-height: 1.1;
@@ -206,4 +209,12 @@ ul {
 /* Needed for pdf.js */
 .hiddenCanvasElement {
   position: absolute;
+}
+
+projector-poll-chart {
+  display: none;
+}
+
+.scroll-inner {
+  margin-top: calc(var(--projector-scroll) * -25px);
 }

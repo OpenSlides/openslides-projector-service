@@ -90,7 +90,7 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 				}
 			} else {
 				if meetingUser, isSet := currentSpeaker.MeetingUser.Value(); isSet {
-					structureLevels, err := viewmodels.MeetingUser_StructureLevelNames(ctx, &meetingUser)
+					structureLevels, err := viewmodels.MeetingUser_StructureLevelNames(&meetingUser)
 					if err != nil {
 						return nil, fmt.Errorf("could not load structure levels: %w", err)
 					}

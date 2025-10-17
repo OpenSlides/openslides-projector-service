@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/rs/zerolog"
@@ -31,6 +32,7 @@ type config struct {
 	MessageBusHost       string `env:"MESSAGE_BUS_HOST" envDetault:"localhost"`
 	MessageBusPort       string `env:"MESSAGE_BUS_PORT" envDetault:"6379"`
 	RestricterUrl        string `env:"RESTRICTER_URL" envDetault:"http://autoupdate:9012/internal/autoupdate"`
+	PublicAccessOnly     bool   `env:"OPENSLIDES_PUBLIC_ACCESS_ONLY" envDefault:"false"`
 }
 
 func main() {
@@ -62,7 +64,24 @@ func run(cfg config) error {
 		return fmt.Errorf("connecting to datastore: %w", err)
 	}
 
-	ds, err := getDatabase(cfg, dsFlow)
+	vote := datastore.NewFlowVoteCount(env)
+
+	var dataFlow flow.Flow = dsFlow
+	if !cfg.PublicAccessOnly {
+		dataFlow = flow.Combine(
+			dsFlow,
+			map[string]flow.Flow{"poll/live_votes": vote},
+		)
+
+		eventer := func() (<-chan time.Time, func() bool) {
+			timer := time.NewTimer(time.Second)
+			return timer.C, timer.Stop
+		}
+
+		go vote.Connect(ctx, eventer, func(err error) {})
+	}
+
+	ds, err := getDatabase(cfg, dataFlow)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
 	}

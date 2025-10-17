@@ -1,0 +1,112 @@
+{{ if .Data }}
+  <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_common.css" />
+  <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_table.css" />
+{{ end }}
+
+
+<div class="content">
+  <div class="slidetitle">
+    <h1>
+      {{ .Title }}
+    </h1>
+  </div>
+
+  {{ if .State }}
+    <div><i>{{ .State }}</i></div>
+  {{ else if .Data }}
+    <div class="scroll-inner">
+      <table class="poll-result-table">
+        <thead>
+          <tr>
+            <th colspan="2"></th>
+            {{ if .Methods.Yes }}
+              <th colspan="2" class="result yes">{{ Loc.Get "Yes" }}</th>
+            {{ end }}
+            {{ if .Methods.No }}
+              {{ if eq .Method "N" }}
+                <th colspan="2" class="result yes">{{ Loc.Get "Votes" }}</th>
+              {{ else }}
+                <th colspan="2" class="result no">{{ Loc.Get "No" }}</th>
+              {{ end }}
+            {{ end }}
+            {{ if .Methods.Abstain }}
+              <th colspan="2" class="result abstain">{{ Loc.Get "Abstain" }}</th>
+            {{ end }}
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $i, $o := .Data.Options }}
+            <tr class="user">
+              <td>
+                <span>{{ RenderIndex $i }}.</span>
+              </td>
+              <td class="voting-option">
+                <div>
+                  <span class="candidate-name">{{ .Name }}</span>
+                </div>
+              </td>
+              {{ if $.Methods.Yes }}
+                {{ if $o.TotalYes.IsNegative }}
+                  <td colspan="2" class="result yes">majority</td>
+                {{ else }}
+                  <td class="result yes">
+                    {{ if ne $.Base "disabled" }}
+                      <span>({{ $o.PercYes }} %)</span>
+                    {{ end }}
+                  </td>
+                  <td class="result yes">
+                    <span>{{ $o.TotalYes }}</span>
+                  </td>
+                {{ end }}
+              {{ end }}
+              {{ if $.Methods.No }}
+                {{ if $o.TotalNo.IsNegative }}
+                  <td colspan="2" class="result no">majority</td>
+                {{ else }}
+                  <td class="result {{ if eq $.Method "N" }}yes{{ else }}no{{ end }}">
+                    {{ if ne $.Base "disabled" }}
+                      <span>({{ $o.PercNo }} %)</span>
+                    {{ end }}
+                  </td>
+                  <td class="result {{ if eq $.Method "N" }}yes{{ else }}no{{ end }}">
+                    <span>{{ $o.TotalNo }}</span>
+                  </td>
+                {{ end }}
+              {{ end }}
+              {{ if $.Methods.Abstain }}
+                {{ if $o.TotalAbstain.IsNegative }}
+                  <td colspan="2" class="result abstain">majority</td>
+                {{ else }}
+                  <td class="result abstain">
+                    {{ if and $.Data.DisplayPercAbstain (ne $.Base "disabled") }}
+                      <span>({{ $o.PercAbstain }} %)</span>
+                    {{ end }}
+                  </td>
+                  <td class="result abstain">
+                    <span>{{ $o.TotalAbstain }}</span>
+                  </td>
+                {{ end }}
+              {{ end }}
+            </tr>
+          {{ end }}
+          {{ range .Data.Sums }}
+            <tr class="sums">
+              <td></td>
+              <td class="voting-option">
+                <span class="candidate-name">{{ .Name }}</span>
+              </td>
+              <td class="result">
+                {{ if .Perc }}
+                  <span>({{ .Perc }} %)</span>
+                {{ end }}
+              </td>
+              <td class="result">
+                <span>{{ .Total }}</span>
+              </td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  {{ end }}
+</div>

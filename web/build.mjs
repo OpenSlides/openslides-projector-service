@@ -16,7 +16,6 @@ let ctx = await context({
   format: 'esm',
   target: ['chrome58', 'firefox57', 'safari11', 'edge18'],
   outdir: '../static/',
-  external: ['*.woff'],
   loader: {
     '.svg': 'file',
     '.gif': 'file',

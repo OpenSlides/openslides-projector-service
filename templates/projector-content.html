@@ -36,10 +36,20 @@
             --projector-aspect-ratio-denominator: {{.Projector.AspectRatioDenominator}};
         {{end}}
     {{end}}
+    {{if .Projector.Theme}}
+        --theme-yes: {{or .Projector.Theme.Yes "#4caf50"}};
+        --theme-no: {{or .Projector.Theme.No "#cc6c5b"}};
+        --theme-abstain: {{or .Projector.Theme.Abstain "#a6a6a6"}};
+    {{end}}
     {{if .Projector.Scroll}}
         --projector-scroll: {{.Projector.Scroll}};
     {{else}}
         --projector-scroll: 0;
+    {{end}}
+    {{if .Projector.Scale}}
+        --projector-scale: {{.Projector.Scale}};
+    {{else}}
+        --projector-scale: 0;
     {{end}}
 }
 </style>
@@ -65,7 +75,9 @@
         {{ if .Projector.ShowTitle }}
           <div id="eventdata">
             <div class="event-name ellipsis-overflow">{{ .Projector.MeetingName }}</div>
-            <div class="event-description">{{ .Projector.MeetingDescription }}</div>
+            {{ if .Projector.MeetingDescription }}
+              <div class="event-description">{{ .Projector.MeetingDescription }}</div>
+            {{ end }}
           </div>
         {{ end }}
 

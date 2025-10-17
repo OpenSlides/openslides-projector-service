@@ -52,6 +52,7 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gote
 	routes["meeting_mediafile"] = MeetingMediafileSlideHandler
 	routes["motion"] = MotionSlideHandler
 	routes["motion_block"] = MotionBlockSlideHandler
+	routes["poll"] = PollSlideHandler
 	routes["projector_countdown"] = ProjectorCountdownSlideHandler
 	routes["projector_message"] = ProjectorMessageSlideHandler
 	routes["topic"] = TopicSlideHandler
@@ -115,15 +116,17 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 		projectionType, contentObjectID := getProjectionType(&projection)
 
 		defer func() {
-			if r := recover(); r != nil {
-				var ok bool
-				err, ok := r.(error)
-				if !ok {
-					err = fmt.Errorf("pkg: %v", r)
-				}
+			/*
+				if r := recover(); r != nil {
+					var ok bool
+					err, ok := r.(error)
+					if !ok {
+						err = fmt.Errorf("pkg: %v", r)
+					}
 
-				onError(err, fmt.Sprintf("panic in slide handler: %s (%d)", projectionType, id))
-			}
+					onError(err, fmt.Sprintf("panic in slide handler: %s (%d)", projectionType, id))
+				}
+			*/
 		}()
 
 		if handler, ok := r.Routes[projectionType]; ok {
@@ -159,6 +162,9 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 			tmplName := fmt.Sprintf("%s.html", templateName)
 			tmpl, err := template.New(tmplName).Funcs(template.FuncMap{
+				"RenderIndex": func(i int) int {
+					return i + 1
+				},
 				"Loc": func() *gotext.Locale {
 					return r.locale
 				},

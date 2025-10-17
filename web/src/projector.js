@@ -1,17 +1,21 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
+import { OsIconContainer } from './components/icon-container.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
 import { QrCode } from './components/qr-code.js';
 import { ProjectorMotionBlock } from './slide/projector_motion_block.js';
 import { ProjectorMotionAmendment, ProjectorMotionText, ProjectorMotionTitle } from './slide/projector_motion.js';
+import { ProjectorPollChart } from './slide/poll_chart.js';
 
 customElements.define('projector-countdown', ProjectorCountdown);
+customElements.define('os-icon-container', OsIconContainer);
 customElements.define('projector-motion-amendment', ProjectorMotionAmendment);
 customElements.define('projector-motion-block', ProjectorMotionBlock);
 customElements.define('projector-motion-title', ProjectorMotionTitle);
 customElements.define('projector-motion-text', ProjectorMotionText);
+customElements.define('projector-poll-chart', ProjectorPollChart);
 customElements.define('pdf-viewer', PdfViewer);
 customElements.define('qr-code', QrCode);
 
@@ -60,7 +64,8 @@ export function Projector(host, id, auth = () => ``) {
       '--projector-width': settings.Width,
       '--projector-aspect-ratio-numerator': settings.AspectRatioNumerator,
       '--projector-aspect-ratio-denominator': settings.AspectRatioDenominator,
-      '--projector-scroll': settings.Scroll
+      '--projector-scroll': settings.Scroll,
+      '--projector-scale': settings.Scale
     };
 
     for (let prop in cssProperties) {
