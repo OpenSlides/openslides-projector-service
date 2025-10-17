@@ -1,7 +1,6 @@
 package viewmodels
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -31,7 +30,7 @@ func MeetingUser_FullName(mu *dsmodels.MeetingUser) string {
 	return fmt.Sprintf("%s (%s)", name, strings.Join(additional, " · "))
 }
 
-func MeetingUser_StructureLevelNames(ctx context.Context, mu *dsmodels.MeetingUser) (string, error) {
+func MeetingUser_StructureLevelNames(mu *dsmodels.MeetingUser) (string, error) {
 	structureLevelNames := []string{}
 	for _, sl := range mu.StructureLevelList {
 		structureLevelNames = append(structureLevelNames, sl.Name)
