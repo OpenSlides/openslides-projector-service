@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type pollSlideOptions struct {
@@ -55,7 +56,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
 
-	if len(poll.OptionIDs) == 1 || poll.Pollmethod == "Y" {
+	if len(poll.OptionIDs) == 1 || (poll.Pollmethod == "Y" && !strings.HasPrefix(poll.ContentObjectID, "assignment")) {
 		return pollChartSlideHandler(ctx, req)
 	}
 
