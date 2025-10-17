@@ -3,8 +3,6 @@ import { ArcElement, Chart, Colors, PieController } from 'chart.js';
 Chart.register(PieController, ArcElement, Colors);
 
 export class ProjectorPollChart extends HTMLElement {
-  config;
-
   connectedCallback() {
     this.config = JSON.parse(this.innerText.trim());
     this.innerHTML = ``;
@@ -35,7 +33,9 @@ export class ProjectorPollChart extends HTMLElement {
     const chart = new Chart(this.canvas, {
       type: 'doughnut',
       options: {
-        hover: { mode: null }
+        hover: { mode: null },
+        responsive: false,
+        animations: false
       },
       data: {
         datasets: [dataset]
