@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 )
 
@@ -20,7 +19,6 @@ func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) dec
 
 	// YN and YNA need an selected option
 	if option == nil && (poll.OnehundredPercentBase == "YN" || poll.OnehundredPercentBase == "YNA") {
-		log.Error().Msg("invalid request for onehundred percent base calculation")
 		return decimal.Decimal{}
 	}
 
