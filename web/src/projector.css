@@ -214,3 +214,7 @@ ul {
 projector-poll-chart {
   display: none;
 }
+
+.scroll-inner {
+  margin-top: calc(var(--projector-scroll) * -25px);
+}

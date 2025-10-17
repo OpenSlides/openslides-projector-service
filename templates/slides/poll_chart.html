@@ -12,36 +12,38 @@
     <h3 class="result-title">{{ .Data.ResultTitle }}</h3>
   {{ end }}
   <div class="result-wrapper extra-grid-slide">
-    <table class="result-table">
-      <tbody>
-        {{ range $i, $o := .Data.Options }}
-          <tr style="color: var(--chart-bg-color-{{ $i }})">
-            <td class="label-column" style="min-width: 300px">
-              <os-icon-container icon="{{ $o.Icon }}">
-                <span class="option-name">{{ $o.Name }}</span>
-              </os-icon-container>
-            </td>
-            <td style="min-width: 80px">
-              <div class="result-cell-definition">
-                {{ $o.TotalVotes }}
-              </div>
-            </td>
-            <td>
-              {{ if $o.PercVotes }}
-                <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
-              {{ end }}
-            </td>
-          </tr>
-        {{ end }}
-        <tr class="valid-votes-row">
-          <td>{{ Loc.Get "Valid votes" }}</td>
-          <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
-          {{ if .Data.PercValidvotes }}
-            <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
+    <div class="scroll-inner">
+      <table class="result-table">
+        <tbody>
+          {{ range $i, $o := .Data.Options }}
+            <tr style="color: var(--chart-bg-color-{{ $i }})">
+              <td class="label-column" style="min-width: 300px">
+                <os-icon-container icon="{{ $o.Icon }}">
+                  <span class="option-name">{{ $o.Name }}</span>
+                </os-icon-container>
+              </td>
+              <td style="min-width: 80px">
+                <div class="result-cell-definition">
+                  {{ $o.TotalVotes }}
+                </div>
+              </td>
+              <td>
+                {{ if $o.PercVotes }}
+                  <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
+                {{ end }}
+              </td>
+            </tr>
           {{ end }}
-        </tr>
-      </tbody>
-    </table>
+          <tr class="valid-votes-row">
+            <td>{{ Loc.Get "Valid votes" }}</td>
+            <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+            {{ if .Data.PercValidvotes }}
+              <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
+            {{ end }}
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <!-- Chart -->
     {{ if .Data.ChartData }}
       <div class="doughnut-chart-slide">

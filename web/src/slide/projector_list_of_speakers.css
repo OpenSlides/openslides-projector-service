@@ -1,7 +1,3 @@
-.scroll-inner {
-  margin-top: calc(var(--projector-scroll) * -25px);
-}
-
 .list-of-speakers {
   .los-lock {
     vertical-align: text-top;
