@@ -74,7 +74,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
 
-	if len(poll.OptionIDs) == 1 {
+	if len(poll.OptionIDs) == 1 || poll.Pollmethod == "Y" {
 		return pollChartSlideHandler(ctx, req)
 	}
 

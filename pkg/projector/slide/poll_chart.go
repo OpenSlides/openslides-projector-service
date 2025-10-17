@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
@@ -66,11 +67,17 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		data.PercValidvotes = poll.Votesvalid.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String()
 	} else {
 		for _, opt := range poll.OptionList {
-			fmt.Println(opt.Abstain)
-			fmt.Println(opt.Yes)
-			fmt.Println(opt.No)
-			fmt.Println(opt.Text)
+			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Icon:       "circle",
+				Name:       opt.Text,
+				TotalVotes: opt.Yes,
+				PercVotes:  opt.Yes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).String(),
+			})
 		}
+
+		slices.SortStableFunc(data.Options, func(a pollSlideProjectionOptionData, b pollSlideProjectionOptionData) int {
+			return b.TotalVotes.Cmp(a.TotalVotes)
+		})
 	}
 
 	type chartDataEntry struct {

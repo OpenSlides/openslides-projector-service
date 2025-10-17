@@ -27,19 +27,24 @@ export class ProjectorPollChart extends HTMLElement {
       data.push(entry.val);
     }
 
-    new Chart(this.canvas, {
+    const dataset = { data };
+    if (backgroundColor.length) {
+      dataset.backgroundColor = backgroundColor;
+    }
+
+    const chart = new Chart(this.canvas, {
       type: 'doughnut',
       options: {
         hover: { mode: null }
       },
       data: {
-        datasets: [
-          {
-            data,
-            backgroundColor: backgroundColor.length ? backgroundColor : undefined
-          }
-        ]
+        datasets: [dataset]
       }
     });
+
+    for (let i = 0; i < chart.data.datasets[0].backgroundColor.length; i++) {
+      const color = chart.data.datasets[0].backgroundColor[i];
+      this.closest(`.result-wrapper`).style.setProperty(`--chart-bg-color-${i}`, color);
+    }
   }
 }

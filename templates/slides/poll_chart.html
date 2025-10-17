@@ -14,21 +14,21 @@
   <div class="result-wrapper extra-grid-slide">
     <table class="result-table">
       <tbody>
-        {{ range .Data.Options }}
-          <tr {{ if .Color }}style="color: var({{ .Color }})"{{ end }}>
-            <td class="label-column">
-              <os-icon-container icon="{{ .Icon }}">
-                <span class="option-name">{{ .Name }}</span>
+        {{ range $i, $o := .Data.Options }}
+          <tr style="color: var(--chart-bg-color-{{ $i }})">
+            <td class="label-column" style="min-width: 300px">
+              <os-icon-container icon="{{ $o.Icon }}">
+                <span class="option-name">{{ $o.Name }}</span>
               </os-icon-container>
             </td>
-            <td>
+            <td style="min-width: 80px">
               <div class="result-cell-definition">
-                {{ .TotalVotes }}
+                {{ $o.TotalVotes }}
               </div>
             </td>
-            <td>
-              {{ if .PercVotes }}
-                <div class="result-cell-definition">{{ .PercVotes }} %</div>
+            <td style="min-width: 150px">
+              {{ if $o.PercVotes }}
+                <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
               {{ end }}
             </td>
           </tr>

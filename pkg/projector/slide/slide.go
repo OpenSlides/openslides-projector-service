@@ -116,6 +116,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 		projectionType, contentObjectID := getProjectionType(&projection)
 
 		defer func() {
+			/*
 			if r := recover(); r != nil {
 				var ok bool
 				err, ok := r.(error)
@@ -125,6 +126,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 
 				onError(err, fmt.Sprintf("panic in slide handler: %s (%d)", projectionType, id))
 			}
+			*/
 		}()
 
 		if handler, ok := r.Routes[projectionType]; ok {

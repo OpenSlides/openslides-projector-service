@@ -27,10 +27,12 @@ func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) dec
 	switch poll.OnehundredPercentBase {
 	case "Y":
 		total := poll.Votesvalid
-		if globalOption, isSet := poll.GlobalOption.Value(); isSet {
-			abstain := globalOption.Abstain
-			no := globalOption.No
-			total = total.Sub(no).Sub(abstain)
+		if poll.GlobalOption != nil {
+			if globalOption, isSet := poll.GlobalOption.Value(); isSet {
+				abstain := globalOption.Abstain
+				no := globalOption.No
+				total = total.Sub(no).Sub(abstain)
+			}
 		}
 		return total
 	case "YN":
