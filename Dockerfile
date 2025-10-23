@@ -1,4 +1,4 @@
-FROM golang:1.25.1-alpine as base
+FROM golang:1.25.1-alpine AS base
 WORKDIR /root/openslides-projector-service
 
 RUN apk add git curl make
@@ -16,17 +16,17 @@ RUN mkdir static
 
 
 # Build service in seperate stage.
-FROM base as builder
+FROM base AS builder
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
-FROM node:22.13 as builder-web
+FROM node:22.13 AS builder-web
 COPY web web
 COPY Makefile Makefile
 RUN make build-web-assets
 
 
 # Test build.
-FROM base as testing
+FROM base AS testing
 
 RUN apk add build-base
 
@@ -34,7 +34,7 @@ CMD go vet ./... && go test -test.short ./...
 
 
 # Development build.
-FROM base as development
+FROM base AS development
 WORKDIR /root/openslides-projector-service
 
 RUN apk add nodejs npm
