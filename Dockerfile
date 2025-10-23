@@ -67,7 +67,7 @@ CMD ["make", "build-live-all"]
 
 
 # Productive build
-FROM alpine:3 as prod
+FROM alpine:3 AS prod
 
 ## Setup
 ARG CONTEXT
