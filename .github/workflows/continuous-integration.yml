@@ -1,13 +1,8 @@
-name: main
+name: CI - Build and Test Service
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-
+on: [pull_request]
 jobs:
-  main-go:
+  continuous-tests-go:
     name: Test go
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +32,7 @@ jobs:
         with:
           test-results: test.json
 
-  main-frontend:
+  continuous-tests-frontend:
     name: Test web
     runs-on: ubuntu-latest
     steps:
