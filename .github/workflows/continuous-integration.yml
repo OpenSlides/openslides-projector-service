@@ -1,6 +1,10 @@
 name: CI - Build and Test Service
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 jobs:
   continuous-tests-go:
     name: Test go

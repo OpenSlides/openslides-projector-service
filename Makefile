@@ -29,7 +29,7 @@ build-watch-web-assets: | install-web-asset-deps
 
 # Tests
 run-tests: | build-tests
-	docker run openslides-projector-test
+	docker run openslides-projector-tests
 
 lint: gofmt gotest golinter
 
