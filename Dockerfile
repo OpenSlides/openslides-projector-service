@@ -1,7 +1,17 @@
-FROM golang:1.25.1-alpine as base
-WORKDIR /root/openslides-projector-service
+ARG CONTEXT=prod
 
-RUN apk add git curl make
+FROM golang:1.25.1-alpine AS base
+
+## Setup
+ARG CONTEXT
+WORKDIR /root/openslides-projector-service
+ENV APP_CONTEXT=${CONTEXT}
+
+## Install
+RUN apk add --no-cache \
+    curl \
+    git \
+    make
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -16,28 +26,34 @@ RUN mkdir static
 
 
 # Build service in seperate stage.
-FROM base as builder
+FROM base AS builder
+
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
-FROM node:22.13 as builder-web
-COPY web web
-COPY Makefile Makefile
+
+FROM node:22.13 AS builder-web
+
+COPY web /web
+COPY Makefile /Makefile
 RUN make build-web-assets
 
 
 # Test build.
-FROM base as testing
+FROM base AS tests
 
-RUN apk add build-base
+RUN apk add --no-cache \
+    build-base
 
 CMD go vet ./... && go test -test.short ./...
 
 
 # Development build.
-FROM base as development
+FROM base AS dev
 WORKDIR /root/openslides-projector-service
 
-RUN apk add nodejs npm
+RUN apk add --no-cache \
+    nodejs \
+    npm
 
 COPY --from=builder-web /static ./static
 COPY web web
@@ -47,18 +63,22 @@ COPY Makefile Makefile
 RUN ["go", "install", "github.com/githubnemo/CompileDaemon@v1.4.0"]
 EXPOSE 9051
 
-CMD make build-live-all
+CMD ["make", "build-live-all"]
 
 
 # Productive build
-FROM alpine:3
+FROM alpine:3 AS prod
+
+## Setup
+ARG CONTEXT
+ENV APP_CONTEXT=prod
 
 LABEL org.opencontainers.image.title="OpenSlides Projector Service"
 LABEL org.opencontainers.image.description="The Projector Service is a http endpoint that serves projectors in Openslides."
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
-COPY --from=builder /root/openslides-projector-service/openslides-projector-service .
-COPY --from=builder-web /root/openslides-projector-service/static ./static
+COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
+COPY --from=builder-web /root/openslides-projector-service/static /static
 EXPOSE 9051
 ENTRYPOINT ["/openslides-projector-service"]
