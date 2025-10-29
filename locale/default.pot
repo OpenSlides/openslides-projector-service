@@ -1,0 +1,188 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"X-Generator: xgotext\n"
+
+#: projector/slide/poll_chart.go:83
+#: templates/slides/poll.html
+#: templates/slides/poll_single_vote.html
+msgid "Abstain"
+msgstr ""
+
+#: templates/slides/agenda_item_list.html
+msgid "Agenda"
+msgstr ""
+
+#: projector/slide/motion.go:333
+msgid "Amendment"
+msgstr ""
+
+#: templates/slides/assignment.html
+msgid "Candidates"
+msgstr ""
+
+#: templates/slides/motion.html
+#: templates/slides/motion.html
+#: templates/slides/motion.html
+#: templates/slides/motion.html
+msgid "Change recommendation"
+msgstr ""
+
+#: templates/slides/motion.html
+msgid "Changed title"
+msgstr ""
+
+#: viewmodels/option.go:45
+msgid "Confirmation of the nomination list"
+msgstr ""
+
+#: projector/slide/poll.go:62
+msgid "Counting of votes is in progress ..."
+msgstr ""
+
+#: templates/slides/agenda_item_list.html
+#: templates/slides/assignment.html
+msgid "Election"
+msgstr ""
+
+#: projector/slide/poll.go:195
+msgid "Entitled present users"
+msgstr ""
+
+#: projector/slide/poll.go:189
+#: templates/slides/poll_single_vote.html
+msgid "Entitled users"
+msgstr ""
+
+#: projector/slide/poll.go:154
+msgid "General abstain"
+msgstr ""
+
+#: projector/slide/poll.go:140
+msgid "General approval"
+msgstr ""
+
+#: projector/slide/poll.go:147
+msgid "General rejection"
+msgstr ""
+
+#: templates/slides/current_speaking_structure_level.html
+#: templates/slides/current_structure_level_list.html
+msgid "Intervention"
+msgstr ""
+
+#: projector/slide/poll.go:167
+msgid "Invalid votes"
+msgstr ""
+
+#: templates/slides/list_of_speakers.html
+#: templates/slides/list_of_speakers.html
+msgid "List of speakers"
+msgstr ""
+
+#: templates/slides/agenda_item_list.html
+msgid "Motion"
+msgstr ""
+
+#: templates/slides/agenda_item_list.html
+#: templates/slides/motion_block.html
+msgid "Motion block"
+msgstr ""
+
+#: projector/slide/poll_chart.go:71
+#: templates/slides/poll.html
+#: templates/slides/poll_single_vote.html
+msgid "No"
+msgstr ""
+
+#: templates/slides/motion.html
+msgid "No changes at the text."
+msgstr ""
+
+#: projector/slide/poll.go:60
+msgid "No results yet"
+msgstr ""
+
+#: templates/slides/wifi_access_data.html
+msgid "Password"
+msgstr ""
+
+#: templates/slides/poll_single_vote.html
+msgid "Please vote now!"
+msgstr ""
+
+#: templates/slides/motion.html
+msgid "Reason"
+msgstr ""
+
+#: templates/slides/poll_single_vote.html
+msgid "Received votes"
+msgstr ""
+
+#: templates/slides/motion.html
+#: templates/slides/motion.html
+msgid "Referring motions"
+msgstr ""
+
+#: templates/slides/list_of_speakers.html
+msgid "Speakers"
+msgstr ""
+
+#: templates/slides/current_structure_level_list.html
+msgid "Speaking times"
+msgstr ""
+
+#: templates/slides/motion.html
+#: templates/slides/motion.html
+msgid "Submitters"
+msgstr ""
+
+#: projector/slide/poll.go:174
+msgid "Total votes cast"
+msgstr ""
+
+#: projector/slide/assignment.go:27
+#: templates/slides/list_of_speakers.html
+msgid "Unknown user"
+msgstr ""
+
+#: projector/slide/poll.go:161
+#: templates/slides/poll_chart.html
+#: templates/slides/poll_single_vote.html
+msgid "Valid votes"
+msgstr ""
+
+#: templates/slides/poll.html
+msgid "Votes"
+msgstr ""
+
+#: projector/slide/poll.go:66
+msgid "Voting in progress"
+msgstr ""
+
+#: templates/slides/wifi_access_data.html
+msgid "Wifi access data"
+msgstr ""
+
+#: templates/slides/wifi_access_data.html
+msgid "Wifi name"
+msgstr ""
+
+#: projector/slide/poll_chart.go:59
+#: templates/slides/poll.html
+#: templates/slides/poll_single_vote.html
+msgid "Yes"
+msgstr ""
+
+#: templates/slides/motion_block.html
+msgid "motions"
+msgstr ""
+
+#: templates/slides/motion.html
+#: templates/slides/motion.html
+msgid "rejected"
+msgstr ""
