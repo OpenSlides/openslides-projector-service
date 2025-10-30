@@ -306,7 +306,8 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 		p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 			projectionIDs, err := f.Projector_CurrentProjectionIDs(p.projector.ID).Value(ctx)
 			if err != nil {
-				log.Error().Err(err).Msg("failed to subscibe projection ids")
+				log.Error().Err(err).Msg("failed to subscribe projection ids")
+				return
 			}
 
 			updated := []int{}
