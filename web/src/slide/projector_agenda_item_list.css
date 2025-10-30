@@ -1,11 +1,11 @@
 .agenda-item-list-content {
   ul {
     list-style: none;
-    font-size: 20px;
+    font-size: 0.9em;
   }
 
   & > ul {
-    font-size: 24px;
+    font-size: 1.1em;
     padding-left: 0;
   }
 }

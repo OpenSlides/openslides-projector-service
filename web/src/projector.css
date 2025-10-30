@@ -145,10 +145,10 @@ h3 {
 }
 
 .slidetitle {
-  margin-top: -20px;
+  margin-top: -0.8em;
   border-bottom: 2px solid #d3d3d3;
-  padding-bottom: 10px;
-  padding-top: 20px;
+  padding-bottom: 0.4em;
+  padding-top: 0.8em;
   position: relative;
   z-index: 9;
   background-color: var(--projector-background-color);
@@ -161,10 +161,15 @@ h3 {
 
 .slidetitle h2 {
   color: #9a9898;
-  margin-top: 10px;
-  margin-bottom: -10px;
-  font-size: 28px;
+  margin-top: 0.4em;
+  margin-bottom: -0.4em;
+  font-size: 1.3em;
   font-weight: normal;
+  line-height: 1.45;
+}
+
+.font-scale {
+  font-size: calc(100% + calc(var(--projector-scale) * 10%));
 }
 
 #projector-page {
