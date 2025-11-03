@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -116,17 +117,15 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 		projectionType, contentObjectID := getProjectionType(&projection)
 
 		defer func() {
-			/*
-				if r := recover(); r != nil {
-					var ok bool
-					err, ok := r.(error)
-					if !ok {
-						err = fmt.Errorf("pkg: %v", r)
-					}
-
-					onError(err, fmt.Sprintf("panic in slide handler: %s (%d)", projectionType, id))
+			if r := recover(); r != nil {
+				var ok bool
+				err, ok := r.(error)
+				if !ok {
+					err = fmt.Errorf("pkg: %v", r)
 				}
-			*/
+
+				onError(err, fmt.Sprintf("panic in slide handler: %s (%d)\n%s", projectionType, id, string(debug.Stack())))
+			}
 		}()
 
 		if handler, ok := r.Routes[projectionType]; ok {
