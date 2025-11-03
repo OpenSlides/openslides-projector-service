@@ -13,7 +13,7 @@ import (
 type ProjectorPool struct {
 	ctx        context.Context
 	mu         sync.Mutex
-	projectors map[int]*projector
+	projectors map[string]*projector
 	db         *database.Datastore
 	ds         flow.Flow
 }
@@ -23,18 +23,19 @@ func NewProjectorPool(ctx context.Context, db *database.Datastore, ds flow.Flow)
 		ctx:        ctx,
 		db:         db,
 		ds:         ds,
-		projectors: make(map[int]*projector),
+		projectors: make(map[string]*projector),
 	}
 }
 
 func (pool *ProjectorPool) readOrCreateProjector(id int, lang language.Tag) (*projector, error) {
-	if projector, ok := pool.projectors[id]; ok {
+	projectorId := fmt.Sprintf("%d_%s", id, lang)
+	if projector, ok := pool.projectors[projectorId]; ok {
 		return projector, nil
 	}
 
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
-	if projector, ok := pool.projectors[id]; ok {
+	if projector, ok := pool.projectors[projectorId]; ok {
 		return projector, nil
 	}
 
@@ -43,7 +44,7 @@ func (pool *ProjectorPool) readOrCreateProjector(id int, lang language.Tag) (*pr
 		return nil, fmt.Errorf("error creating new projector: %w", err)
 	}
 
-	pool.projectors[id] = projector
+	pool.projectors[projectorId] = projector
 	return projector, nil
 }
 
