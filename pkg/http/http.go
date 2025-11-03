@@ -86,10 +86,13 @@ func getRequestLanguage(r *http.Request) language.Tag {
 	lang, _ := r.Cookie("lang")
 	accept := r.Header.Get("Accept-Language")
 	tag, _ := language.MatchStrings(languageMatcher, lang.String(), accept)
-	log.Info().Msg("----------------")
-	log.Info().Msg(fmt.Sprint(lang))
-	log.Info().Msg(accept)
-	log.Info().Msg(fmt.Sprint(tag))
+
+	// Overwrite if lang has been provided via query parameter
+	langVar := r.URL.Query().Get("lang")
+
+	if langVar != "" {
+		tag, _ = language.MatchStrings(languageMatcher, langVar, accept)
+	}
 
 	return tag
 }
