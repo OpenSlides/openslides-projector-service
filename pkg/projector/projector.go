@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"runtime/debug"
 	"slices"
 	"strconv"
 	"time"
@@ -117,6 +118,18 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 
 func (p *projector) subscribeProjector(ctx context.Context) {
 	defer p.ctxCancel()
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok := r.(error)
+			if !ok {
+				err = fmt.Errorf("pkg: %v", r)
+			}
+
+			log.Err(err).Msgf("panic on projector: %d\n%s", p.projector.ID, string(debug.Stack()))
+		}
+	}()
+
 	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		f.Projector_Name(p.projector.ID).Lazy(&p.pSettings.Name)
 		f.Projector_IsInternal(p.projector.ID).Lazy(&p.pSettings.IsInternal)
