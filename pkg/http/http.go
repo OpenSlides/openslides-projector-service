@@ -67,8 +67,8 @@ func writeResponse(w http.ResponseWriter, resp string) {
 
 func (s *projectorHttp) registerRoutes(cfg ProjectorConfig) {
 	s.serverMux.HandleFunc("/system/projector/health", s.HealthHandler())
-	s.serverMux.Handle("/system/projector/get/{id}", (http.HandlerFunc(s.ProjectorGetHandler())))
-	s.serverMux.Handle("/system/projector/subscribe/{id}", (http.HandlerFunc(s.ProjectorSubscribeHandler())))
+	s.serverMux.Handle("/system/projector/get/{id}", authMiddleware(http.HandlerFunc(s.ProjectorGetHandler()), s.auth, cfg))
+	s.serverMux.Handle("/system/projector/subscribe/{id}", authMiddleware(http.HandlerFunc(s.ProjectorSubscribeHandler()), s.auth, cfg))
 }
 
 var languageMatcher = language.NewMatcher([]language.Tag{
