@@ -172,6 +172,13 @@ h3 {
   font-size: calc(100% + calc(var(--projector-scale) * 10%));
 }
 
+.transform-scale {
+  transform-origin: 0px 0px 0px;
+  --actual-scale: pow(1.05, var(--projector-scale));
+  transform: scale(var(--actual-scale));
+  width: calc(100% / var(--actual-scale));
+}
+
 #projector-page {
   width: 100vw;
   height: 100vh;

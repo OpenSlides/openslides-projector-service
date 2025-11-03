@@ -106,6 +106,7 @@
   left: calc(-184px * var(--projector-scroll));
   margin-top: 10px;
   column-width: 170px;
+  column-fill: auto;
   gap: 4px 6px;
   height: 0;
 
