@@ -79,6 +79,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
 COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
+COPY --from=builder /root/openslides-projector-service/templates /templates
 COPY --from=builder-web /static /static
 EXPOSE 9051
 ENTRYPOINT ["/openslides-projector-service"]
