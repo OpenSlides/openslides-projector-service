@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 
 	"github.com/leonelquinteros/gotext"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
@@ -96,11 +98,12 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 
 func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateChannel chan<- *projectionUpdate) {
 	onError := func(err error, msg string) {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		log.Error().Err(err).Msg(msg)
 
 		updateChannel <- &projectionUpdate{
 			ID:      id,
-			Content: "",
+			Content: "Error",
 		}
 	}
 
