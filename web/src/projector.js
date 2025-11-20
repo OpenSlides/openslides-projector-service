@@ -42,6 +42,7 @@ export function Projector(host, id, auth = () => ``) {
         ...init,
         headers: {
           ...init.headers,
+          'ngsw-bypass': true,
           Authentication: auth()
         }
       });
