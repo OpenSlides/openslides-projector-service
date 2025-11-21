@@ -92,27 +92,27 @@ export function Projector(host, id, auth = () => ``) {
   eventSource.addEventListener(`projector-replace`, e => {
     const html = JSON.parse(e.data);
     container.innerHTML = html;
-    
+
     const projectorContainer = container.querySelector('#projector-container');
     if (projectorContainer && !container.querySelector('.countdown-container')) {
       const countdownContainer = document.createElement('div');
       countdownContainer.className = 'countdown-container';
       projectorContainer.appendChild(countdownContainer);
     }
-    
+
     sizeListener.update();
     clock.update();
   });
 
   eventSource.addEventListener(`projection-updated`, e => {
     const data = JSON.parse(e.data);
-    
+
     for (let id of Object.keys(data)) {
       const isOverlayCountdown = data[id].includes('class="countdown overlay"');
-      
+
       if (isOverlayCountdown) {
         let el = container.querySelector(`.countdown-container [data-projection-id="${id}"]`);
-        
+
         if (!el) {
           container.querySelector(`.countdown-container`).insertAdjacentHTML('beforeend', data[id]);
         } else {
