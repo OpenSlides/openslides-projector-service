@@ -111,7 +111,7 @@ export function Projector(host, id, auth = () => ``) {
       const isOverlayCountdown = data[id].includes('class="countdown overlay"');
 
       if (isOverlayCountdown) {
-        let el = container.querySelector(`.countdown-container [data-projection-id="${id}"]`);
+        let el = container.querySelector(`.countdown-container [data-id="${id}"]`);
 
         if (!el) {
           container.querySelector(`.countdown-container`).insertAdjacentHTML('beforeend', data[id]);
@@ -134,7 +134,7 @@ export function Projector(host, id, auth = () => ``) {
     console.debug(`projection-deleted`, e.data);
 
     container.querySelector(`.slide[data-id="${e.data}"]`)?.remove();
-    container.querySelector(`.countdown-container [data-projection-id="${e.data}"]`)?.remove();
+    container.querySelector(`.countdown-container [data-id="${e.data}"]`)?.remove();
   });
 
   window.addEventListener(`unload`, () => {
