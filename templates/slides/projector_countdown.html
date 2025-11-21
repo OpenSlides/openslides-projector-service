@@ -1,6 +1,5 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_countdown.css" />
-
-<div class="countdown {{ if .Options.Fullscreen }}fullscreen{{ else }}overlay{{ end }}">
+<div class="countdown {{ if .Options.Fullscreen }}fullscreen{{ else }}overlay{{ end }}" data-projection-id="{{ .ProjectionID }}">
   <projector-countdown
     id="countdown-{{ .Countdown.ID }}"
     countdown-time="{{ printf "%.0f" .Countdown.CountdownTime }}"

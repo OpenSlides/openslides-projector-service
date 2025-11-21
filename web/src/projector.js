@@ -90,22 +90,43 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   eventSource.addEventListener(`projector-replace`, e => {
-    container.innerHTML = JSON.parse(e.data);
+    const html = JSON.parse(e.data);
+    container.innerHTML = html;
+    
+    const projectorContainer = container.querySelector('#projector-container');
+    if (projectorContainer && !container.querySelector('.countdown-container')) {
+      const countdownContainer = document.createElement('div');
+      countdownContainer.className = 'countdown-container';
+      projectorContainer.appendChild(countdownContainer);
+    }
+    
     sizeListener.update();
     clock.update();
   });
 
   eventSource.addEventListener(`projection-updated`, e => {
     const data = JSON.parse(e.data);
+    
     for (let id of Object.keys(data)) {
-      let el = container.querySelector(`.slide[data-id="${id}"]`);
-      if (!el) {
-        el = container.querySelector(`#slides`).appendChild(document.createElement(`div`));
-        el.classList.add(`slide`);
-        el.dataset.id = id;
+      const isOverlayCountdown = data[id].includes('class="countdown overlay"');
+      
+      if (isOverlayCountdown) {
+        let el = container.querySelector(`.countdown-container [data-projection-id="${id}"]`);
+        
+        if (!el) {
+          container.querySelector(`.countdown-container`).insertAdjacentHTML('beforeend', data[id]);
+        } else {
+          el.outerHTML = data[id];
+        }
+      } else {
+        let el = container.querySelector(`.slide[data-id="${id}"]`);
+        if (!el) {
+          el = container.querySelector(`#slides`).appendChild(document.createElement(`div`));
+          el.classList.add(`slide`);
+          el.dataset.id = id;
+        }
+        el.innerHTML = data[id];
       }
-
-      el.innerHTML = data[id];
     }
   });
 
@@ -113,6 +134,7 @@ export function Projector(host, id, auth = () => ``) {
     console.debug(`projection-deleted`, e.data);
 
     container.querySelector(`.slide[data-id="${e.data}"]`)?.remove();
+    container.querySelector(`.countdown-container [data-projection-id="${e.data}"]`)?.remove();
   });
 
   window.addEventListener(`unload`, () => {

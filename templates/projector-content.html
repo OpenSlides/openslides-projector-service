@@ -53,9 +53,7 @@
     {{end}}
 }
 </style>
-
 <link rel="stylesheet" type="text/css" href="/system/projector/static/projector.css" />
-
 <div id="projector-container" class="nocursor">
   <div id="projector">
     {{ if .Projector.ShowHeaderFooter }}
@@ -71,7 +69,6 @@
             <img id="projector-logo-main" src="/system/media/get/{{ .Projector.MeetingLogo }}" aria-hidden />
           {{ end }}
         {{ end }}
-
         {{ if .Projector.ShowTitle }}
           <div id="eventdata">
             <div class="event-name ellipsis-overflow">{{ .Projector.MeetingName }}</div>
@@ -80,7 +77,6 @@
             {{ end }}
           </div>
         {{ end }}
-
         {{ if .Projector.ShowClock }}
           <div id="clock">
             <span id="clock-time"></span>
@@ -88,16 +84,25 @@
         {{ end }}
       </div>
     {{ end }}
-
-
     <div id="slides">
+      <div class="countdown-container">
+        {{ range $index, $element := .Projections }}
+          {{ $elemStr := printf "%s" $element }}
+          {{ if contains $elemStr `class="countdown overlay"` }}
+            {{ $element }}
+          {{ end }}
+        {{ end }}
+      </div>
+      
       {{ range $index, $element := .Projections }}
-        <div class="slide" data-id="{{ $index }}">
-          {{ $element }}
-        </div>
+        {{ $elemStr := printf "%s" $element }}
+        {{ if not (contains $elemStr `class="countdown overlay"`) }}
+          <div class="slide" data-id="{{ $index }}">
+            {{ $element }}
+          </div>
+        {{ end }}
       {{ end }}
     </div>
-
     {{ if .Projector.ShowHeaderFooter }}
       <div
         id="footer"
