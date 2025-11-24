@@ -47,3 +47,6 @@ gogenertate:
 
 nodelinter: | install-web-asset-deps
 	cd web && npm run lint
+
+nodelinter-fix: | install-web-asset-deps
+	cd web && npm run lint-fix
