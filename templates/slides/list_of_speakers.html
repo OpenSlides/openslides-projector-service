@@ -53,9 +53,11 @@
         {{ if .ContentTitle.Title }}
           {{ .ContentTitle.Title }}
         {{ end }}
-        &ndash;
-        {{ len .Speakers.WaitingSpeakers }}
-        {{ Loc.Get "Speakers" }}
+        {{ if .Speakers.WaitingSpeakers }}
+          &ndash;
+          {{ len .Speakers.WaitingSpeakers }}
+          {{ Loc.Get "Speakers" }}
+        {{ end }}
       </h2>
     </div>
   {{ end }}
