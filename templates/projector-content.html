@@ -85,22 +85,12 @@
       </div>
     {{ end }}
     <div id="slides">
-      <div class="countdown-container">
-        {{ range $index, $element := .Projections }}
-          {{ $elemStr := printf "%s" $element }}
-          {{ if contains $elemStr `class="countdown overlay"` }}
-            {{ $element }}
-          {{ end }}
-        {{ end }}
-      </div>
+      <div class="countdown-container"></div>
 
       {{ range $index, $element := .Projections }}
-        {{ $elemStr := printf "%s" $element }}
-        {{ if not (contains $elemStr `class="countdown overlay"`) }}
-          <div class="slide" data-id="{{ $index }}">
-            {{ $element }}
-          </div>
-        {{ end }}
+        <div class="slide" data-id="{{ $index }}">
+          {{ $element }}
+        </div>
       {{ end }}
     </div>
     {{ if .Projector.ShowHeaderFooter }}

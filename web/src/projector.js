@@ -1,6 +1,7 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
+import { createOverlayOrganizer } from './projector/overlay.js';
 import { OsIconContainer } from './components/icon-container.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
@@ -28,6 +29,7 @@ export function Projector(host, id, auth = () => ``) {
   const container = host.attachShadow({ mode: `open` });
   const sizeListener = setPageWidthVar(container);
   const clock = createProjectorClock(container);
+  const overlayOrganizer = createOverlayOrganizer(container);
   let subscriptionUrl = `/system/projector/subscribe/${id}`;
   let needsInit = !container.childNodes.length;
 
@@ -93,41 +95,27 @@ export function Projector(host, id, auth = () => ``) {
     const html = JSON.parse(e.data);
     container.innerHTML = html;
 
-    const projectorContainer = container.querySelector('#projector-container');
-    if (projectorContainer && !container.querySelector('.countdown-container')) {
-      const countdownContainer = document.createElement('div');
-      countdownContainer.className = 'countdown-container';
-      projectorContainer.appendChild(countdownContainer);
-    }
-
     sizeListener.update();
     clock.update();
+    overlayOrganizer.update();
   });
 
   eventSource.addEventListener(`projection-updated`, e => {
     const data = JSON.parse(e.data);
 
     for (let id of Object.keys(data)) {
-      const isOverlayCountdown = data[id].includes('class="countdown overlay"');
+      let el = container.querySelector(`[data-id="${id}"]`);
 
-      if (isOverlayCountdown) {
-        let el = container.querySelector(`.countdown-container [data-id="${id}"]`);
-
-        if (!el) {
-          container.querySelector(`.countdown-container`).insertAdjacentHTML('beforeend', data[id]);
-        } else {
-          el.outerHTML = data[id];
-        }
-      } else {
-        let el = container.querySelector(`.slide[data-id="${id}"]`);
-        if (!el) {
-          el = container.querySelector(`#slides`).appendChild(document.createElement(`div`));
-          el.classList.add(`slide`);
-          el.dataset.id = id;
-        }
-        el.innerHTML = data[id];
+      if (!el) {
+        el = container.querySelector(`#slides`).appendChild(document.createElement(`div`));
+        el.classList.add(`slide`);
+        el.dataset.id = id;
       }
+
+      el.innerHTML = data[id];
     }
+
+    overlayOrganizer.update();
   });
 
   eventSource.addEventListener(`projection-deleted`, e => {

@@ -47,8 +47,10 @@ export class ProjectorCountdown extends HTMLElement {
     this.showCountdown = displayType === `onlyCountdown` || displayType === `countdownAndTimeIndicator`;
 
     this.classList.add(`countdown-time-wrapper`);
+    this.countdownEl = this.querySelector('#countdown');
+    const existingTimeIndicator = this.querySelector('#timeIndicator');
 
-    if (this.showTimeIndicator) {
+    if (this.showTimeIndicator && !existingTimeIndicator) {
       const timeIndicator = document.createElement(`div`);
       timeIndicator.id = `timeIndicator`;
 
@@ -58,7 +60,7 @@ export class ProjectorCountdown extends HTMLElement {
       this.appendChild(timeIndicatorWrapper);
     }
 
-    if (this.showCountdown) {
+    if (this.showCountdown && !this.countdownEl) {
       this.countdownEl = document.createElement(`div`);
       this.countdownEl.id = `countdown`;
 
@@ -69,6 +71,7 @@ export class ProjectorCountdown extends HTMLElement {
     }
 
     this.updateComponent();
+
     if (this.running) {
       this.updateCallback = setInterval(() => {
         this.updateComponent();
