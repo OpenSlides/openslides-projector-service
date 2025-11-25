@@ -15,8 +15,8 @@ func ProjectorCountdownSlideHandler(ctx context.Context, req *projectionRequest)
 	if req.ContentObjectID == nil {
 		return nil, fmt.Errorf("no topic id provided for slide")
 	}
-	countdown, err := req.Fetch.ProjectorCountdown(*req.ContentObjectID).First(ctx)
 
+	countdown, err := req.Fetch.ProjectorCountdown(*req.ContentObjectID).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load projector message %w", err)
 	}
