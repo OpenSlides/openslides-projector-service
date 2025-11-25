@@ -9,7 +9,6 @@ import (
 	"html/template"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
@@ -273,11 +272,7 @@ func (p *projector) sendToAll(event *ProjectorUpdateEvent) {
 }
 
 func (p *projector) updateFullContent() error {
-	tmpl, err := template.New("projector-content.html").Funcs(template.FuncMap{
-		"contains": func(s, substr string) bool {
-			return strings.Contains(s, substr)
-		},
-	}).ParseFiles("templates/projector-content.html")
+	tmpl, err := template.ParseFiles("templates/projector-content.html")
 	if err != nil {
 		return fmt.Errorf("error reading projector template %w", err)
 	}

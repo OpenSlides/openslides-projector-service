@@ -16,9 +16,11 @@ func ProjectorCountdownSlideHandler(ctx context.Context, req *projectionRequest)
 		return nil, fmt.Errorf("no topic id provided for slide")
 	}
 	countdown, err := req.Fetch.ProjectorCountdown(*req.ContentObjectID).First(ctx)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not load projector message %w", err)
 	}
+
 	options := projectorCountdownOptions{
 		Fullscreen:  false,
 		DisplayType: "",
@@ -28,14 +30,15 @@ func ProjectorCountdownSlideHandler(ctx context.Context, req *projectionRequest)
 			return nil, fmt.Errorf("could not parse slide options: %w", err)
 		}
 	}
+
 	warningTime, err := req.Fetch.Meeting_ProjectorCountdownWarningTime(countdown.MeetingID).Value(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load projector countdown warning time %w", err)
 	}
+
 	return map[string]any{
-		"Countdown":    countdown,
-		"Options":      options,
-		"WarningTime":  warningTime,
-		"ProjectionID": req.Projection.ID,
+		"Countdown":   countdown,
+		"Options":     options,
+		"WarningTime": warningTime,
 	}, nil
 }
