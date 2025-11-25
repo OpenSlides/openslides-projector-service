@@ -30,7 +30,7 @@
 {{ end }}
 
 
-<div class="content {{ if .Overlay }}overlay{{ end }} list-of-speakers">
+<div class="content {{ if .Overlay }}overlay{{ end }} list-of-speakers font-scale">
   {{ if .Overlay }}
     <h3>
       {{ Loc.Get "List of speakers" }}
@@ -53,9 +53,11 @@
         {{ if .ContentTitle.Title }}
           {{ .ContentTitle.Title }}
         {{ end }}
-        &ndash;
-        {{ len .Speakers.WaitingSpeakers }}
-        {{ Loc.Get "Speakers" }}
+        {{ if .Speakers.WaitingSpeakers }}
+          &ndash;
+          {{ len .Speakers.WaitingSpeakers }}
+          {{ Loc.Get "Speakers" }}
+        {{ end }}
       </h2>
     </div>
   {{ end }}

@@ -1,6 +1,6 @@
 ARG CONTEXT=prod
 
-FROM golang:1.25.3-alpine AS base
+FROM golang:1.25.4-alpine AS base
 
 ## Setup
 ARG CONTEXT
@@ -79,6 +79,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
 COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
-COPY --from=builder-web /root/openslides-projector-service/static /static
+COPY --from=builder /root/openslides-projector-service/templates /templates
+COPY --from=builder-web /static /static
 EXPOSE 9051
 ENTRYPOINT ["/openslides-projector-service"]

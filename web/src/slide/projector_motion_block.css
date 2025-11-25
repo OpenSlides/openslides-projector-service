@@ -18,7 +18,7 @@
       line-height: 1;
       .label {
         display: inline-block;
-        font-size: 12px;
+        font-size: 0.5em;
         font-weight: bold;
         border-radius: 5px !important;
         padding: 0px 8px !important;
@@ -29,7 +29,7 @@
       }
     }
     .motion-title {
-      font-size: 14px;
+      font-size: 0.6em;
     }
   }
 

@@ -74,12 +74,25 @@ func (s *projectorHttp) registerRoutes(cfg ProjectorConfig) {
 var languageMatcher = language.NewMatcher([]language.Tag{
 	language.English,
 	language.German,
+	language.Spanish,
+	language.Italian,
+	language.Dutch,
+	language.Czech,
+	language.French,
+	language.Russian,
 })
 
 func getRequestLanguage(r *http.Request) language.Tag {
 	lang, _ := r.Cookie("lang")
 	accept := r.Header.Get("Accept-Language")
 	tag, _ := language.MatchStrings(languageMatcher, lang.String(), accept)
+
+	// Overwrite if lang has been provided via query parameter
+	langVar := r.URL.Query().Get("lang")
+
+	if langVar != "" {
+		tag, _ = language.MatchStrings(languageMatcher, langVar, accept)
+	}
 
 	return tag
 }

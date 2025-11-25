@@ -27,6 +27,9 @@ build-web-assets: | install-web-asset-deps
 build-watch-web-assets: | install-web-asset-deps
 	cd web && npm run build-watch
 
+extract-translations:
+	go run cmd/i18n-extract/main.go
+
 # Tests
 run-tests: | build-tests
 	docker run openslides-projector-tests
@@ -47,3 +50,6 @@ gogenertate:
 
 nodelinter: | install-web-asset-deps
 	cd web && npm run lint
+
+nodelinter-fix: | install-web-asset-deps
+	cd web && npm run lint-fix
