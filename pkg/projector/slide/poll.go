@@ -56,7 +56,9 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return nil, fmt.Errorf("could not load poll base info %w", err)
 	}
 
-	if pollState != "published" && (pollState != "started" && pollLiveVotingEnabled) {
+	showResults := pollState == "published" || ((pollState == "created" || pollState == "started") && pollLiveVotingEnabled)
+
+	if !showResults {
 		state := req.Locale.Get("No results yet")
 		if pollState == "finished" {
 			state = req.Locale.Get("Counting of votes is in progress ...")
@@ -66,6 +68,14 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			state = req.Locale.Get("Voting in progress")
 		}
 
+		if options.SingleVotes {
+			return map[string]any{
+				"_template": "poll_single_vote",
+				"Title":     pollTitle,
+				"State":     state,
+			}, nil
+		}
+
 		return map[string]any{
 			"Title": pollTitle,
 			"State": state,
@@ -73,7 +83,15 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	}
 
 	if options.SingleVotes {
-		return pollSingleVotesSlideHandler(ctx, req)
+		var isAnonymized bool
+		req.Fetch.Poll_IsPseudoanonymized(pollID).Lazy(&isAnonymized)
+		if err := req.Fetch.Execute(ctx); err != nil {
+			return nil, fmt.Errorf("could not check if poll is anonymized: %w", err)
+		}
+
+		if !isAnonymized {
+			return pollSingleVotesSlideHandler(ctx, req)
+		}
 	}
 
 	poll, err := req.Fetch.Poll(pollID).First(ctx)

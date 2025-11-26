@@ -1,9 +1,8 @@
 .poll-single-vote {
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 
   > .content-wrapper {
-    flex-grow: 1;
+    overflow: visible;
   }
 }
 
@@ -24,6 +23,11 @@
     font-size: 14px !important;
     line-height: 14px !important;
   }
+}
+
+.state-message {
+  margin-top: 20px;
+  font-size: 18px;
 }
 
 .poll-bar-wrapper {
@@ -103,12 +107,16 @@
 
 .votes-area {
   position: relative;
-  left: calc(-184px * var(--projector-scroll));
+  transform: translateX(calc(
+    -1 * var(--projector-scroll) * 
+    (var(--projector-width) * 1px / var(--visible-columns, 4))
+  ));
   margin-top: 10px;
-  column-width: 170px;
+  column-count: var(--visible-columns, 4);
+  column-gap: 6px;
   column-fill: auto;
-  gap: 4px 6px;
-  height: 0;
+  width: 100%;
+  height: calc(var(--projector-inner-height) * 1px - 250px);
 
   .vote-entry {
     display: flex;
