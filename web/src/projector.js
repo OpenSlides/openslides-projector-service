@@ -104,7 +104,9 @@ export function Projector(host, id, auth = () => ``) {
     const data = JSON.parse(e.data);
 
     for (let id of Object.keys(data)) {
-      let el = container.querySelector(`[data-id="${id}"]`);
+      let el =
+        container.querySelector(`#slides > [data-id="${id}"]`) ||
+        container.querySelector(`.overlay-container > [data-id="${id}"]`);
 
       if (!el) {
         el = container.querySelector(`#slides`).appendChild(document.createElement(`div`));
@@ -121,8 +123,8 @@ export function Projector(host, id, auth = () => ``) {
   eventSource.addEventListener(`projection-deleted`, e => {
     console.debug(`projection-deleted`, e.data);
 
-    container.querySelector(`.slide[data-id="${e.data}"]`)?.remove();
-    container.querySelector(`.countdown-container [data-id="${e.data}"]`)?.remove();
+    container.querySelector(`#slides > [data-id="${e.data}"]`)?.remove();
+    container.querySelector(`.overlay-container > [data-id="${e.data}"]`)?.remove();
   });
 
   window.addEventListener(`unload`, () => {

@@ -1,6 +1,6 @@
 export function createOverlayOrganizer(shadowDom) {
   function organizeOverlays() {
-    const container = shadowDom.querySelector('.countdown-container');
+    const container = shadowDom.querySelector('.overlay-container');
     if (!container) return;
 
     // Find all slides containing overlay elements
