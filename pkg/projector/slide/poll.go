@@ -56,7 +56,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return nil, fmt.Errorf("could not load poll base info %w", err)
 	}
 
-	if pollState != "published" && (pollState != "started" && pollLiveVotingEnabled) {
+	if pollState != "published" && (pollState == "finished" && pollLiveVotingEnabled) {
 		state := req.Locale.Get("No results yet")
 		if pollState == "finished" {
 			state = req.Locale.Get("Counting of votes is in progress ...")

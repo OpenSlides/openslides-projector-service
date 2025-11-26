@@ -2,6 +2,7 @@ package slide
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -16,9 +17,23 @@ type agendaListEntry struct {
 	ChildEntries []agendaListEntry
 }
 
+type agendaItemListSlideOptions struct {
+	OnlyMainItems bool `json:"only_main_items"`
+}
+
 func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	if req.ContentObjectID == nil {
 		return nil, fmt.Errorf("no meeting id provided for slide")
+	}
+
+	options := agendaItemListSlideOptions{
+		OnlyMainItems: false,
+	}
+
+	if len(req.Projection.Options) > 0 {
+		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
+			return nil, fmt.Errorf("could not parse slide options: %w", err)
+		}
 	}
 
 	agendaItemIds, err := req.Fetch.Meeting_AgendaItemIDs(*req.ContentObjectID).Value(ctx)
@@ -31,7 +46,7 @@ func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		return nil, fmt.Errorf("could not load agenda items %w", err)
 	}
 
-	agenda, err := recBuildAgendaList(ctx, req.Fetch, agendaItems, 0)
+	agenda, err := recBuildAgendaList(ctx, req.Fetch, agendaItems, 0, options)
 	if err != nil {
 		return nil, fmt.Errorf("could process agenda items %w", err)
 	}
@@ -41,7 +56,7 @@ func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (ma
 	}, nil
 }
 
-func recBuildAgendaList(ctx context.Context, fetch *dsmodels.Fetch, agendaItems []dsmodels.AgendaItem, currentParent int) ([]agendaListEntry, error) {
+func recBuildAgendaList(ctx context.Context, fetch *dsmodels.Fetch, agendaItems []dsmodels.AgendaItem, currentParent int, options agendaItemListSlideOptions) ([]agendaListEntry, error) {
 	agenda := []agendaListEntry{}
 	for _, agendaItem := range agendaItems {
 		parentId, _ := agendaItem.ParentID.Value()
@@ -51,9 +66,12 @@ func recBuildAgendaList(ctx context.Context, fetch *dsmodels.Fetch, agendaItems 
 				return nil, fmt.Errorf("could not get title information: %w", err)
 			}
 
-			childEntries, err := recBuildAgendaList(ctx, fetch, agendaItems, agendaItem.ID)
-			if err != nil {
-				return nil, fmt.Errorf("could not get child entries: %w", err)
+			var childEntries []agendaListEntry
+			if !options.OnlyMainItems {
+				childEntries, err = recBuildAgendaList(ctx, fetch, agendaItems, agendaItem.ID, options)
+				if err != nil {
+					return nil, fmt.Errorf("could not get child entries: %w", err)
+				}
 			}
 
 			agenda = append(agenda, agendaListEntry{
