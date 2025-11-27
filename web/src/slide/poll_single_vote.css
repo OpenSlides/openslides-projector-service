@@ -1,7 +1,10 @@
 .poll-single-vote {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 
   > .content-wrapper {
+    flex-grow: 1;
     overflow: visible;
   }
 }
@@ -107,10 +110,7 @@
 
 .votes-area {
   position: relative;
-  transform: translateX(calc(
-    -1 * var(--projector-scroll) * 
-    (var(--projector-width) * 1px / var(--visible-columns, 4))
-  ));
+  transform: translateX(calc(-1 * var(--projector-scroll) * 100px));
   margin-top: 10px;
   column-count: var(--visible-columns, 4);
   column-gap: 6px;
