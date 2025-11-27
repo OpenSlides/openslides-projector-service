@@ -53,7 +53,9 @@
     {{end}}
 }
 </style>
+
 <link rel="stylesheet" type="text/css" href="/system/projector/static/projector.css" />
+
 <div id="projector-container" class="nocursor">
   <div id="projector">
     {{ if .Projector.ShowHeaderFooter }}
@@ -69,6 +71,7 @@
             <img id="projector-logo-main" src="/system/media/get/{{ .Projector.MeetingLogo }}" aria-hidden />
           {{ end }}
         {{ end }}
+
         {{ if .Projector.ShowTitle }}
           <div id="eventdata">
             <div class="event-name ellipsis-overflow">{{ .Projector.MeetingName }}</div>
@@ -77,6 +80,7 @@
             {{ end }}
           </div>
         {{ end }}
+
         {{ if .Projector.ShowClock }}
           <div id="clock">
             <span id="clock-time"></span>
@@ -84,6 +88,8 @@
         {{ end }}
       </div>
     {{ end }}
+
+
     <div id="slides">
       <div class="overlay-container"></div>
 
@@ -93,6 +99,7 @@
         </div>
       {{ end }}
     </div>
+
     {{ if .Projector.ShowHeaderFooter }}
       <div
         id="footer"
