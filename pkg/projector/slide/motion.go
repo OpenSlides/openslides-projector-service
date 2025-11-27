@@ -235,9 +235,7 @@ func motionSubmitterList(motion *dsmodels.Motion) []string {
 		return a.Weight - b.Weight
 	})
 	for _, submitter := range motion.SubmitterList {
-		if meetingUser, ok := submitter.MeetingUser.Value(); ok {
-			submitters = append(submitters, viewmodels.MeetingUser_FullName(&meetingUser))
-		}
+		submitters = append(submitters, viewmodels.MeetingUser_FullName(submitter.MeetingUser))
 	}
 	if motion.AdditionalSubmitter != "" {
 		submitters = append(submitters, motion.AdditionalSubmitter)
