@@ -21,7 +21,7 @@ type pollSingleVotesSlideVoteEntry struct {
 
 type pollSingleVotesSlideVoteEntryGroup struct {
 	Title string
-	Votes map[int]*pollSingleVotesSlideVoteEntry
+	Votes []*pollSingleVotesSlideVoteEntry
 }
 
 func (e *pollSingleVotesSlideVoteEntryGroup) TotalYes() int {
@@ -66,7 +66,7 @@ type pollSingleVotesSlideData struct {
 	PercNo          decimal.Decimal
 	PercAbstain     decimal.Decimal
 	PercVotesvalid  decimal.Decimal
-	GroupedVotes    map[int]*pollSingleVotesSlideVoteEntryGroup
+	GroupedVotes    []*pollSingleVotesSlideVoteEntryGroup
 }
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -91,7 +91,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		nameOrderSetting = "last_name"
 	}
 
-	if maxColumns == 0 {
+	if maxColumns <= 0 {
 		maxColumns = 4
 	}
 
@@ -100,33 +100,17 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		pollOption = poll.OptionList[0]
 	}
 
-	voteMap := map[int]string{}
-	entitledUsers := []int{}
-	if poll.EntitledUsersAtStop != nil {
-		var entitledUsersAtStop []struct {
-			UserID int `json:"user_id"`
-		}
-		if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
-			return nil, fmt.Errorf("parse los id: %w", err)
-		}
+	entitledUsers := viewmodels.Poll_EntitledUserIDsSorted(poll, nameOrderSetting)
 
+	voteMap := map[int]string{}
+	if poll.EntitledUsersAtStop != nil {
 		for _, entry := range pollOption.VoteList {
 			if val, ok := entry.UserID.Value(); ok {
 				voteMap[val] = entry.Value
 			}
 		}
-
-		for _, entry := range entitledUsersAtStop {
-			entitledUsers = append(entitledUsers, entry.UserID)
-		}
-	} else {
-		for _, group := range poll.EntitledGroupList {
-			for _, mu := range group.MeetingUserList {
-				entitledUsers = append(entitledUsers, mu.UserID)
-			}
-		}
-
-		if poll.LiveVotingEnabled && poll.State == "started" {
+	} else if poll.LiveVotingEnabled && poll.State == "started" {
+		if poll.LiveVotes != nil {
 			var liveVotes map[int]string
 			if err := json.Unmarshal(poll.LiveVotes, &liveVotes); err != nil {
 				return nil, fmt.Errorf("parse live votes: %w", err)
@@ -157,57 +141,17 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 	}
 
-	slices.SortFunc(entitledUsers, func(aID, bID int) int {
-		muA, aExists := meetingUserMap[aID]
-		muB, bExists := meetingUserMap[bID]
-
-		if !aExists || !bExists {
-			if !aExists && !bExists {
-				return 0
-			}
-			if !aExists {
-				return 1
-			}
-			return -1
-		}
-
-		slAName := ""
-		if len(muA.StructureLevelList) > 0 {
-			slAName = muA.StructureLevelList[0].Name
-		}
-		slBName := ""
-		if len(muB.StructureLevelList) > 0 {
-			slBName = muB.StructureLevelList[0].Name
-		}
-
-		if slAName != slBName {
-			return strings.Compare(slAName, slBName)
-		}
-
-		userA := muA.User
-		userB := muB.User
-
-		if nameOrderSetting == "first_name" {
-			firstNameA := strings.Trim(userA.Title+" "+userA.FirstName, " ")
-			firstNameB := strings.Trim(userB.Title+" "+userB.FirstName, " ")
-			if firstNameA != firstNameB {
-				return strings.Compare(firstNameA, firstNameB)
-			}
-			return strings.Compare(userA.LastName, userB.LastName)
-		} else {
-			if userA.LastName != userB.LastName {
-				return strings.Compare(userA.LastName, userB.LastName)
-			}
-			firstNameA := strings.Trim(userA.Title+" "+userA.FirstName, " ")
-			firstNameB := strings.Trim(userB.Title+" "+userB.FirstName, " ")
-			return strings.Compare(firstNameA, firstNameB)
-		}
-	})
-
 	slideData := pollSingleVotesSlideData{}
-	voteEntryGroups := map[int]*pollSingleVotesSlideVoteEntryGroup{}
+
+	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
+
 	for _, userID := range entitledUsers {
-		user := meetingUserMap[userID].User
+		mu, exists := meetingUserMap[userID]
+		if !exists {
+			continue
+		}
+
+		user := mu.User
 		vote := pollSingleVotesSlideVoteEntry{
 			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 			LastName:  user.LastName,
@@ -219,20 +163,37 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			ID:   0,
 			Name: "",
 		}
-		if mu, ok := meetingUserMap[userID]; ok {
-			if len(mu.StructureLevelList) > 0 {
-				structureLevel = &mu.StructureLevelList[0]
-			}
+		if len(mu.StructureLevelList) > 0 {
+			structureLevel = &mu.StructureLevelList[0]
 		}
 
-		if _, ok := voteEntryGroups[structureLevel.ID]; !ok {
-			voteEntryGroups[structureLevel.ID] = &pollSingleVotesSlideVoteEntryGroup{
+		if _, ok := voteEntryGroupsMap[structureLevel.ID]; !ok {
+			voteEntryGroupsMap[structureLevel.ID] = &pollSingleVotesSlideVoteEntryGroup{
 				Title: structureLevel.Name,
-				Votes: map[int]*pollSingleVotesSlideVoteEntry{},
+				Votes: []*pollSingleVotesSlideVoteEntry{},
 			}
 		}
 
-		voteEntryGroups[structureLevel.ID].Votes[userID] = &vote
+		voteEntryGroupsMap[structureLevel.ID].Votes = append(
+			voteEntryGroupsMap[structureLevel.ID].Votes,
+			&vote,
+		)
+	}
+
+	structureLevelIDs := make([]int, 0, len(voteEntryGroupsMap))
+	for slID := range voteEntryGroupsMap {
+		structureLevelIDs = append(structureLevelIDs, slID)
+	}
+
+	slices.SortFunc(structureLevelIDs, func(aID, bID int) int {
+		nameA := voteEntryGroupsMap[aID].Title
+		nameB := voteEntryGroupsMap[bID].Title
+		return strings.Compare(nameA, nameB)
+	})
+
+	voteEntryGroups := make([]*pollSingleVotesSlideVoteEntryGroup, 0, len(structureLevelIDs))
+	for _, slID := range structureLevelIDs {
+		voteEntryGroups = append(voteEntryGroups, voteEntryGroupsMap[slID])
 	}
 
 	pollMethod := map[string]bool{
