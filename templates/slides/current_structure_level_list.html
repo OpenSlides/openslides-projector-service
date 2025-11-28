@@ -36,6 +36,7 @@
             id="structure-level-{{ .ID }}"
             countdown-time="{{ printf "%.0f" .CountdownTime }}"
             running="{{ .Running }}"
+            {{ if and .Answer .Running }}default-time="0"{{ end }}
           ></projector-countdown>
         </div>
         <div class="structure-level-name">
@@ -45,9 +46,15 @@
             </div>
           {{ end }}
           {{ if .Intervention }}
-            <div class="intervention">
-              {{ Loc.Get "Intervention" }}
-            </div>
+            {{ if .Answer }}
+              <div class="intervention">
+                {{ Loc.Get "Answer to intervention" }}
+              </div>
+            {{ else }}
+              <div class="intervention">
+                {{ Loc.Get "Intervention" }}
+              </div>
+            {{ end }}
           {{ end }}
         </div>
       </div>
