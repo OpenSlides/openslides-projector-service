@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
@@ -165,7 +166,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	if !poll.Votesinvalid.IsZero() {
 		data.Sums = append(data.Sums, pollSlideTableSum{
 			Name:  req.Locale.Get("Invalid votes"),
-			Total: poll.Votesvalid,
+			Total: poll.Votesinvalid,
 		})
 	}
 
@@ -197,6 +198,16 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			Perc:  "100",
 		})
 	}
+
+	slices.SortFunc(data.Options, func(a, b pollSlideTableOption) int {
+		if a.TotalYes.GreaterThan(b.TotalYes) {
+			return -1
+		}
+		if a.TotalYes.LessThan(b.TotalYes) {
+			return 1
+		}
+		return 0
+	})
 
 	return map[string]any{
 		"_fullHeight": true,
