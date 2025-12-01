@@ -27,7 +27,7 @@
   display: grid;
   grid-gap: 0 2em;
   grid-template-columns: 1fr auto;
-  margin: 18px 55px 0px 35px;
+  margin: 2.3em 55px 0px 35px;
 
   .result-table {
     border-collapse: collapse;
