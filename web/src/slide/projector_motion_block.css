@@ -39,21 +39,17 @@
   }
 
   .grid-container {
-    --grid-layout-gap: 2.5px;
     --grid-column-count: 1;
-    --grid-item--min-width: 200px;
-
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    height: 100%;
+    width: 100%;
+    
     --gap-count: calc(var(--grid-column-count) - 1);
     --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
     --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
 
-    display: grid;
-    grid-template-columns: repeat(
-      auto-fill,
-      minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr)
-    );
-    grid-gap: var(--grid-layout-gap);
-    margin-top: calc(var(--projector-scroll) * -20px);
   }
 
   projector-motion-block {

@@ -10,6 +10,7 @@ export class ProjectorMotionBlock extends HTMLElement {
       this.updateMotionNumberWidths();
       this.updateGridColumnCount();
       this.updateDisplayMotionTitle();
+      this.updateHeight();
     });
 
     this.observer.observe(this);
@@ -43,6 +44,24 @@ export class ProjectorMotionBlock extends HTMLElement {
     const display = offsets.size > 1 ? `none` : null;
     for (const motion of motions) {
       motion.querySelector(`.motion-title`).style.display = display;
+    }
+  }
+
+  updateHeight() {
+    const motionNumbers = this.querySelectorAll(`.motion-number`);
+    const span = motionNumbers[0].querySelector(`span`);
+    const maxNumberHeight = span.offsetHeight;
+
+    const maxGridHeight = this.offsetHeight - 113; // the title is 113px high
+    const numberOfMotionsPerColumn = (maxGridHeight / maxNumberHeight);
+
+    const neededColumnAmount = Math.ceil(motionNumbers.length / numberOfMotionsPerColumn);
+    
+    const gridContainer = this.querySelector(`.grid-container`);
+    if (neededColumnAmount > this.MAX_COLUMNS) {
+      const extraColumnWidth = 100 / this.MAX_COLUMNS;
+      const addtionalColumns = (neededColumnAmount * extraColumnWidth).toFixed(0)
+      gridContainer.style.setProperty(`width`, `${addtionalColumns}%`);
     }
   }
 
