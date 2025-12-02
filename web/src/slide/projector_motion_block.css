@@ -5,11 +5,12 @@
 
   .column-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    margin-right: 10px;
     .motion-number {
       white-space: nowrap;
-      margin-right: 8px;
-      font-weight: bold;
+      margin-right: 10px;
+      font-weight: 500;
     }
     .motion-details {
       overflow: hidden;
@@ -29,7 +30,7 @@
         border-radius: 5px !important;
         padding: 0px 8px !important;
         line-height: 2;
-        max-width: 98%;
+        max-width: 95%;
       }
     }
     .motion-title {
