@@ -39,7 +39,7 @@
                   </td>
                 </tr>
               {{ end }}
-              {{ if or (eq .OneHundredPercentBase "YN") (eq .OneHundredPercentBase "YNA")}}
+              {{ if or (eq .OneHundredPercentBase "YN") (eq .OneHundredPercentBase "YNA") }}
               {{ else }}
                 <tr class="valid-votes-row">
                   <td>{{ Loc.Get "Valid votes" }}</td>
