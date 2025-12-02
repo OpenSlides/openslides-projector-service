@@ -19,7 +19,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-
     }
     .motion-recommendation {
       line-height: 1;
@@ -45,11 +44,11 @@
     flex-wrap: wrap;
     height: 100%;
     width: 100%;
-    
+    transform: translateX(calc(-1 * var(--projector-scroll) * var(--scroll-value)));
+
     --gap-count: calc(var(--grid-column-count) - 1);
     --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
     --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
-
   }
 
   projector-motion-block {

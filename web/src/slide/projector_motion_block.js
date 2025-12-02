@@ -53,14 +53,15 @@ export class ProjectorMotionBlock extends HTMLElement {
     const maxNumberHeight = span.offsetHeight;
 
     const maxGridHeight = this.offsetHeight - 113; // the title is 113px high
-    const numberOfMotionsPerColumn = (maxGridHeight / maxNumberHeight);
+    const numberOfMotionsPerColumn = maxGridHeight / maxNumberHeight;
 
     const neededColumnAmount = Math.ceil(motionNumbers.length / numberOfMotionsPerColumn);
-    
+    const extraColumnWidth = 100 / this.MAX_COLUMNS;
+    const addtionalColumns = (neededColumnAmount * extraColumnWidth).toFixed(0);
+
     const gridContainer = this.querySelector(`.grid-container`);
+    gridContainer.style.setProperty(`--scroll-value`, `${(this.offsetWidth / 100) * extraColumnWidth}px`);
     if (neededColumnAmount > this.MAX_COLUMNS) {
-      const extraColumnWidth = 100 / this.MAX_COLUMNS;
-      const addtionalColumns = (neededColumnAmount * extraColumnWidth).toFixed(0)
       gridContainer.style.setProperty(`width`, `${addtionalColumns}%`);
     }
   }
