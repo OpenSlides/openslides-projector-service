@@ -200,13 +200,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	}
 
 	slices.SortFunc(data.Options, func(a, b pollSlideTableOption) int {
-		if a.TotalYes.GreaterThan(b.TotalYes) {
-			return -1
-		}
-		if a.TotalYes.LessThan(b.TotalYes) {
-			return 1
-		}
-		return 0
+		return b.TotalYes.Cmp(a.TotalYes)
 	})
 
 	return map[string]any{
