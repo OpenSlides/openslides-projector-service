@@ -116,6 +116,13 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 
 		if poll.Pollmethod == "N" {
 			acceptance := poll.Votesvalid.Sub(option.No)
+
+			if poll.GlobalAbstain && poll.GlobalOption != nil {
+				if globalOption, isSet := poll.GlobalOption.Value(); isSet {
+					acceptance = acceptance.Sub(globalOption.Abstain)
+				}
+			}
+
 			optData.TotalYes = acceptance
 		}
 
