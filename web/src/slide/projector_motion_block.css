@@ -14,6 +14,12 @@
     .motion-details {
       overflow: hidden;
     }
+    .motion-overflow {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+    }
     .motion-recommendation {
       line-height: 1;
       .label {
@@ -23,9 +29,7 @@
         border-radius: 5px !important;
         padding: 0px 8px !important;
         line-height: 2;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        max-width: 98%;
       }
     }
     .motion-title {
