@@ -62,9 +62,9 @@ export class ProjectorMotionBlock extends HTMLElement {
     const gridContainer = this.querySelector(`.grid-container`);
     const motionNumbers = this.querySelectorAll(`.motion-number`);
     const maxNumberHeight = motionNumbers[0].querySelector(`span`).offsetHeight;
+    const titleHeight = this.offsetParent.querySelector(`.slidetitle`).offsetHeight;
 
-    //TODO add actual title height
-    const maxGridHeight = this.offsetHeight - 113; //the title is 113px high
+    const maxGridHeight = this.offsetHeight - titleHeight;
     const numberOfMotionsPerColumn = maxGridHeight / maxNumberHeight;
 
     const neededColumnAmount = Math.ceil(motionNumbers.length / numberOfMotionsPerColumn);
