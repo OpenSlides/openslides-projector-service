@@ -38,7 +38,7 @@ type config struct {
 func main() {
 	var cfg config
 	err := env.Parse(&cfg)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	if err != nil {
 		log.Err(err).Msg("parsing config")
 	}
