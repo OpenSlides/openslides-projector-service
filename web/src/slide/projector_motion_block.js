@@ -8,8 +8,8 @@ export class ProjectorMotionBlock extends HTMLElement {
   connectedCallback() {
     this.observer = new ResizeObserver(() => {
       this.updateMotionNumberWidths();
-      this.updateGridColumnCount();
       this.updateDisplayMotionTitle();
+      this.updateHeight();
     });
 
     this.observer.observe(this);
@@ -31,6 +31,18 @@ export class ProjectorMotionBlock extends HTMLElement {
       const span = number.querySelector(`span`);
       number.style.width = maxNumberWidths[span.offsetLeft] + `px`;
     }
+
+    const motionDetail = this.querySelectorAll(`.motion-detail`);
+    let motionDetailWidths = {};
+    for (const number of motionDetail) {
+      const span = number.querySelector(`span`);
+      motionDetailWidths[span.offsetLeft] = Math.max(motionDetailWidths[span.offsetLeft] || 0, span.offsetWidth);
+    }
+
+    for (const number of motionDetail) {
+      const span = number.querySelector(`span`);
+      number.style.width = motionDetailWidths[span.offsetLeft] + `px`;
+    }
   }
 
   updateDisplayMotionTitle() {
@@ -46,14 +58,22 @@ export class ProjectorMotionBlock extends HTMLElement {
     }
   }
 
-  updateGridColumnCount() {
+  updateHeight() {
     const gridContainer = this.querySelector(`.grid-container`);
-    for (let i = 0; i < this.MAX_COLUMNS; i++) {
-      gridContainer.style.setProperty(`--grid-column-count`, i + 1);
+    const motionNumbers = this.querySelectorAll(`.motion-number`);
+    const maxNumberHeight = motionNumbers[0].querySelector(`span`).offsetHeight;
+    const titleHeight = this.offsetParent.querySelector(`.slidetitle`).offsetHeight;
 
-      if (this.offsetHeight >= gridContainer.offsetHeight) {
-        return;
-      }
+    const maxGridHeight = this.offsetHeight - titleHeight;
+    const numberOfMotionsPerColumn = maxGridHeight / maxNumberHeight;
+
+    const neededColumnAmount = Math.ceil(motionNumbers.length / numberOfMotionsPerColumn);
+    const columnWidth = 100 / this.MAX_COLUMNS;
+    const addtionalColumns = (neededColumnAmount * columnWidth).toFixed(0);
+
+    gridContainer.style.setProperty(`--scroll-value`, `${(this.offsetWidth / 100) * columnWidth}px`);
+    if (neededColumnAmount > this.MAX_COLUMNS) {
+      gridContainer.style.setProperty(`width`, `${addtionalColumns}%`);
     }
   }
 }
