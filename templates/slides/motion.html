@@ -132,8 +132,6 @@
                       data-line-to="{{ .LineTo }}"
                       {{ if .Rejected }}
                         data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
-                      {{ else }}
-                        data-change-title="{{ Loc.Get "Change recommendation" }}"
                       {{ end }}
                     >
                       {{ .Text }}
@@ -183,8 +181,6 @@
                     data-line-to="{{ .LineTo }}"
                     {{ if .Rejected }}
                       data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
-                    {{ else }}
-                      data-change-title="{{ Loc.Get "Change recommendation" }}"
                     {{ end }}
                   >
                     {{ .Text }}
