@@ -31,6 +31,18 @@ export class ProjectorMotionBlock extends HTMLElement {
       const span = number.querySelector(`span`);
       number.style.width = maxNumberWidths[span.offsetLeft] + `px`;
     }
+
+    const motionDetail = this.querySelectorAll(`.motion-detail`);
+    let motionDetailWidths = {};
+    for (const number of motionDetail) {
+      const span = number.querySelector(`span`);
+      motionDetailWidths[span.offsetLeft] = Math.max(motionDetailWidths[span.offsetLeft] || 0, span.offsetWidth);
+    }
+
+    for (const number of motionDetail) {
+      const span = number.querySelector(`span`);
+      number.style.width = motionDetailWidths[span.offsetLeft] + `px`;
+    }
   }
 
   updateDisplayMotionTitle() {
@@ -56,12 +68,10 @@ export class ProjectorMotionBlock extends HTMLElement {
     const numberOfMotionsPerColumn = maxGridHeight / maxNumberHeight;
 
     const neededColumnAmount = Math.ceil(motionNumbers.length / numberOfMotionsPerColumn);
-    const extraColumnWidth = 100 / this.MAX_COLUMNS;
-    const addtionalColumns = (neededColumnAmount * extraColumnWidth).toFixed(0);
+    const columnWidth = 100 / this.MAX_COLUMNS;
+    const addtionalColumns = (neededColumnAmount * columnWidth).toFixed(0);
 
-    //TODO for --scroll-value and width: calculate with scale in mind
-
-    gridContainer.style.setProperty(`--scroll-value`, `${(this.offsetWidth / 100) * extraColumnWidth}px`);
+    gridContainer.style.setProperty(`--scroll-value`, `${(this.offsetWidth / 100) * columnWidth}px`);
     if (neededColumnAmount > this.MAX_COLUMNS) {
       gridContainer.style.setProperty(`width`, `${addtionalColumns}%`);
     }
