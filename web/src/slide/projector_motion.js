@@ -246,6 +246,10 @@ export class ProjectorMotionText extends HTMLElement {
     const lineNumbering = this.getAttribute(`line-numbering`);
     const currentChange = changes[idx];
 
+    if (!currentChange.changeTitle) {
+      return '';
+    }
+
     const changeHeader = [];
     if (HtmlDiff.changeHasCollissions(currentChange, changes)) {
       let style = `margin-left: 40px`;
