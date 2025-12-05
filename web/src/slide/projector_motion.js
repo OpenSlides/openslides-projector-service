@@ -245,6 +245,7 @@ export class ProjectorMotionText extends HTMLElement {
   getChangeHeader(changes, idx) {
     const lineNumbering = this.getAttribute(`line-numbering`);
     const currentChange = changes[idx];
+    const hideMetadataBg = this.hasAttribute('data-hide-metadata-bg');
 
     if (!currentChange.changeTitle) {
       return '';
@@ -273,7 +274,8 @@ export class ProjectorMotionText extends HTMLElement {
       changeHeader.push(`<span class="amendment-nr-n-icon"${style}>`);
     }
 
-    changeHeader.push(`<span class="amendment-nr">`);
+    const bgStyle = hideMetadataBg ? ' style="background-color: transparent;"' : '';
+    changeHeader.push(`<span class="amendment-nr"${bgStyle}>`);
     changeHeader.push(currentChange.changeTitle);
     changeHeader.push(`: </span></span>`);
     return changeHeader.join(``);
