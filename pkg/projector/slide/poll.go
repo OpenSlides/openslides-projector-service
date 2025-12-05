@@ -115,6 +115,18 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			TotalAbstain: option.Abstain,
 		}
 
+		if poll.Pollmethod == "N" {
+			acceptance := poll.Votesvalid.Sub(option.No)
+
+			if poll.GlobalAbstain && poll.GlobalOption != nil {
+				if globalOption, isSet := poll.GlobalOption.Value(); isSet {
+					acceptance = acceptance.Sub(globalOption.Abstain)
+				}
+			}
+
+			optData.TotalYes = acceptance
+		}
+
 		if !onehundredPercentBase.IsZero() {
 			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
