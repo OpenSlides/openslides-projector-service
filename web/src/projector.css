@@ -225,6 +225,8 @@ ul {
 
 projector-poll-chart {
   display: none;
+  width: 260px;
+  height: 260px;
 }
 
 .scroll-inner {

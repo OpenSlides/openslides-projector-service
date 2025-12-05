@@ -41,8 +41,6 @@ export class ProjectorPollChart extends HTMLElement {
         datasets: [dataset]
       }
     });
-    chart.canvas.style.setProperty(`height`, `260px`);
-    chart.canvas.style.setProperty(`width`, `260px`);
 
     for (let i = 0; i < chart.data.datasets[0].backgroundColor.length; i++) {
       const color = chart.data.datasets[0].backgroundColor[i];
