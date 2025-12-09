@@ -55,7 +55,7 @@
           {{ if .Submitters }}
             <tr>
               <td class="min">
-                <b>{{ Loc.Get "Submitters" }}</b>
+                {{ Loc.Get "Submitters" }}:
               </td>
               <td>
                 {{ .Submitters }}
@@ -66,7 +66,7 @@
           {{ if and .Recommender .Recommendation }}
             <tr class="topline">
               <td class="min">
-                <b>{{ .Recommender }}:</b>
+                {{ .Recommender }}:
               </td>
               <td>{{ .Recommendation }}</td>
             </tr>
@@ -75,7 +75,7 @@
           {{ if .ReferencedRecoMotions }}
             <tr class="topline">
               <td class="min">
-                <b>{{ Loc.Get "Referring motions" }}:</b>
+                {{ Loc.Get "Referring motions" }}:
               </td>
               <td>
                 {{ .ReferencedRecoMotions }}
