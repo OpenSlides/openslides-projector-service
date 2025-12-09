@@ -30,19 +30,25 @@
                     </div>
                   </td>
                   <td>
-                    {{ if $o.PercVotes }}
-                      <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
+                    {{ if or (eq $.OneHundredPercentBase "valid") (eq $.OneHundredPercentBase "cast") }}
+                    {{ else }}
+                      {{ if $o.PercVotes }}
+                        <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
+                      {{ end }}
                     {{ end }}
                   </td>
                 </tr>
               {{ end }}
-              <tr class="valid-votes-row">
-                <td>{{ Loc.Get "Valid votes" }}</td>
-                <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
-                {{ if .Data.PercValidvotes }}
-                  <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
-                {{ end }}
-              </tr>
+              {{ if or (eq .OneHundredPercentBase "YN") (eq .OneHundredPercentBase "YNA") }}
+              {{ else }}
+                <tr class="valid-votes-row">
+                  <td>{{ Loc.Get "Valid votes" }}</td>
+                  <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+                  {{ if .Data.PercValidvotes }}
+                    <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
+                  {{ end }}
+                </tr>
+              {{ end }}
             </tbody>
           </table>
         </div>
