@@ -323,7 +323,7 @@ export class ProjectorMotionAmendment extends ProjectorMotionText {
 
     const text = [];
     for (const p of amendmentParagraphs) {
-      if (p.diffLineFrom === p.diffLineFrom) {
+      if (p.diffLineFrom === p.diffLineTo) {
         text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom}</h3>`);
       } else {
         text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom} - ${p.diffLineTo}</h3>`);
