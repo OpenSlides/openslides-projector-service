@@ -1,11 +1,9 @@
 .poll-single-vote {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 
   > .content-wrapper {
     flex-grow: 1;
-    overflow: visible;
   }
 }
 
@@ -110,13 +108,12 @@
 
 .votes-area {
   position: relative;
-  transform: translateX(calc(-1 * var(--projector-scroll) * 100px));
+  left: calc(-184px * var(--projector-scroll));
   margin-top: 10px;
-  column-count: var(--visible-columns, 4);
-  column-gap: 6px;
+  column-width: 170px;
   column-fill: auto;
-  width: 100%;
-  height: calc(var(--projector-inner-height) * 1px - 250px);
+  gap: 4px 6px;
+  height: 0;
 
   .vote-entry {
     display: flex;
