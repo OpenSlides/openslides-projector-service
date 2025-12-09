@@ -54,9 +54,9 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 	var currentSpeakerInfo speakerInfo
 	currentSpeakerInfo.Running = currentSpeaker.PauseTime == 0
 
-	sllos, ok := currentSpeaker.StructureLevelListOfSpeakers.Value()
+	sllos, hasSLLOS := currentSpeaker.StructureLevelListOfSpeakers.Value()
 
-	if currentSpeaker.SpeechState != "intervention" && (!ok || sllos.StructureLevelID == 0) {
+	if currentSpeaker.SpeechState != "intervention" && (!hasSLLOS || sllos.StructureLevelID == 0) {
 		return nil, nil
 	}
 
@@ -66,30 +66,22 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 		if currentSpeaker.Answer {
 			currentSpeakerInfo.Answer = true
 			currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateElapsedTime(currentSpeaker)
-
-			if ok {
-				currentSpeakerInfo.ID = sllos.StructureLevelID
-				currentSpeakerInfo.Color = sllos.StructureLevel.Color
-			}
 		} else {
 			defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("could not load intervention time: %w", err)
 			}
 			currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentSpeaker, defaultInterventionTime)
-
-			if ok {
-				currentSpeakerInfo.ID = sllos.StructureLevelID
-				currentSpeakerInfo.Color = sllos.StructureLevel.Color
-			}
 		}
-	} else {
-		if ok {
+		if hasSLLOS {
 			currentSpeakerInfo.ID = sllos.StructureLevelID
-			currentSpeakerInfo.Name = sllos.StructureLevel.Name
 			currentSpeakerInfo.Color = sllos.StructureLevel.Color
-			currentSpeakerInfo.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
 		}
+	} else if hasSLLOS {
+		currentSpeakerInfo.ID = sllos.StructureLevelID
+		currentSpeakerInfo.Name = sllos.StructureLevel.Name
+		currentSpeakerInfo.Color = sllos.StructureLevel.Color
+		currentSpeakerInfo.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
 	}
 
 	return map[string]any{
