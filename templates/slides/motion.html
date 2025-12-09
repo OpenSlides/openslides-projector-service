@@ -54,9 +54,7 @@
           <!-- Submitters -->
           {{ if .Submitters }}
             <tr>
-              <td class="min">
-                {{ Loc.Get "Submitters" }}:
-              </td>
+              <td class="min">{{ Loc.Get "Submitters" }}:</td>
               <td>
                 {{ .Submitters }}
               </td>
@@ -65,18 +63,14 @@
           <!-- Recommendation -->
           {{ if and .Recommender .Recommendation }}
             <tr class="topline">
-              <td class="min">
-                {{ .Recommender }}:
-              </td>
+              <td class="min">{{ .Recommender }}:</td>
               <td>{{ .Recommendation }}</td>
             </tr>
           {{ end }}
           <!-- recommendation referencing motions -->
           {{ if .ReferencedRecoMotions }}
             <tr class="topline">
-              <td class="min">
-                {{ Loc.Get "Referring motions" }}:
-              </td>
+              <td class="min">{{ Loc.Get "Referring motions" }}:</td>
               <td>
                 {{ .ReferencedRecoMotions }}
               </td>
