@@ -201,7 +201,7 @@ export class ProjectorMotionText extends HTMLElement {
     const text = [];
     let lastLineTo = -1;
     for (let i = 0; i < changesToShow.length; i++) {
-      if (changesToShow[i].lineTo > lastLineTo) {
+      if (changesToShow[i].lineFrom > lastLineTo + 1 && changesToShow[i].lineFrom > this.firstLine) {
         const changeFrom = changesToShow[i - 1] ? changesToShow[i - 1].lineTo + 1 : this.firstLine;
         text.push(
           HtmlDiff.extractMotionLineRange(
