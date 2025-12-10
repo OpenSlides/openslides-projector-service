@@ -197,6 +197,7 @@ export class ProjectorMotionText extends HTMLElement {
   renderDiffView() {
     const motionText = this.getLineNumberedMotionText();
     const changesToShow = HtmlDiff.sortChangeRequests([...this.changeRecos, ...this.amendmentChanges]);
+    changesToShow.sort(this.sortChangeRecBeforeAmend);
     const text = [];
     let lastLineTo = -1;
     for (let i = 0; i < changesToShow.length; i++) {
@@ -229,6 +230,7 @@ export class ProjectorMotionText extends HTMLElement {
 
   renderFinalView() {
     const changesToShow = HtmlDiff.sortChangeRequests([...this.changeRecos, ...this.amendmentChanges]);
+    changesToShow.sort(this.sortChangeRecBeforeAmend);
 
     const container = document.createElement(`div`);
     container.innerHTML = HtmlDiff.getTextWithChanges(
@@ -277,6 +279,15 @@ export class ProjectorMotionText extends HTMLElement {
     changeHeader.push(currentChange.changeTitle);
     changeHeader.push(`: </span></span>`);
     return changeHeader.join(``);
+  }
+
+  sortChangeRecBeforeAmend(a, b) {
+    if (a.changeType == `unknown` && b.changeType == `unknown`) {
+      return 1;
+    } else if (a.changeType != `unknown` && b.lineFrom <= a.lineFrom && b.lineFrom >= a.lineTo && b != a) {
+      return -1;
+    }
+    return 0;
   }
 }
 
