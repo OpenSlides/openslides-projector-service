@@ -248,7 +248,11 @@ export class ProjectorMotionText extends HTMLElement {
     const lineNumbering = this.getAttribute(`line-numbering`);
     const currentChange = changes[idx];
 
-    if (!currentChange.changeTitle) {
+    if (currentChange.changeTitle != null && !currentChange.changeTitle) {
+      return 'Title change';
+    }
+
+    if (!HtmlDiff.changeHasCollissions(currentChange, changes) && currentChange.changeType != `unknown`) {
       return '';
     }
 
@@ -270,7 +274,10 @@ export class ProjectorMotionText extends HTMLElement {
 
     changeHeader.push(`<span class="amendment-nr">`);
     changeHeader.push(currentChange.changeTitle);
-    changeHeader.push(`: </span></span>`);
+    if (currentChange.changeType == `unknown`) {
+      changeHeader.push(`: `);
+    }
+    changeHeader.push(`</span></span>`);
     return changeHeader.join(``);
   }
 
