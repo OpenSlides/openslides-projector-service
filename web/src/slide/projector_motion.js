@@ -249,7 +249,7 @@ export class ProjectorMotionText extends HTMLElement {
     const currentChange = changes[idx];
 
     if (currentChange.changeTitle != null && !currentChange.changeTitle) {
-      return 'Title change';
+      return '';
     }
 
     if (!HtmlDiff.changeHasCollissions(currentChange, changes) && currentChange.changeType != `unknown`) {
