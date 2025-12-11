@@ -31,18 +31,6 @@ export class ProjectorMotionBlock extends HTMLElement {
       const span = number.querySelector(`span`);
       number.style.width = maxNumberWidths[span.offsetLeft] + `px`;
     }
-
-    const motionDetail = this.querySelectorAll(`.motion-detail`);
-    let motionDetailWidths = {};
-    for (const number of motionDetail) {
-      const span = number.querySelector(`span`);
-      motionDetailWidths[span.offsetLeft] = Math.max(motionDetailWidths[span.offsetLeft] || 0, span.offsetWidth);
-    }
-
-    for (const number of motionDetail) {
-      const span = number.querySelector(`span`);
-      number.style.width = motionDetailWidths[span.offsetLeft] + `px`;
-    }
   }
 
   updateDisplayMotionTitle() {
