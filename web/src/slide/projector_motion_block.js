@@ -7,7 +7,8 @@ export class ProjectorMotionBlock extends HTMLElement {
 
   connectedCallback() {
     this.observer = new ResizeObserver(() => {
-      this.updateMotionNumberWidths();
+      this.updateWidth(this.querySelectorAll(`.motion-number`));
+      this.updateWidth(this.querySelectorAll(`.motion-detail`));
       this.updateGridColumnCount();
       this.updateDisplayMotionTitle();
     });
@@ -19,17 +20,16 @@ export class ProjectorMotionBlock extends HTMLElement {
     this.observer.disconnect();
   }
 
-  updateMotionNumberWidths() {
-    const motionNumbers = this.querySelectorAll(`.motion-number`);
-    let maxNumberWidths = {};
-    for (const number of motionNumbers) {
+  updateWidth(nodeList) {
+    let motion_widths = {};
+    for (const number of nodeList) {
       const span = number.querySelector(`span`);
-      maxNumberWidths[span.offsetLeft] = Math.max(maxNumberWidths[span.offsetLeft] || 0, span.offsetWidth);
+      motion_widths[span.offsetLeft] = Math.max(motion_widths[span.offsetLeft] || 0, span.offsetWidth);
     }
 
-    for (const number of motionNumbers) {
+    for (const number of nodeList) {
       const span = number.querySelector(`span`);
-      number.style.width = maxNumberWidths[span.offsetLeft] + `px`;
+      number.style.width = motion_widths[span.offsetLeft] + `px`;
     }
   }
 
