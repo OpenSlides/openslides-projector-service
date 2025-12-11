@@ -265,9 +265,7 @@ export class ProjectorMotionText extends HTMLElement {
         style = `margin-left-45`;
       }
 
-      changeHeader.push(
-        `<span class="amendment-nr-n-icon"><span class="material-icons ${style}">warning</span>`
-      );
+      changeHeader.push(`<span class="amendment-nr-n-icon"><span class="material-icons ${style}">warning</span>`);
     } else {
       changeHeader.push(`<span class="amendment-nr-n-icon margin-left-40">`);
     }
