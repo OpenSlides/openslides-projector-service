@@ -5,20 +5,14 @@
 
   .column-item {
     display: flex;
-    align-items: flex-start;
-    margin-right: 10px;
+    align-items: center;
     .motion-number {
       white-space: nowrap;
-      margin-right: 10px;
-      font-weight: 500;
+      margin-right: 8px;
+      font-weight: bold;
     }
     .motion-details {
       overflow: hidden;
-    }
-    .motion-overflow {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .motion-recommendation {
       line-height: 1;
@@ -29,7 +23,9 @@
         border-radius: 5px !important;
         padding: 0px 8px !important;
         line-height: 2;
-        max-width: 95%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     .motion-title {
