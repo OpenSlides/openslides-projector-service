@@ -20,13 +20,14 @@
   justify-items: start;
   align-items: start;
   grid-template-columns: 6fr 4fr;
+  grid-gap: 0 18em;
 }
 
 .result-wrapper {
   display: grid;
   grid-gap: 0 2em;
   grid-template-columns: 1fr auto;
-  margin: 2em 50px 0px 50px;
+  margin: 2.3em 55px 0px 35px;
 
   .result-table {
     border-collapse: collapse;
@@ -44,7 +45,7 @@
 
     tr {
       border-bottom: none !important;
-      font-size: 32px;
+      font-size: 38px;
       font-weight: 500;
 
       .result-cell-definition {
@@ -53,7 +54,10 @@
       }
 
       td {
-        padding: 7px 0;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        padding-right: 0 !important;
+        padding-left: 20px !important;
       }
 
       :nth-child(2):not(th) {
