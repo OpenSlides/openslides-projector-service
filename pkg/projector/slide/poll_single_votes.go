@@ -97,7 +97,6 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	entitledUsers := viewmodels.Poll_EntitledUserIDsSorted(poll, nameOrderString)
 
 	voteMap := map[int]string{}
-
 	if poll.EntitledUsersAtStop != nil {
 		for _, entry := range pollOption.VoteList {
 			if val, ok := entry.UserID.Value(); ok {
