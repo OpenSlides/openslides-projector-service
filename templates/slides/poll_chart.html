@@ -55,7 +55,9 @@
         <!-- Chart -->
         {{ if .Data.ChartData }}
           <div class="doughnut-chart-slide">
-            <projector-poll-chart>{{ .Data.ChartData }}</projector-poll-chart>
+            <projector-poll-chart style="position: relative; height:260px; width:260px">
+              {{ .Data.ChartData }}
+            </projector-poll-chart>
           </div>
         {{ end }}
       </div>
