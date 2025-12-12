@@ -156,7 +156,6 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 
 		userA := muA.User
 		userB := muB.User
-
 		if nameOrderSetting == "first_name" {
 			firstNameA := strings.Trim(userA.Title+" "+userA.FirstName, " ")
 			firstNameB := strings.Trim(userB.Title+" "+userB.FirstName, " ")
