@@ -60,6 +60,6 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 		"MotionBlock": block,
 		"Motions":     motionList,
 		"NumMotions":  numMotions,
-		"MaxColums":   maxColumns,
+		"MaxColumns":  maxColumns,
 	}, nil
 }

@@ -33,13 +33,14 @@
     }
   }
 
-  .grid-container {
+  .motion-block-container {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
     height: 100%;
     width: 100%;
-    transform: translateX(calc(-1 * var(--projector-scroll) * var(--scroll-value)));
+    transform: translateX(calc(-1 * var(--projector-scroll, 0) * 100% / var(--visible-columns, 3)));
+    column-count: var(--visible-columns, 3);
   }
 
   projector-motion-block {

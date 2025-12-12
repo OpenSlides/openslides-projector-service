@@ -13,7 +13,7 @@
   </div>
 
   <projector-motion-block>
-    <div class="grid-container">
+    <div class="motion-block-container" style="--visible-columns: {{ .MaxColumns }};">
       {{ range .Motions }}
         <div class="column-item">
           <div class="motion-number">
