@@ -8,9 +8,8 @@ export class ProjectorPollChart extends HTMLElement {
     this.innerHTML = ``;
 
     const shadow = this.attachShadow({ mode: 'open' });
-    this.canvas = document.createElement('canvas');
+    this.canvas = document.createElement('canvas', { maintainAspectRatio: false });
     this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
     shadow.append(this.canvas);
     this.render();
   }
