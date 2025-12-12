@@ -145,6 +145,7 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 		if len(muA.StructureLevelList) > 0 {
 			slAName = muA.StructureLevelList[0].Name
 		}
+
 		slBName := ""
 		if len(muB.StructureLevelList) > 0 {
 			slBName = muB.StructureLevelList[0].Name
