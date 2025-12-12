@@ -21,7 +21,7 @@ type pollSingleVotesSlideVoteEntry struct {
 
 type pollSingleVotesSlideVoteEntryGroup struct {
 	Title string
-	Votes map[int]*pollSingleVotesSlideVoteEntry
+	Votes []*pollSingleVotesSlideVoteEntry
 }
 
 func (e *pollSingleVotesSlideVoteEntryGroup) TotalYes() int {
@@ -66,7 +66,7 @@ type pollSingleVotesSlideData struct {
 	PercNo          decimal.Decimal
 	PercAbstain     decimal.Decimal
 	PercVotesvalid  decimal.Decimal
-	GroupedVotes    map[int]*pollSingleVotesSlideVoteEntryGroup
+	GroupedVotes    []*pollSingleVotesSlideVoteEntryGroup
 }
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -79,37 +79,29 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		return nil, fmt.Errorf("could not load poll id %w", err)
 	}
 
+	var nameOrderString string
+	req.Fetch.Meeting_MotionPollProjectionNameOrderFirst(poll.MeetingID).Lazy(&nameOrderString)
+	if err := req.Fetch.Execute(ctx); err != nil {
+		return nil, fmt.Errorf("could not load meeting settings: %w", err)
+	}
+
+	if nameOrderString == "" {
+		nameOrderString = "last_name"
+	}
+
 	pollOption := dsmodels.Option{}
 	if len(poll.OptionList) > 0 {
 		pollOption = poll.OptionList[0]
 	}
 
 	voteMap := map[int]string{}
-	entitledUsers := []int{}
 	if poll.EntitledUsersAtStop != nil {
-		var entitledUsersAtStop []struct {
-			UserID int `json:"user_id"`
-		}
-		if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
-			return nil, fmt.Errorf("parse los id: %w", err)
-		}
-
 		for _, entry := range pollOption.VoteList {
 			if val, ok := entry.UserID.Value(); ok {
 				voteMap[val] = entry.Value
 			}
 		}
-
-		for _, entry := range entitledUsersAtStop {
-			entitledUsers = append(entitledUsers, entry.UserID)
-		}
 	} else if poll.LiveVotingEnabled {
-		for _, group := range poll.EntitledGroupList {
-			for _, mu := range group.MeetingUserList {
-				entitledUsers = append(entitledUsers, mu.UserID)
-			}
-		}
-
 		var liveVotes map[int]string
 		if err := json.Unmarshal(poll.LiveVotes, &liveVotes); err != nil {
 			return nil, fmt.Errorf("parse los id: %w", err)
@@ -140,9 +132,15 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	slideData := pollSingleVotesSlideData{}
-	voteEntryGroups := map[int]*pollSingleVotesSlideVoteEntryGroup{}
+	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
+	entitledUsers := viewmodels.Poll_EntitledUserIDsSorted(poll, nameOrderString)
 	for _, userID := range entitledUsers {
-		user := meetingUserMap[userID].User
+		mu, exists := meetingUserMap[userID]
+		if !exists {
+			continue
+		}
+
+		user := mu.User
 		vote := pollSingleVotesSlideVoteEntry{
 			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 			LastName:  user.LastName,
@@ -154,20 +152,37 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			ID:   0,
 			Name: "",
 		}
-		if mu, ok := meetingUserMap[userID]; ok {
-			if len(mu.StructureLevelList) > 0 {
-				structureLevel = &mu.StructureLevelList[0]
-			}
+		if len(mu.StructureLevelList) > 0 {
+			structureLevel = &mu.StructureLevelList[0]
 		}
 
-		if _, ok := voteEntryGroups[structureLevel.ID]; !ok {
-			voteEntryGroups[structureLevel.ID] = &pollSingleVotesSlideVoteEntryGroup{
+		if _, ok := voteEntryGroupsMap[structureLevel.ID]; !ok {
+			voteEntryGroupsMap[structureLevel.ID] = &pollSingleVotesSlideVoteEntryGroup{
 				Title: structureLevel.Name,
-				Votes: map[int]*pollSingleVotesSlideVoteEntry{},
+				Votes: []*pollSingleVotesSlideVoteEntry{},
 			}
 		}
 
-		voteEntryGroups[structureLevel.ID].Votes[userID] = &vote
+		voteEntryGroupsMap[structureLevel.ID].Votes = append(
+			voteEntryGroupsMap[structureLevel.ID].Votes,
+			&vote,
+		)
+	}
+
+	structureLevelIDs := make([]int, 0, len(voteEntryGroupsMap))
+	for slID := range voteEntryGroupsMap {
+		structureLevelIDs = append(structureLevelIDs, slID)
+	}
+
+	slices.SortFunc(structureLevelIDs, func(aID, bID int) int {
+		nameA := voteEntryGroupsMap[aID].Title
+		nameB := voteEntryGroupsMap[bID].Title
+		return strings.Compare(nameA, nameB)
+	})
+
+	voteEntryGroups := make([]*pollSingleVotesSlideVoteEntryGroup, 0, len(structureLevelIDs))
+	for _, slID := range structureLevelIDs {
+		voteEntryGroups = append(voteEntryGroups, voteEntryGroupsMap[slID])
 	}
 
 	pollMethod := map[string]bool{

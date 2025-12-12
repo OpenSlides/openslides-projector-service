@@ -3,6 +3,8 @@ package viewmodels
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/shopspring/decimal"
@@ -86,4 +88,90 @@ func Poll_EntitledUsers(poll dsmodels.Poll) (EntitledUsersAtStop, error) {
 	}
 
 	return users, nil
+}
+
+func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []int {
+	var entitledUserIDs []int
+	meetingUserMap := make(map[int]dsmodels.MeetingUser)
+
+	if poll.EntitledUsersAtStop != nil {
+		var entitledUsersAtStop []struct {
+			UserID int `json:"user_id"`
+		}
+		if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
+			for _, entry := range entitledUsersAtStop {
+				entitledUserIDs = append(entitledUserIDs, entry.UserID)
+			}
+			return entitledUserIDs
+		}
+
+		for _, entry := range entitledUsersAtStop {
+			entitledUserIDs = append(entitledUserIDs, entry.UserID)
+		}
+
+		for _, group := range poll.EntitledGroupList {
+			for _, mu := range group.MeetingUserList {
+				meetingUserMap[mu.UserID] = mu
+			}
+		}
+	} else {
+		for _, group := range poll.EntitledGroupList {
+			for _, mu := range group.MeetingUserList {
+				entitledUserIDs = append(entitledUserIDs, mu.UserID)
+				meetingUserMap[mu.UserID] = mu
+			}
+		}
+	}
+
+	if nameOrderSetting == "" {
+		nameOrderSetting = "last_name"
+	}
+
+	slices.SortFunc(entitledUserIDs, func(aID, bID int) int {
+		muA, aExists := meetingUserMap[aID]
+		muB, bExists := meetingUserMap[bID]
+		if !aExists || !bExists {
+			if !aExists && !bExists {
+				return 0
+			}
+			if !aExists {
+				return 1
+			}
+			return -1
+		}
+
+		slAName := ""
+		if len(muA.StructureLevelList) > 0 {
+			slAName = muA.StructureLevelList[0].Name
+		}
+
+		slBName := ""
+		if len(muB.StructureLevelList) > 0 {
+			slBName = muB.StructureLevelList[0].Name
+		}
+
+		if slAName != slBName {
+			return strings.Compare(slAName, slBName)
+		}
+
+		userA := muA.User
+		userB := muB.User
+		if nameOrderSetting == "first_name" {
+			firstNameA := strings.Trim(userA.Title+" "+userA.FirstName, " ")
+			firstNameB := strings.Trim(userB.Title+" "+userB.FirstName, " ")
+			if firstNameA != firstNameB {
+				return strings.Compare(firstNameA, firstNameB)
+			}
+			return strings.Compare(userA.LastName, userB.LastName)
+		} else {
+			if userA.LastName != userB.LastName {
+				return strings.Compare(userA.LastName, userB.LastName)
+			}
+			firstNameA := strings.Trim(userA.Title+" "+userA.FirstName, " ")
+			firstNameB := strings.Trim(userB.Title+" "+userB.FirstName, " ")
+			return strings.Compare(firstNameA, firstNameB)
+		}
+	})
+
+	return entitledUserIDs
 }
