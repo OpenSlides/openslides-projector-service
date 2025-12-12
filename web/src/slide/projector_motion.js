@@ -197,10 +197,11 @@ export class ProjectorMotionText extends HTMLElement {
   renderDiffView() {
     const motionText = this.getLineNumberedMotionText();
     const changesToShow = HtmlDiff.sortChangeRequests([...this.changeRecos, ...this.amendmentChanges]);
+    changesToShow.sort(this.sortChangeRecBeforeAmend);
     const text = [];
     let lastLineTo = -1;
     for (let i = 0; i < changesToShow.length; i++) {
-      if (changesToShow[i].lineTo > lastLineTo) {
+      if (changesToShow[i].lineFrom > lastLineTo + 1 && changesToShow[i].lineFrom > this.firstLine) {
         const changeFrom = changesToShow[i - 1] ? changesToShow[i - 1].lineTo + 1 : this.firstLine;
         text.push(
           HtmlDiff.extractMotionLineRange(
@@ -229,6 +230,7 @@ export class ProjectorMotionText extends HTMLElement {
 
   renderFinalView() {
     const changesToShow = HtmlDiff.sortChangeRequests([...this.changeRecos, ...this.amendmentChanges]);
+    changesToShow.sort(this.sortChangeRecBeforeAmend);
 
     const container = document.createElement(`div`);
     container.innerHTML = HtmlDiff.getTextWithChanges(
@@ -246,7 +248,11 @@ export class ProjectorMotionText extends HTMLElement {
     const lineNumbering = this.getAttribute(`line-numbering`);
     const currentChange = changes[idx];
 
-    if (!currentChange.changeTitle) {
+    if (currentChange.changeTitle != null && !currentChange.changeTitle) {
+      return '';
+    }
+
+    if (!HtmlDiff.changeHasCollissions(currentChange, changes) && currentChange.changeType != `unknown`) {
       return '';
     }
 
@@ -254,7 +260,7 @@ export class ProjectorMotionText extends HTMLElement {
     if (HtmlDiff.changeHasCollissions(currentChange, changes)) {
       let style = `margin-left: 40px`;
       if (lineNumbering === `outside`) {
-        style = `margin-right: 10px`;
+        style = `margin-right: 15px`;
       } else if (lineNumbering === `inside`) {
         style = `margin-left: 45px`;
       }
@@ -263,20 +269,25 @@ export class ProjectorMotionText extends HTMLElement {
         `<span class="amendment-nr-n-icon"><span class="material-icons" style="${style}">warning</span>`
       );
     } else {
-      let style = ` style="margin-left: 40px"`;
-      if (lineNumbering === `outside`) {
-        style = ``;
-      } else if (lineNumbering === `inside`) {
-        style = ` style="margin-left: 46px"`;
-      }
-
-      changeHeader.push(`<span class="amendment-nr-n-icon"${style}>`);
+      changeHeader.push(`<span class="amendment-nr-n-icon" style="margin-left: 40px">`);
     }
 
     changeHeader.push(`<span class="amendment-nr">`);
     changeHeader.push(currentChange.changeTitle);
-    changeHeader.push(`: </span></span>`);
+    if (currentChange.changeType == `unknown`) {
+      changeHeader.push(`: `);
+    }
+    changeHeader.push(`</span></span>`);
     return changeHeader.join(``);
+  }
+
+  sortChangeRecBeforeAmend(a, b) {
+    if (a.changeType == `unknown` && b.changeType == `unknown`) {
+      return 1;
+    } else if (a.changeType != `unknown` && b.lineFrom <= a.lineFrom && b.lineFrom >= a.lineTo && b != a) {
+      return -1;
+    }
+    return 0;
   }
 }
 
@@ -323,7 +334,7 @@ export class ProjectorMotionAmendment extends ProjectorMotionText {
 
     const text = [];
     for (const p of amendmentParagraphs) {
-      if (p.diffLineFrom === p.diffLineFrom) {
+      if (p.diffLineFrom === p.diffLineTo) {
         text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom}</h3>`);
       } else {
         text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom} - ${p.diffLineTo}</h3>`);
