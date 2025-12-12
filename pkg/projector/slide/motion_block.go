@@ -18,6 +18,12 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 		return nil, fmt.Errorf("could not load motion block %w", err)
 	}
 
+	var maxColumns int
+	req.Fetch.Meeting_MotionsBlockSlideColumns(block.MeetingID).Lazy(&maxColumns)
+	if err := req.Fetch.Execute(ctx); err != nil {
+		return nil, fmt.Errorf("could not load meeting settings: %w", err)
+	}
+
 	numMotions := len(block.MotionIDs)
 
 	type motionListEntry struct {
@@ -54,5 +60,6 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 		"MotionBlock": block,
 		"Motions":     motionList,
 		"NumMotions":  numMotions,
+		"MaxColumns":  maxColumns,
 	}, nil
 }
