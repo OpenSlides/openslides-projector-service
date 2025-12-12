@@ -84,7 +84,7 @@
     <section id="text-wrapper">
       <div id="text" style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
         <!-- Text -->
-        {{ if .Preamble }}
+        {{ if and .Preamble .Motion.Text }}
           <span class="text-prefix-label">{{ .Preamble }}</span>
         {{ end }}
 
