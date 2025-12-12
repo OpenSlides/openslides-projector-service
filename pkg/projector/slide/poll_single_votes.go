@@ -136,7 +136,6 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	slideData := pollSingleVotesSlideData{}
 	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
-
 	for _, userID := range entitledUsers {
 		mu, exists := meetingUserMap[userID]
 		if !exists {
