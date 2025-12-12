@@ -1,6 +1,6 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_countdown.css" />
-
-<div class="countdown {{ if .Options.Fullscreen }}fullscreen{{ else }}overlay{{ end }}">
+<!-- prettier-ignore -->
+<div class="countdown {{ if .Options.Fullscreen }}fullscreen{{ else }}overlay{{ end }}"{{ if not .Options.Fullscreen }} data-is-overlay="true"{{ end }}>
   <projector-countdown
     id="countdown-{{ .Countdown.ID }}"
     countdown-time="{{ printf "%.0f" .Countdown.CountdownTime }}"
@@ -10,10 +10,10 @@
     warning-time="{{ .WarningTime }}"
   ></projector-countdown>
   {{ if not .Options.Fullscreen }}
-    {{ if .Countdown.Description }}
-      <div class="description">
-        {{ .Countdown.Description }}
-      </div>
-    {{ end }}
+  {{ if .Countdown.Description }}
+    <div class="description">
+      {{ .Countdown.Description }}
+    </div>
   {{ end }}
+{{ end }}
 </div>

@@ -44,6 +44,7 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 		CountdownTime float64 `json:"remaining_time"`
 		Running       bool    `json:"current_start_time"`
 		Intervention  bool
+		Answer        bool
 	}
 	structureLevels := []structureLevelEntry{}
 	for _, sllos := range los.StructureLevelListOfSpeakersList {
@@ -79,9 +80,15 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 	}
 
 	var interventionSpeakers []dsmodels.Speaker
+	var answerSpeakers []dsmodels.Speaker
+
 	for _, speaker := range los.SpeakerList {
 		if speaker.SpeechState == "intervention" && speaker.EndTime == 0 {
-			interventionSpeakers = append(interventionSpeakers, speaker)
+			if speaker.Answer {
+				answerSpeakers = append(answerSpeakers, speaker)
+			} else {
+				interventionSpeakers = append(interventionSpeakers, speaker)
+			}
 		}
 	}
 
@@ -109,8 +116,7 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 			interventionEntry.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentInterventionSpeaker, defaultInterventionTime)
 
 			if currentInterventionSpeaker.StructureLevelListOfSpeakers != nil {
-				sllos, ok := currentInterventionSpeaker.StructureLevelListOfSpeakers.Value()
-				if ok {
+				if sllos, ok := currentInterventionSpeaker.StructureLevelListOfSpeakers.Value(); ok {
 					interventionEntry.ID = sllos.StructureLevelID
 					interventionEntry.Color = sllos.StructureLevel.Color
 				}
@@ -118,6 +124,33 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 		}
 
 		structureLevels = append(structureLevels, interventionEntry)
+	}
+
+	for _, answerSpeaker := range answerSpeakers {
+		isCurrent := viewmodels.Speaker_IsCurrent(&answerSpeaker)
+		running := answerSpeaker.PauseTime == 0 && isCurrent
+
+		elapsedTime := float64(0)
+		if isCurrent {
+			elapsedTime = viewmodels.Speaker_CalculateElapsedTime(&answerSpeaker)
+		}
+
+		answerEntry := structureLevelEntry{
+			CountdownTime: elapsedTime,
+			Running:       running,
+			Intervention:  true,
+			Answer:        true,
+		}
+
+		if answerSpeaker.StructureLevelListOfSpeakers != nil {
+			sllos, ok := answerSpeaker.StructureLevelListOfSpeakers.Value()
+			if ok {
+				answerEntry.ID = sllos.StructureLevelID
+				answerEntry.Color = sllos.StructureLevel.Color
+			}
+		}
+
+		structureLevels = append(structureLevels, answerEntry)
 	}
 
 	titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, req.Fetch, los.ContentObjectID)

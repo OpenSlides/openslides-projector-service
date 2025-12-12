@@ -39,7 +39,7 @@ body {
   justify-content: space-between;
   position: relative;
   z-index: 10;
-  height: 70px;
+  height: 60px;
   padding: 0 50px;
   box-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
   background-repeat: no-repeat;
@@ -145,7 +145,7 @@ h3 {
 }
 
 .slidetitle {
-  margin-top: -0.8em;
+  margin-top: 0.1em;
   border-bottom: 2px solid #d3d3d3;
   padding-bottom: 0.4em;
   padding-top: 0.8em;

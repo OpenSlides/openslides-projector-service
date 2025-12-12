@@ -1,6 +1,7 @@
 import { EventSource } from 'eventsource';
 import { setPageWidthVar } from './projector/scale.js';
 import { createProjectorClock } from './projector/clock.js';
+import { createOverlayOrganizer } from './projector/overlay.js';
 import { OsIconContainer } from './components/icon-container.js';
 import { ProjectorCountdown } from './slide/projector_countdown.js';
 import { PdfViewer } from './components/pdf-viewer.js';
@@ -28,6 +29,7 @@ export function Projector(host, id, auth = () => ``) {
   const container = host.attachShadow({ mode: `open` });
   const sizeListener = setPageWidthVar(container);
   const clock = createProjectorClock(container);
+  const overlayOrganizer = createOverlayOrganizer(container);
   let subscriptionUrl = `/system/projector/subscribe/${id}`;
   let needsInit = !container.childNodes.length;
 
@@ -42,6 +44,7 @@ export function Projector(host, id, auth = () => ``) {
         ...init,
         headers: {
           ...init.headers,
+          'ngsw-bypass': true,
           Authentication: auth()
         }
       });
@@ -90,15 +93,22 @@ export function Projector(host, id, auth = () => ``) {
   });
 
   eventSource.addEventListener(`projector-replace`, e => {
-    container.innerHTML = JSON.parse(e.data);
+    const html = JSON.parse(e.data);
+    container.innerHTML = html;
+
     sizeListener.update();
     clock.update();
+    overlayOrganizer.update();
   });
 
   eventSource.addEventListener(`projection-updated`, e => {
     const data = JSON.parse(e.data);
+
     for (let id of Object.keys(data)) {
-      let el = container.querySelector(`.slide[data-id="${id}"]`);
+      let el =
+        container.querySelector(`#slides > [data-id="${id}"]`) ||
+        container.querySelector(`.overlay-container > [data-id="${id}"]`);
+
       if (!el) {
         el = container.querySelector(`#slides`).appendChild(document.createElement(`div`));
         el.classList.add(`slide`);
@@ -107,12 +117,15 @@ export function Projector(host, id, auth = () => ``) {
 
       el.innerHTML = data[id];
     }
+
+    overlayOrganizer.update();
   });
 
   eventSource.addEventListener(`projection-deleted`, e => {
     console.debug(`projection-deleted`, e.data);
 
-    container.querySelector(`.slide[data-id="${e.data}"]`)?.remove();
+    container.querySelector(`#slides > [data-id="${e.data}"]`)?.remove();
+    container.querySelector(`.overlay-container > [data-id="${e.data}"]`)?.remove();
   });
 
   window.addEventListener(`unload`, () => {

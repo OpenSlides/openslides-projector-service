@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
@@ -131,6 +132,18 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			TotalAbstain: option.Abstain,
 		}
 
+		if poll.Pollmethod == "N" {
+			acceptance := poll.Votesvalid.Sub(option.No)
+
+			if poll.GlobalAbstain && poll.GlobalOption != nil {
+				if globalOption, isSet := poll.GlobalOption.Value(); isSet {
+					acceptance = acceptance.Sub(globalOption.Abstain)
+				}
+			}
+
+			optData.TotalYes = acceptance
+		}
+
 		if !onehundredPercentBase.IsZero() {
 			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
@@ -182,7 +195,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	if !poll.Votesinvalid.IsZero() {
 		data.Sums = append(data.Sums, pollSlideTableSum{
 			Name:  req.Locale.Get("Invalid votes"),
-			Total: poll.Votesvalid,
+			Total: poll.Votesinvalid,
 		})
 	}
 
@@ -214,6 +227,10 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			Perc:  "100",
 		})
 	}
+
+	slices.SortFunc(data.Options, func(a, b pollSlideTableOption) int {
+		return b.TotalYes.Cmp(a.TotalYes)
+	})
 
 	return map[string]any{
 		"_fullHeight": true,
