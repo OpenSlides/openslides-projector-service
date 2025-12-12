@@ -21,15 +21,15 @@ export class ProjectorMotionBlock extends HTMLElement {
   }
 
   updateWidth(nodeList) {
-    let motion_widths = {};
+    let motionWidths = {};
     for (const number of nodeList) {
       const span = number.querySelector(`span`);
-      motion_widths[span.offsetLeft] = Math.max(motion_widths[span.offsetLeft] || 0, span.offsetWidth);
+      motionWidths[span.offsetLeft] = Math.max(motionWidths[span.offsetLeft] || 0, span.offsetWidth);
     }
 
     for (const number of nodeList) {
       const span = number.querySelector(`span`);
-      number.style.width = motion_widths[span.offsetLeft] + `px`;
+      number.style.width = motionWidths[span.offsetLeft] + `px`;
     }
   }
 
