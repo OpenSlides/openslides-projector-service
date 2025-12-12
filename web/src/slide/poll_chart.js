@@ -9,6 +9,8 @@ export class ProjectorPollChart extends HTMLElement {
 
     const shadow = this.attachShadow({ mode: 'open' });
     this.canvas = document.createElement('canvas');
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
     shadow.append(this.canvas);
     this.render();
   }
@@ -41,8 +43,6 @@ export class ProjectorPollChart extends HTMLElement {
         datasets: [dataset]
       }
     });
-    chart.canvas.style.setProperty(`height`, `260px`);
-    chart.canvas.style.setProperty(`width`, `260px`);
 
     for (let i = 0; i < chart.data.datasets[0].backgroundColor.length; i++) {
       const color = chart.data.datasets[0].backgroundColor[i];
