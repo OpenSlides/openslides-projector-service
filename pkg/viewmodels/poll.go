@@ -130,7 +130,6 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 	slices.SortFunc(entitledUserIDs, func(aID, bID int) int {
 		muA, aExists := meetingUserMap[aID]
 		muB, bExists := meetingUserMap[bID]
-
 		if !aExists || !bExists {
 			if !aExists && !bExists {
 				return 0
