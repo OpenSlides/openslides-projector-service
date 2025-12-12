@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
@@ -56,7 +57,8 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return nil, fmt.Errorf("could not load poll base info %w", err)
 	}
 
-	if pollState != "published" && (pollState == "finished" && pollLiveVotingEnabled) {
+	showResults := pollState == "published" || ((pollState == "created" || pollState == "started") && pollLiveVotingEnabled)
+	if !showResults {
 		state := req.Locale.Get("No results yet")
 		if pollState == "finished" {
 			state = req.Locale.Get("Counting of votes is in progress ...")
@@ -66,6 +68,14 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			state = req.Locale.Get("Voting in progress")
 		}
 
+		if options.SingleVotes {
+			return map[string]any{
+				"_template": "poll_single_vote",
+				"Title":     pollTitle,
+				"State":     state,
+			}, nil
+		}
+
 		return map[string]any{
 			"Title": pollTitle,
 			"State": state,
@@ -73,7 +83,15 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	}
 
 	if options.SingleVotes {
-		return pollSingleVotesSlideHandler(ctx, req)
+		var isAnonymized bool
+		req.Fetch.Poll_IsPseudoanonymized(pollID).Lazy(&isAnonymized)
+		if err := req.Fetch.Execute(ctx); err != nil {
+			return nil, fmt.Errorf("could not check if poll is anonymized: %w", err)
+		}
+
+		if !isAnonymized {
+			return pollSingleVotesSlideHandler(ctx, req)
+		}
 	}
 
 	poll, err := req.Fetch.Poll(pollID).First(ctx)
@@ -112,6 +130,18 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			TotalYes:     option.Yes,
 			TotalNo:      option.No,
 			TotalAbstain: option.Abstain,
+		}
+
+		if poll.Pollmethod == "N" {
+			acceptance := poll.Votesvalid.Sub(option.No)
+
+			if poll.GlobalAbstain && poll.GlobalOption != nil {
+				if globalOption, isSet := poll.GlobalOption.Value(); isSet {
+					acceptance = acceptance.Sub(globalOption.Abstain)
+				}
+			}
+
+			optData.TotalYes = acceptance
 		}
 
 		if !onehundredPercentBase.IsZero() {
@@ -165,7 +195,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	if !poll.Votesinvalid.IsZero() {
 		data.Sums = append(data.Sums, pollSlideTableSum{
 			Name:  req.Locale.Get("Invalid votes"),
-			Total: poll.Votesvalid,
+			Total: poll.Votesinvalid,
 		})
 	}
 
@@ -197,6 +227,10 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 			Perc:  "100",
 		})
 	}
+
+	slices.SortFunc(data.Options, func(a, b pollSlideTableOption) int {
+		return b.TotalYes.Cmp(a.TotalYes)
+	})
 
 	return map[string]any{
 		"_fullHeight": true,

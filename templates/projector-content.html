@@ -91,6 +91,8 @@
 
 
     <div id="slides">
+      <div class="overlay-container"></div>
+
       {{ range $index, $element := .Projections }}
         <div class="slide" data-id="{{ $index }}">
           {{ $element }}

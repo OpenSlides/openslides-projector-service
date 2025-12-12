@@ -26,6 +26,11 @@
   }
 }
 
+.state-message {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
 .poll-bar-wrapper {
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
   padding: 7px 0;

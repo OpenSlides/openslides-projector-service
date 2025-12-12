@@ -66,7 +66,7 @@ func (m *motionSlideCommonData) templateData(additional map[string]any) map[stri
 		data["Reason"] = template.HTML(m.Motion.Reason)
 	}
 
-	if m.ShowRecommendation && m.Recommendation != "" {
+	if m.ShowRecommendation && m.Recommendation != "" && m.Recommender != "" {
 		data["Recommender"] = m.Recommender
 		data["Recommendation"] = m.Recommendation
 	}
@@ -128,10 +128,10 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 		return nil, fmt.Errorf("could not fetch motion slide data: %w", err)
 	}
 
-	if data.ShowRecommendation && motion.RecommendationExtension != "" {
+	if data.ShowRecommendation {
 		if val, ok := motion.Recommendation.Value(); ok {
 			data.Recommendation = val.RecommendationLabel
-			if val.ShowRecommendationExtensionField && motion.RecommendationExtension != "" {
+			if motion.RecommendationExtension != "" && val.ShowRecommendationExtensionField {
 				ext, err := data.motionParseRecommendationExtension(ctx)
 				if err != nil {
 					return nil, err
@@ -235,7 +235,9 @@ func motionSubmitterList(motion *dsmodels.Motion) []string {
 		return a.Weight - b.Weight
 	})
 	for _, submitter := range motion.SubmitterList {
-		submitters = append(submitters, viewmodels.MeetingUser_FullName(submitter.MeetingUser))
+		if meetingUser, ok := submitter.MeetingUser.Value(); ok {
+			submitters = append(submitters, viewmodels.MeetingUser_FullName(&meetingUser))
+		}
 	}
 	if motion.AdditionalSubmitter != "" {
 		submitters = append(submitters, motion.AdditionalSubmitter)

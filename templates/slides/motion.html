@@ -54,9 +54,7 @@
           <!-- Submitters -->
           {{ if .Submitters }}
             <tr>
-              <td class="min">
-                <b>{{ Loc.Get "Submitters" }}</b>
-              </td>
+              <td class="min">{{ Loc.Get "Submitters" }}:</td>
               <td>
                 {{ .Submitters }}
               </td>
@@ -90,7 +88,7 @@
     <section id="text-wrapper">
       <div id="text" style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
         <!-- Text -->
-        {{ if .Motion.Text }}
+        {{ if and .Preamble .Motion.Text }}
           <span class="text-prefix-label">{{ .Preamble }}</span>
         {{ end }}
 
@@ -126,20 +124,17 @@
                     <template class="paragraph" data-number="{{ $paragraphNo }}">{{ $text }}</template>
                   {{ end }}
                   {{ range .MotionChangeRecos }}
-                    <template
-                      class="change-reco"
-                      data-id="{{ .ID }}"
-                      data-type="{{ .Type }}"
-                      data-line-from="{{ .LineFrom }}"
-                      data-line-to="{{ .LineTo }}"
-                      {{ if .Rejected }}
-                        data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
-                      {{ else }}
-                        data-change-title="{{ Loc.Get "Change recommendation" }}"
-                      {{ end }}
-                    >
-                      {{ .Text }}
-                    </template>
+                    {{ if not .Rejected }}
+                      <template
+                        class="change-reco"
+                        data-id="{{ .ID }}"
+                        data-type="{{ .Type }}"
+                        data-line-from="{{ .LineFrom }}"
+                        data-line-to="{{ .LineTo }}"
+                      >
+                        {{ .Text }}
+                      </template>
+                    {{ end }}
                   {{ end }}
                 </projector-motion-amendment>
               </div>
@@ -178,20 +173,17 @@
               <template id="content">{{ .MotionText }}</template>
               {{ if .MotionChangeRecos }}
                 {{ range .MotionChangeRecos }}
-                  <template
-                    class="change-reco"
-                    data-id="{{ .ID }}"
-                    data-type="{{ .Type }}"
-                    data-line-from="{{ .LineFrom }}"
-                    data-line-to="{{ .LineTo }}"
-                    {{ if .Rejected }}
-                      data-change-title="{{ Loc.Get "Change recommendation" }} - {{ Loc.Get "rejected" }}"
-                    {{ else }}
-                      data-change-title="{{ Loc.Get "Change recommendation" }}"
-                    {{ end }}
-                  >
-                    {{ .Text }}
-                  </template>
+                  {{ if not .Rejected }}
+                    <template
+                      class="change-reco"
+                      data-id="{{ .ID }}"
+                      data-type="{{ .Type }}"
+                      data-line-from="{{ .LineFrom }}"
+                      data-line-to="{{ .LineTo }}"
+                    >
+                      {{ .Text }}
+                    </template>
+                  {{ end }}
                 {{ end }}
               {{ end }}
               {{ if .Amendments }}
