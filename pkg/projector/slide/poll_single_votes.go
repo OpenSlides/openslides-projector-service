@@ -94,8 +94,6 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		pollOption = poll.OptionList[0]
 	}
 
-	entitledUsers := viewmodels.Poll_EntitledUserIDsSorted(poll, nameOrderString)
-
 	voteMap := map[int]string{}
 	if poll.EntitledUsersAtStop != nil {
 		for _, entry := range pollOption.VoteList {
@@ -135,6 +133,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	slideData := pollSingleVotesSlideData{}
 	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
+	entitledUsers := viewmodels.Poll_EntitledUserIDsSorted(poll, nameOrderString)
 	for _, userID := range entitledUsers {
 		mu, exists := meetingUserMap[userID]
 		if !exists {
