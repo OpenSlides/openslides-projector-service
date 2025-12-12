@@ -258,16 +258,18 @@ export class ProjectorMotionText extends HTMLElement {
 
     const changeHeader = [];
     if (HtmlDiff.changeHasCollissions(currentChange, changes)) {
-      let style = `margin-left-40`;
+      let style = `margin-left: 40px`;
       if (lineNumbering === `outside`) {
-        style = `margin-right-15`;
+        style = `margin-right: 15px`;
       } else if (lineNumbering === `inside`) {
-        style = `margin-left-45`;
+        style = `margin-left: 45px`;
       }
 
-      changeHeader.push(`<span class="amendment-nr-n-icon"><span class="material-icons ${style}">warning</span>`);
+      changeHeader.push(
+        `<span class="amendment-nr-n-icon"><span class="material-icons" style="${style}">warning</span>`
+      );
     } else {
-      changeHeader.push(`<span class="amendment-nr-n-icon margin-left-40">`);
+      changeHeader.push(`<span class="amendment-nr-n-icon" style="margin-left: 40px">`);
     }
 
     changeHeader.push(`<span class="amendment-nr">`);

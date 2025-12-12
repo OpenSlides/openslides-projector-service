@@ -130,17 +130,13 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 
 	if data.ShowRecommendation {
 		if val, ok := motion.Recommendation.Value(); ok {
-			if motion.RecommendationExtension != "" {
-				data.Recommendation = val.RecommendationLabel
-				if val.ShowRecommendationExtensionField && motion.RecommendationExtension != "" {
-					ext, err := data.motionParseRecommendationExtension(ctx)
-					if err != nil {
-						return nil, err
-					}
-					data.Recommendation = fmt.Sprintf("%s %s", data.Recommendation, ext)
+			data.Recommendation = val.RecommendationLabel
+			if motion.RecommendationExtension != "" && val.ShowRecommendationExtensionField {
+				ext, err := data.motionParseRecommendationExtension(ctx)
+				if err != nil {
+					return nil, err
 				}
-			} else {
-				data.Recommendation = val.RecommendationLabel
+				data.Recommendation = fmt.Sprintf("%s %s", data.Recommendation, ext)
 			}
 		}
 	}
