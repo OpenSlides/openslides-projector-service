@@ -263,3 +263,8 @@
 .os-linebreak {
   display: none !important;
 }
+
+projector-motion-text[data-hide-metadata-bg] .amendment-nr,
+projector-motion-amendment[data-hide-metadata-bg] .amendment-nr {
+  background-color: transparent;
+}

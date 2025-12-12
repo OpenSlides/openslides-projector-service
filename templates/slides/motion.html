@@ -62,15 +62,19 @@
           {{ end }}
           <!-- Recommendation -->
           {{ if and .Recommender .Recommendation }}
-            <tr class="topline">
-              <td class="min">{{ .Recommender }}:</td>
+            <tr class="{{ if not .HideMetadataBackground }}topline{{ end }}">
+              <td class="min">
+                <b>{{ .Recommender }}:</b>
+              </td>
               <td>{{ .Recommendation }}</td>
             </tr>
           {{ end }}
           <!-- recommendation referencing motions -->
           {{ if .ReferencedRecoMotions }}
-            <tr class="topline">
-              <td class="min">{{ Loc.Get "Referring motions" }}:</td>
+            <tr class="{{ if not .HideMetadataBackground }}topline{{ end }}">
+              <td class="min">
+                <b>{{ Loc.Get "Referring motions" }}:</b>
+              </td>
               <td>
                 {{ .ReferencedRecoMotions }}
               </td>
@@ -98,6 +102,7 @@
                   line-length="{{ .LineLength }}"
                   line-numbering="{{ .LineNumbering }}"
                   class="detail-view-text"
+                  {{ if .HideMetadataBackground }}data-hide-metadata-bg="true"{{ end }}
                 >
                   <template id="content">{{ .MotionText }}</template>
                 </projector-motion-text>
@@ -112,6 +117,7 @@
                   line-numbering="{{ .LineNumbering }}"
                   mode="{{ .Mode }}"
                   class="detail-view-text"
+                  {{ if .HideMetadataBackground }}data-hide-metadata-bg="true"{{ end }}
                 >
                   <template id="lead-motion-text">{{ .LeadMotionText }}</template>
                   {{ range $paragraphNo, $text := .AmendmentParagraphs }}
@@ -162,6 +168,7 @@
               line-numbering="{{ .LineNumbering }}"
               mode="{{ .Mode }}"
               class="detail-view-text"
+              {{ if .HideMetadataBackground }}data-hide-metadata-bg="true"{{ end }}
             >
               <template id="content">{{ .MotionText }}</template>
               {{ if .MotionChangeRecos }}
