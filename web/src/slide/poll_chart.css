@@ -132,3 +132,9 @@
     justify-self: right;
   }
 }
+
+.canvas-style {
+  position: relative;
+  height: 260px;
+  width: 260px;
+}

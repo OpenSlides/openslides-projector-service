@@ -9,7 +9,6 @@ export class ProjectorPollChart extends HTMLElement {
 
     const shadow = this.attachShadow({ mode: 'open' });
     this.canvas = document.createElement('canvas');
-    this.canvas.style.width = '100%';
     shadow.append(this.canvas);
     this.render();
   }
@@ -35,7 +34,6 @@ export class ProjectorPollChart extends HTMLElement {
       type: 'doughnut',
       options: {
         hover: { mode: null },
-        responsive: false,
         animations: false,
         maintainAspectRatio: false
       },
