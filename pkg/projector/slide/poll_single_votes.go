@@ -79,7 +79,9 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		return nil, fmt.Errorf("could not load poll id %w", err)
 	}
 
+	var maxColumns int
 	var nameOrderString string
+	req.Fetch.Meeting_MotionPollProjectionMaxColumns(poll.MeetingID).Lazy(&maxColumns)
 	req.Fetch.Meeting_MotionPollProjectionNameOrderFirst(poll.MeetingID).Lazy(&nameOrderString)
 	if err := req.Fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("could not load meeting settings: %w", err)
@@ -216,5 +218,6 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"NumVotes":         len(voteMap),
 		"NumNotVoted":      len(entitledUsers) - len(voteMap),
 		"NumEntitledUsers": len(entitledUsers),
+		"MaxColumns":       maxColumns,
 	}, nil
 }
