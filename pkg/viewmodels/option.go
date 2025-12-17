@@ -38,7 +38,11 @@ func Option_OptionLabel(ctx context.Context, fetch *dsmodels.Fetch, locale *gote
 
 			slName := ""
 			if len(mu.StructureLevelIDs) > 0 {
-				slName = fmt.Sprintf(" (%s)", mu.StructureLevelList[0].Name)
+				slNames := make([]string, 0, len(mu.StructureLevelList))
+				for _, sl := range mu.StructureLevelList {
+					slNames = append(slNames, sl.Name)
+				}
+				slName = fmt.Sprintf(" (%s)", strings.Join(slNames, ", "))
 			}
 			return fmt.Sprintf("%s %s%s", mu.User.FirstName, mu.User.LastName, slName), nil
 		} else if strings.HasPrefix(contentObjectID, "poll_candidate_list/") {

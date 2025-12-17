@@ -82,4 +82,4 @@ COPY --from=builder /root/openslides-projector-service/openslides-projector-serv
 COPY --from=builder /root/openslides-projector-service/templates /templates
 COPY --from=builder-web /static /static
 EXPOSE 9051
-ENTRYPOINT ["/openslides-projector-service"]
+CMD ["/openslides-projector-service"]

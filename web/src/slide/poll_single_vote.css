@@ -26,6 +26,11 @@
   }
 }
 
+.state-message {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
 .poll-bar-wrapper {
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
   padding: 7px 0;
@@ -103,9 +108,9 @@
 
 .votes-area {
   position: relative;
-  left: calc(-184px * var(--projector-scroll));
+  transform: translateX(calc(-1 * var(--projector-scroll, 0) * 100% / var(--visible-columns, 4)));
   margin-top: 10px;
-  column-width: 170px;
+  column-count: var(--visible-columns, 4);
   column-fill: auto;
   gap: 4px 6px;
   height: 0;
