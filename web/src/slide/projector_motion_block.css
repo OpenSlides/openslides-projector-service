@@ -37,15 +37,17 @@
     }
   }
 
-  .grid-container {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
+  .motion-block-container {
     height: 100%;
     width: 100%;
+    transform: translateX(calc(-1 * var(--projector-scroll, 0) * 100% / var(--visible-columns, 3)));
+    column-count: var(--visible-columns, 3);
   }
 
   projector-motion-block {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
     padding-top: 12px;
     overflow: hidden;
     flex-grow: 1;

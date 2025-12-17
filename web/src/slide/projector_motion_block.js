@@ -9,7 +9,6 @@ export class ProjectorMotionBlock extends HTMLElement {
     this.observer = new ResizeObserver(() => {
       this.updateWidth(this.querySelectorAll(`.motion-number`));
       this.updateWidth(this.querySelectorAll(`.motion-detail`));
-      this.updateGridColumnCount();
       this.updateDisplayMotionTitle();
     });
 
@@ -43,17 +42,6 @@ export class ProjectorMotionBlock extends HTMLElement {
     const display = offsets.size > 1 ? `none` : null;
     for (const motion of motions) {
       motion.querySelector(`.motion-title`).style.display = display;
-    }
-  }
-
-  updateGridColumnCount() {
-    const gridContainer = this.querySelector(`.grid-container`);
-    for (let i = 0; i < this.MAX_COLUMNS; i++) {
-      gridContainer.style.setProperty(`--grid-column-count`, i + 1);
-
-      if (this.offsetHeight >= gridContainer.offsetHeight) {
-        return;
-      }
     }
   }
 }
