@@ -268,3 +268,22 @@ projector-motion-text[data-hide-metadata-bg] .amendment-nr,
 projector-motion-amendment[data-hide-metadata-bg] .amendment-nr {
   background-color: transparent;
 }
+
+.os-colliding-change {
+  background: rgba(255, 152, 0, 0.15);
+  border-left: 3px solid #ff0800;
+  padding-left: 8px;
+  
+  &::before {
+    content: 'Conflict: ' attr(data-identifier);
+    display: inline-flex;
+    align-items: center;
+    background: #ff0800;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-right: 8px;
+  }
+}
