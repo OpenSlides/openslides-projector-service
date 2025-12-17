@@ -74,6 +74,9 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	poll, err := req.Fetch.Poll(*req.ContentObjectID).
 		Preload(pQ.OptionList().VoteList()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().User()).
+		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedTo().User()).
+		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedTo().User().IsPresentInMeetingList()).
+		Preload(pQ.EntitledGroupList().MeetingUserList().User().IsPresentInMeetingList()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().StructureLevelList()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll id %w", err)
@@ -143,10 +146,19 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 
 		user := mu.User
+		isPresent := slices.Contains(user.IsPresentInMeetingIDs, poll.MeetingID)
+		hasDelegate := false
+
+		if !isPresent && mu.VoteDelegatedTo != nil {
+			if delegateMU, ok := mu.VoteDelegatedTo.Value(); ok {
+				hasDelegate = slices.Contains(delegateMU.User.IsPresentInMeetingIDs, poll.MeetingID)
+			}
+		}
+
 		vote := pollSingleVotesSlideVoteEntry{
 			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 			LastName:  user.LastName,
-			Present:   slices.Contains(user.IsPresentInMeetingIDs, poll.MeetingID),
+			Present:   isPresent || hasDelegate,
 			Value:     voteMap[user.ID],
 		}
 
