@@ -241,7 +241,6 @@ export class ProjectorMotionText extends HTMLElement {
       null,
       this.firstLine
     );
-
     this.appendChild(container);
   }
 
