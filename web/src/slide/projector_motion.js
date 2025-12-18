@@ -242,14 +242,6 @@ export class ProjectorMotionText extends HTMLElement {
       this.firstLine
     );
 
-    container.querySelectorAll('.os-colliding-change').forEach(el => {
-      const identifier = el.getAttribute('data-identifier') || '';
-      const warningLine = document.createElement('div');
-      warningLine.className = 'conflict-warning-line';
-      warningLine.innerHTML = `<span class="material-icons">warning</span><span>${identifier}</span>`;
-      el.insertBefore(warningLine, el.firstChild);
-    });
-
     this.appendChild(container);
   }
 

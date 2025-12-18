@@ -273,18 +273,12 @@ projector-motion-amendment[data-hide-metadata-bg] .amendment-nr {
   background: rgba(255, 152, 0, 0.15);
   border-left: 3px solid #ff0800;
   padding-left: 8px;
-}
 
-.conflict-warning-line {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #ff0800;
-  font-weight: bold;
-  font-size: 0.9em;
-  margin-bottom: 4px;
-
-  .material-icons {
-    font-size: 1em;
+  &::before {
+    content: 'warning';
+    font-family: 'Material Icons';
+    color: #ff0800;
+    margin-right: 8px;
+    vertical-align: middle;
   }
 }
