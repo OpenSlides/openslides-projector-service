@@ -27,10 +27,11 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 	numMotions := len(block.MotionIDs)
 
 	type motionListEntry struct {
-		Number              string
-		Title               string
-		Recommendation      string
-		RecommendationColor string
+		Number                  string
+		Title                   string
+		Recommendation          string
+		RecommendationExtension string
+		RecommendationColor     string
 	}
 	motionList := []motionListEntry{}
 	for _, motion := range block.MotionList {
@@ -41,10 +42,11 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 			recoColor = reco.CssClass
 		}
 		motionList = append(motionList, motionListEntry{
-			Number:              motion.Number,
-			Title:               motion.Title,
-			Recommendation:      recoName,
-			RecommendationColor: recoColor,
+			Number:                  motion.Number,
+			Title:                   motion.Title,
+			Recommendation:          recoName,
+			RecommendationExtension: motion.RecommendationExtension,
+			RecommendationColor:     recoColor,
 		})
 	}
 
