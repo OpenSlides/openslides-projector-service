@@ -71,7 +71,7 @@ export class ProjectorMotionText extends HTMLElement {
         identifier: crEl.getAttribute(`data-id`),
         lineFrom: +crEl.getAttribute(`data-line-from`),
         lineTo: +crEl.getAttribute(`data-line-to`),
-        title: crEl.getAttribute(`data-change-title`),
+        title: crEl.getAttribute(`data-change-title`) || ``,
         changeId: `r-${crEl.getAttribute(`data-id`)}`,
         changeType: crEl.getAttribute(`data-type`),
         changeNewText: crEl.getHTML().trim(),
@@ -139,7 +139,7 @@ export class ProjectorMotionText extends HTMLElement {
           const affectedConsolidated = HtmlDiff.diffHtmlToFinalText(affectedDiff);
           changes.push({
             isTitleChange: false,
-            title: amendmentEl.getAttribute(`data-title`),
+            title: amendmentEl.getAttribute(`data-title`) || ``,
             identifier: amendmentEl.getAttribute(`data-number`),
             lineFrom: affectedLines.from,
             lineTo: affectedLines.to,
