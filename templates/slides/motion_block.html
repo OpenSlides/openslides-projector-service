@@ -21,7 +21,9 @@
           </div>
           <div class="motion-details">
             <div class="motion-recommendation">
-              <span class="label motion-overflow {{ .RecommendationColor }}">{{ .Recommendation }}</span>
+              <span class="label motion-overflow {{ .RecommendationColor }}">
+                {{ .Recommendation }}{{ if .RecommendationExtension }}: {{ .RecommendationExtension }}{{ end }}
+              </span>
             </div>
             <div class="motion-title motion-overflow">
               {{ .Title }}

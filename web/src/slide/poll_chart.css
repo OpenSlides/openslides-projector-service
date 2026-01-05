@@ -133,9 +133,13 @@
   }
 
   .doughnut-chart-slide {
-    width: 260px;
-    height: 260px;
     margin-top: 0px;
     justify-self: right;
   }
+}
+
+.poll-chart-canvas-style {
+  position: relative;
+  height: 260px;
+  width: 260px;
 }

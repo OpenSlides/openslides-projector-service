@@ -34,8 +34,8 @@ export class ProjectorPollChart extends HTMLElement {
       type: 'doughnut',
       options: {
         hover: { mode: null },
-        responsive: false,
-        animations: false
+        animations: false,
+        maintainAspectRatio: false
       },
       data: {
         datasets: [dataset]
