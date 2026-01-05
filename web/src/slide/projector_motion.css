@@ -267,3 +267,14 @@
 .hide-metadata-bg .amendment-nr {
   background-color: transparent;
 }
+
+.os-colliding-change {
+  &::before {
+    display: block;
+    font-size: 24px;
+    content: 'warning';
+    font-family: 'Material Icons';
+    margin-left: -40px;
+    vertical-align: middle;
+  }
+}

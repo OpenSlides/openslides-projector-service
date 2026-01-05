@@ -75,7 +75,7 @@ export class ProjectorMotionText extends HTMLElement {
         changeId: `r-${crEl.getAttribute(`data-id`)}`,
         changeType: crEl.getAttribute(`data-type`),
         changeNewText: crEl.getHTML().trim(),
-        changeTitle: crEl.getAttribute(`data-change-title`)
+        changeTitle: crEl.getAttribute(`data-change-title`) || ``
       });
     });
 
@@ -146,7 +146,7 @@ export class ProjectorMotionText extends HTMLElement {
             changeId: `a-${amendmentEl.getAttribute(`data-id`)}-${pKey}`,
             changeType: `unknown`,
             changeNewText: affectedConsolidated,
-            changeTitle: amendmentEl.getAttribute(`data-change-title`)
+            changeTitle: amendmentEl.getAttribute(`data-change-title`) || ``
           });
         }
       });
