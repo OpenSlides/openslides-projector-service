@@ -72,18 +72,19 @@ type ProjectorSettings struct {
 }
 
 type projector struct {
-	ctxCancel       context.CancelFunc
-	db              *database.Datastore
-	slideRouter     *slide.SlideRouter
-	projector       *dsmodels.Projector
-	pSettings       *ProjectorSettings
-	listeners       []chan *ProjectorUpdateEvent
-	locale          *gotext.Locale
-	Content         string
-	Projections     map[int]template.HTML
-	ProjectionsHash map[int]uint64
-	AddListener     chan chan *ProjectorUpdateEvent
-	RemoveListener  chan (<-chan *ProjectorUpdateEvent)
+	ctxCancel          context.CancelFunc
+	db                 *database.Datastore
+	slideRouter        *slide.SlideRouter
+	projector          *dsmodels.Projector
+	pSettings          *ProjectorSettings
+	pSettingsOverwrite *ProjectorPreviewSettings
+	listeners          []chan *ProjectorUpdateEvent
+	locale             *gotext.Locale
+	Content            string
+	Projections        map[int]template.HTML
+	ProjectionsHash    map[int]uint64
+	AddListener        chan chan *ProjectorUpdateEvent
+	RemoveListener     chan (<-chan *ProjectorUpdateEvent)
 }
 
 type ProjectorUpdateEvent struct {
@@ -132,16 +133,17 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 	langName, _ := lang.Base()
 	locale := gotext.NewLocale("locale", langName.String())
 	p := &projector{
-		ctxCancel:       cancel,
-		db:              db,
-		projector:       &data,
-		pSettings:       &ProjectorSettings{},
-		slideRouter:     slide.New(ctx, db, ds, locale),
-		locale:          locale,
-		Projections:     make(map[int]template.HTML),
-		ProjectionsHash: make(map[int]uint64),
-		AddListener:     make(chan chan *ProjectorUpdateEvent),
-		RemoveListener:  make(chan (<-chan *ProjectorUpdateEvent)),
+		ctxCancel:          cancel,
+		db:                 db,
+		projector:          &data,
+		pSettings:          &ProjectorSettings{},
+		pSettingsOverwrite: &settings,
+		slideRouter:        slide.New(ctx, db, ds, locale),
+		locale:             locale,
+		Projections:        make(map[int]template.HTML),
+		ProjectionsHash:    make(map[int]uint64),
+		AddListener:        make(chan chan *ProjectorUpdateEvent),
+		RemoveListener:     make(chan (<-chan *ProjectorUpdateEvent)),
 	}
 
 	p.initProjector(ctx)
@@ -223,24 +225,45 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		f.Projector_Name(p.projector.ID).Lazy(&p.pSettings.Name)
 		f.Projector_IsInternal(p.projector.ID).Lazy(&p.pSettings.IsInternal)
-		f.Projector_Scale(p.projector.ID).Lazy(&p.pSettings.Scale)
-		f.Projector_Scroll(p.projector.ID).Lazy(&p.pSettings.Scroll)
-		f.Projector_Width(p.projector.ID).Lazy(&p.pSettings.Width)
-		f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&p.pSettings.AspectRatioNumerator)
-		f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&p.pSettings.AspectRatioDenominator)
-		f.Projector_Color(p.projector.ID).Lazy(&p.pSettings.Color)
-		f.Projector_BackgroundColor(p.projector.ID).Lazy(&p.pSettings.BackgroundColor)
-		f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&p.pSettings.HeaderBackgroundColor)
-		f.Projector_HeaderFontColor(p.projector.ID).Lazy(&p.pSettings.HeaderFontColor)
-		f.Projector_HeaderH1Color(p.projector.ID).Lazy(&p.pSettings.HeaderH1Color)
-		f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor)
-		f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor2)
-		f.Projector_ChyronFontColor(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor)
-		f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor2)
-		f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&p.pSettings.ShowHeaderFooter)
-		f.Projector_ShowTitle(p.projector.ID).Lazy(&p.pSettings.ShowTitle)
-		f.Projector_ShowLogo(p.projector.ID).Lazy(&p.pSettings.ShowLogo)
-		f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
+		if p.pSettingsOverwrite == nil {
+			f.Projector_Scale(p.projector.ID).Lazy(&p.pSettings.Scale)
+			f.Projector_Scroll(p.projector.ID).Lazy(&p.pSettings.Scroll)
+			f.Projector_Width(p.projector.ID).Lazy(&p.pSettings.Width)
+			f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&p.pSettings.AspectRatioNumerator)
+			f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&p.pSettings.AspectRatioDenominator)
+			f.Projector_Color(p.projector.ID).Lazy(&p.pSettings.Color)
+			f.Projector_BackgroundColor(p.projector.ID).Lazy(&p.pSettings.BackgroundColor)
+			f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&p.pSettings.HeaderBackgroundColor)
+			f.Projector_HeaderFontColor(p.projector.ID).Lazy(&p.pSettings.HeaderFontColor)
+			f.Projector_HeaderH1Color(p.projector.ID).Lazy(&p.pSettings.HeaderH1Color)
+			f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor)
+			f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor2)
+			f.Projector_ChyronFontColor(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor)
+			f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor2)
+			f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&p.pSettings.ShowHeaderFooter)
+			f.Projector_ShowTitle(p.projector.ID).Lazy(&p.pSettings.ShowTitle)
+			f.Projector_ShowLogo(p.projector.ID).Lazy(&p.pSettings.ShowLogo)
+			f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
+		} else {
+			p.pSettings.Scale = p.pSettingsOverwrite.Scale
+			p.pSettings.Scroll = p.pSettingsOverwrite.Scroll
+			p.pSettings.Width = p.pSettingsOverwrite.Width
+			p.pSettings.AspectRatioNumerator = p.pSettingsOverwrite.AspectRatioNumerator
+			p.pSettings.AspectRatioDenominator = p.pSettingsOverwrite.AspectRatioDenominator
+			p.pSettings.Color = p.pSettingsOverwrite.Color
+			p.pSettings.BackgroundColor = p.pSettingsOverwrite.BackgroundColor
+			p.pSettings.HeaderBackgroundColor = p.pSettingsOverwrite.HeaderBackgroundColor
+			p.pSettings.HeaderFontColor = p.pSettingsOverwrite.HeaderFontColor
+			p.pSettings.HeaderH1Color = p.pSettingsOverwrite.HeaderH1Color
+			p.pSettings.ChyronBackgroundColor = p.pSettingsOverwrite.ChyronBackgroundColor
+			p.pSettings.ChyronBackgroundColor2 = p.pSettingsOverwrite.ChyronBackgroundColor2
+			p.pSettings.ChyronFontColor = p.pSettingsOverwrite.ChyronFontColor
+			p.pSettings.ChyronFontColor2 = p.pSettingsOverwrite.ChyronFontColor2
+			p.pSettings.ShowHeaderFooter = p.pSettingsOverwrite.ShowHeaderFooter
+			p.pSettings.ShowTitle = p.pSettingsOverwrite.ShowTitle
+			p.pSettings.ShowLogo = p.pSettingsOverwrite.ShowLogo
+			p.pSettings.ShowClock = p.pSettingsOverwrite.ShowClock
+		}
 
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
