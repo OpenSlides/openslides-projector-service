@@ -27,11 +27,19 @@ window.serverTime = () => new Date();
  */
 export function Projector(host, id, auth = () => ``) {
   const container = host.attachShadow({ mode: `open` });
+  const initContent = host.querySelector(`#current-content`).innerHTML;
   const sizeListener = setPageWidthVar(container);
   const clock = createProjectorClock(container);
   const overlayOrganizer = createOverlayOrganizer(container);
   let subscriptionUrl = `/system/projector/subscribe/${id}`;
-  let needsInit = !container.childNodes.length;
+  let needsInit = !initContent;
+  if (!needsInit) {
+    container.innerHTML = initContent;
+
+    sizeListener.update();
+    clock.update();
+    overlayOrganizer.update();
+  }
 
   const eventSource = new EventSource(subscriptionUrl, {
     fetch: (input, init) => {

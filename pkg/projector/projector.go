@@ -22,6 +22,27 @@ import (
 	"golang.org/x/text/language"
 )
 
+type ProjectorPreviewSettings struct {
+	Scale                  int    `json:"scale"`
+	Scroll                 int    `json:"scroll"`
+	Width                  int    `json:"width"`
+	AspectRatioNumerator   int    `json:"aspect_ratio_numerator"`
+	AspectRatioDenominator int    `json:"aspect_ratio_denominator"`
+	Color                  string `json:"color"`
+	BackgroundColor        string `json:"background_color"`
+	HeaderBackgroundColor  string `json:"header_background_color"`
+	HeaderFontColor        string `json:"header_font_color"`
+	HeaderH1Color          string `json:"header_h1_color"`
+	ChyronBackgroundColor  string `json:"chyron_background_color"`
+	ChyronBackgroundColor2 string `json:"chyron_background_color2"`
+	ChyronFontColor        string `json:"chyron_font_color"`
+	ChyronFontColor2       string `json:"chyron_font_color_2"`
+	ShowHeaderFooter       bool   `json:"show_header_footer"`
+	ShowTitle              bool   `json:"show_title"`
+	ShowLogo               bool   `json:"show_logo"`
+	ShowClock              bool   `json:"show_clock"`
+}
+
 type ProjectorSettings struct {
 	MeetingName            string
 	MeetingDescription     string
@@ -94,8 +115,44 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		RemoveListener:  make(chan (<-chan *ProjectorUpdateEvent)),
 	}
 
-	p.locale.AddDomain("default")
+	p.initProjector(ctx)
 
+	return p, nil
+}
+
+func projectorPreview(ctx context.Context, id int, lang language.Tag, db *database.Datastore, ds flow.Flow, settings ProjectorPreviewSettings) (string, error) {
+	ctx, cancel := context.WithCancel(ctx)
+
+	data, err := db.Fetch.Projector(id).First(ctx)
+	if err != nil {
+		cancel()
+		return "", fmt.Errorf("error fetching projector from db %w", err)
+	}
+
+	langName, _ := lang.Base()
+	locale := gotext.NewLocale("locale", langName.String())
+	p := &projector{
+		ctxCancel:       cancel,
+		db:              db,
+		projector:       &data,
+		pSettings:       &ProjectorSettings{},
+		slideRouter:     slide.New(ctx, db, ds, locale),
+		locale:          locale,
+		Projections:     make(map[int]template.HTML),
+		ProjectionsHash: make(map[int]uint64),
+		AddListener:     make(chan chan *ProjectorUpdateEvent),
+		RemoveListener:  make(chan (<-chan *ProjectorUpdateEvent)),
+	}
+
+	p.initProjector(ctx)
+	content := p.Content
+
+	cancel()
+	return content, nil
+}
+
+func (p *projector) initProjector(ctx context.Context) {
+	p.locale.AddDomain("default")
 	go p.subscribeProjector(ctx)
 
 	if len(p.projector.CurrentProjectionIDs) > 0 {
@@ -112,8 +169,6 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		}
 		p.RemoveListener <- initListener
 	}
-
-	return p, nil
 }
 
 func (p *projector) subscribeProjector(ctx context.Context) {
@@ -130,6 +185,41 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 		}
 	}()
 
+	p.subscribeSettings(ctx)
+
+	projectionUpdate, projections, err := p.getProjectionSubscription(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not open projection subscription")
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case listener := <-p.AddListener:
+			p.listeners = append(p.listeners, listener)
+			listener <- &ProjectorUpdateEvent{
+				Event: "connected",
+				Data:  strconv.Itoa(int(time.Now().Unix())),
+			}
+		case listener := <-p.RemoveListener:
+			i := slices.IndexFunc(p.listeners, func(el chan *ProjectorUpdateEvent) bool { return el == listener })
+			if i > -1 {
+				close(p.listeners[i])
+				p.listeners[i] = p.listeners[len(p.listeners)-1]
+				p.listeners = p.listeners[:len(p.listeners)-1]
+			}
+		case data, ok := <-projectionUpdate:
+			if !ok {
+				return
+			}
+
+			p.processProjectionUpdate(data, projections)
+		}
+	}
+}
+
+func (p *projector) subscribeSettings(ctx context.Context) {
 	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		f.Projector_Name(p.projector.ID).Lazy(&p.pSettings.Name)
 		f.Projector_IsInternal(p.projector.ID).Lazy(&p.pSettings.IsInternal)
@@ -199,37 +289,6 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 			log.Error().Err(err).Msg("error generating projector content after settings update")
 		}
 	})
-
-	projectionUpdate, projections, err := p.getProjectionSubscription(ctx)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not open projection subscription")
-	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case listener := <-p.AddListener:
-			p.listeners = append(p.listeners, listener)
-			listener <- &ProjectorUpdateEvent{
-				Event: "connected",
-				Data:  strconv.Itoa(int(time.Now().Unix())),
-			}
-		case listener := <-p.RemoveListener:
-			i := slices.IndexFunc(p.listeners, func(el chan *ProjectorUpdateEvent) bool { return el == listener })
-			if i > -1 {
-				close(p.listeners[i])
-				p.listeners[i] = p.listeners[len(p.listeners)-1]
-				p.listeners = p.listeners[:len(p.listeners)-1]
-			}
-		case data, ok := <-projectionUpdate:
-			if !ok {
-				return
-			}
-
-			p.processProjectionUpdate(data, projections)
-		}
-	}
 }
 
 func (p *projector) processProjectionUpdate(updated []int, projections map[int]string) {

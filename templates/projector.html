@@ -8,7 +8,11 @@
   </head>
 
   <body>
-    <div id="projector-page" class="projector-container"></div>
+    <div id="projector-page" class="projector-container">
+      {{ if .ProjectorContent }}
+        <template id="current-content">{{ .ProjectorContent }}</template>
+      {{ end }}
+    </div>
 
     <script type="module">
       import { Projector } from '../static/projector.js';
