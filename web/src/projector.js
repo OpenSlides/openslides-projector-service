@@ -27,7 +27,7 @@ window.serverTime = () => new Date();
  */
 export function Projector(host, id, auth = () => ``) {
   const container = host.attachShadow({ mode: `open` });
-  const initContent = host.querySelector(`#current-content`).innerHTML;
+  const initContent = host.querySelector(`#current-content`)?.innerHTML;
   const sizeListener = setPageWidthVar(container);
   const clock = createProjectorClock(container);
   const overlayOrganizer = createOverlayOrganizer(container);
