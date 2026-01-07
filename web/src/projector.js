@@ -17,8 +17,8 @@ customElements.define('projector-motion-block', ProjectorMotionBlock);
 customElements.define('projector-motion-title', ProjectorMotionTitle);
 customElements.define('projector-motion-text', ProjectorMotionText);
 customElements.define('projector-poll-chart', ProjectorPollChart);
-customElements.define('pdf-viewer', PdfViewer);
-customElements.define('qr-code', QrCode);
+customElements.define('projector-pdf-viewer', PdfViewer);
+customElements.define('projector-qr-code', QrCode);
 
 window.serverTime = () => new Date();
 

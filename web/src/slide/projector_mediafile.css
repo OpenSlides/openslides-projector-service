@@ -12,7 +12,7 @@
   }
 
   .mediafile-pdf {
-    pdf-viewer {
+    projector-pdf-viewer {
       display: block;
       & > div {
         background-color: #fff;
