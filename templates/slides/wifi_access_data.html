@@ -5,7 +5,7 @@
     <h1 class="projector_h1">{{ Loc.Get "Wifi access data" }}</h1>
     <div class="wifi-slide-content">
       {{ if .WlanData.QrString }}
-        <qr-code text="{{ .WlanData.QrString }}" size="450"></qr-code>
+        <projector-qr-code text="{{ .WlanData.QrString }}" size="450"></projector-qr-code>
       {{ end }}
       <div>
         {{ if .WlanData.SSID }}
