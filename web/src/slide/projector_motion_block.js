@@ -7,8 +7,8 @@ export class ProjectorMotionBlock extends HTMLElement {
 
   connectedCallback() {
     this.observer = new ResizeObserver(() => {
-      this.updateWidth(this.querySelectorAll(`.motion-number`));
-      this.updateWidth(this.querySelectorAll(`.motion-detail`));
+      this.updateMotionNumberWidths();
+      this.updateGridColumnCount();
       this.updateDisplayMotionTitle();
     });
 
@@ -19,16 +19,17 @@ export class ProjectorMotionBlock extends HTMLElement {
     this.observer.disconnect();
   }
 
-  updateWidth(nodeList) {
-    let motionWidths = {};
-    for (const number of nodeList) {
+  updateMotionNumberWidths() {
+    const motionNumbers = this.querySelectorAll(`.motion-number`);
+    let maxNumberWidths = {};
+    for (const number of motionNumbers) {
       const span = number.querySelector(`span`);
-      motionWidths[span.offsetLeft] = Math.max(motionWidths[span.offsetLeft] || 0, span.offsetWidth);
+      maxNumberWidths[span.offsetLeft] = Math.max(maxNumberWidths[span.offsetLeft] || 0, span.offsetWidth);
     }
 
-    for (const number of nodeList) {
+    for (const number of motionNumbers) {
       const span = number.querySelector(`span`);
-      number.style.width = motionWidths[span.offsetLeft] + `px`;
+      number.style.width = maxNumberWidths[span.offsetLeft] + `px`;
     }
   }
 
@@ -42,6 +43,17 @@ export class ProjectorMotionBlock extends HTMLElement {
     const display = offsets.size > 1 ? `none` : null;
     for (const motion of motions) {
       motion.querySelector(`.motion-title`).style.display = display;
+    }
+  }
+
+  updateGridColumnCount() {
+    const gridContainer = this.querySelector(`.grid-container`);
+    for (let i = 0; i < this.MAX_COLUMNS; i++) {
+      gridContainer.style.setProperty(`--grid-column-count`, i + 1);
+
+      if (this.offsetHeight >= gridContainer.offsetHeight) {
+        return;
+      }
     }
   }
 }

@@ -5,23 +5,14 @@
 
   .column-item {
     display: flex;
-    align-items: flex-start;
-    margin-right: 10px;
+    align-items: center;
     .motion-number {
       white-space: nowrap;
-      margin-right: 10px;
-      font-weight: 500;
-      flex-shrink: 0;
+      margin-right: 8px;
+      font-weight: bold;
     }
     .motion-details {
       overflow: hidden;
-      min-width: 0;
-      flex: 1;
-    }
-    .motion-overflow {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
     .motion-recommendation {
       line-height: 1;
@@ -32,7 +23,9 @@
         border-radius: 5px !important;
         padding: 0px 8px !important;
         line-height: 2;
-        max-width: 95%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     .motion-title {
@@ -40,17 +33,25 @@
     }
   }
 
-  .motion-block-container {
-    height: 100%;
-    width: 100%;
-    transform: translateX(calc(-1 * var(--projector-scroll, 0) * 100% / var(--visible-columns, 3)));
-    column-count: var(--visible-columns, 3);
+  .motion-grid-container {
+    --grid-layout-gap: 2.5px;
+    --grid-column-count: 1;
+    --grid-item--min-width: 200px;
+
+    --gap-count: calc(var(--grid-column-count) - 1);
+    --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
+    --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
+
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr)
+    );
+    grid-gap: var(--grid-layout-gap);
+    margin-top: calc(var(--projector-scroll) * -20px);
   }
 
   projector-motion-block {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
     padding-top: 12px;
     overflow: hidden;
     flex-grow: 1;

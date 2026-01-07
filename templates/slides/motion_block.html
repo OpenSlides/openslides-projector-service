@@ -13,7 +13,7 @@
   </div>
 
   <projector-motion-block>
-    <div class="motion-block-container" style="--visible-columns: {{ .MaxColumns }};">
+    <div class="motion-grid-container" style="--max-columns: {{ .MaxColumns }};">
       {{ range .Motions }}
         <div class="column-item">
           <div class="motion-number">
@@ -21,11 +21,11 @@
           </div>
           <div class="motion-details">
             <div class="motion-recommendation">
-              <span class="label motion-overflow {{ .RecommendationColor }}">
+              <span class="label {{ .RecommendationColor }}">
                 {{ .Recommendation }}{{ if .RecommendationExtension }}: {{ .RecommendationExtension }}{{ end }}
               </span>
             </div>
-            <div class="motion-title motion-overflow">
+            <div class="motion-title">
               {{ .Title }}
             </div>
           </div>
