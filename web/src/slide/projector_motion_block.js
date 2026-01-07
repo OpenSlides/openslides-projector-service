@@ -1,6 +1,4 @@
 export class ProjectorMotionBlock extends HTMLElement {
-  MAX_COLUMNS = 3;
-
   constructor() {
     super();
   }
@@ -29,7 +27,7 @@ export class ProjectorMotionBlock extends HTMLElement {
 
     for (const number of motionNumbers) {
       const span = number.querySelector(`span`);
-      number.style.width = maxNumberWidths[span.offsetLeft] + `px`;
+      number.style.minWidth = maxNumberWidths[span.offsetLeft] + `px`;
     }
   }
 
@@ -41,14 +39,14 @@ export class ProjectorMotionBlock extends HTMLElement {
     }
 
     const display = offsets.size > 1 ? `none` : null;
-    for (const motion of motions) {
-      motion.querySelector(`.motion-title`).style.display = display;
-    }
+    const gridContainer = this.querySelector(`.motion-grid-container`);
+    gridContainer.style.setProperty(`--title-display`, display);
   }
 
   updateGridColumnCount() {
-    const gridContainer = this.querySelector(`.grid-container`);
-    for (let i = 0; i < this.MAX_COLUMNS; i++) {
+    const gridContainer = this.querySelector(`.motion-grid-container`);
+    const maxColumns = +gridContainer.style.getPropertyValue(`--max-columns`) || 3;
+    for (let i = 0; i < maxColumns; i++) {
       gridContainer.style.setProperty(`--grid-column-count`, i + 1);
 
       if (this.offsetHeight >= gridContainer.offsetHeight) {

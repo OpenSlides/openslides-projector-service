@@ -5,36 +5,46 @@
 
   .column-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    margin-bottom: 0.4em;
     .motion-number {
+      font-size: 0.9em;
       white-space: nowrap;
-      margin-right: 8px;
-      font-weight: bold;
+      margin-right: 12px;
+      font-weight: 500;
+      line-height: 1.8;
     }
     .motion-details {
       overflow: hidden;
     }
     .motion-recommendation {
       line-height: 1;
+      max-width: 100%;
       .label {
         display: inline-block;
-        font-size: 0.5em;
-        font-weight: bold;
-        border-radius: 5px !important;
-        padding: 0px 8px !important;
-        line-height: 2;
+        font-size: 0.9em;
+        font-weight: 500;
+        border-radius: 5px;
+        padding: 0px 8px;
+        line-height: 1.8;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        max-width: calc(100% - 16px);
       }
     }
     .motion-title {
-      font-size: 0.6em;
+      font-size: 0.7em;
+      font-weight: 300;
+      display: var(--title-display, block);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 
   .motion-grid-container {
-    --grid-layout-gap: 2.5px;
+    --grid-layout-gap: 7.5px;
     --grid-column-count: 1;
     --grid-item--min-width: 200px;
 
