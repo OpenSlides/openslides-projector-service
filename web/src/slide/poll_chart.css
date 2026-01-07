@@ -114,7 +114,7 @@
       line-height: 0.8;
     }
 
-    os-icon-container {
+    projector-icon-container {
       display: flex;
       align-items: center;
       .material-icons {

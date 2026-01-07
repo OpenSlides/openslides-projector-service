@@ -67,7 +67,7 @@
           {{ else }}
             <div class="spacer"></div>
             {{ if .PollMethod.Yes }}
-              <os-icon-container icon="check_circle" iconClass="yes">
+              <projector-icon-container icon="check_circle" iconClass="yes">
                 <div class="total-result-wrapper">
                   <span class="yes number">
                     {{ Loc.Get "Yes" }}:
@@ -75,10 +75,10 @@
                   </span>
                   <div class="yes percent">({{ .Data.PercYes }} %)</div>
                 </div>
-              </os-icon-container>
+              </projector-icon-container>
             {{ end }}
             {{ if .PollMethod.No }}
-              <os-icon-container icon="cancel" iconClass="no">
+              <projector-icon-container icon="cancel" iconClass="no">
                 <div class="total-result-wrapper">
                   <span class="no number">
                     {{ Loc.Get "No" }}:
@@ -86,10 +86,10 @@
                   </span>
                   <div class="no percent">({{ .Data.PercNo }} %)</div>
                 </div>
-              </os-icon-container>
+              </projector-icon-container>
             {{ end }}
             {{ if .PollMethod.Abstain }}
-              <os-icon-container icon="circle" iconClass="abstain">
+              <projector-icon-container icon="circle" iconClass="abstain">
                 <div class="total-result-wrapper">
                   <span class="abstain number">
                     {{ Loc.Get "Abstain" }}:
@@ -99,7 +99,7 @@
                     <div class="abstain percent">({{ .Data.PercAbstain }} %)</div>
                   {{ end }}
                 </div>
-              </os-icon-container>
+              </projector-icon-container>
             {{ end }}
           {{ end }}
         </div>
@@ -119,19 +119,19 @@
               {{ if not $isLiveVoting }}
                 <div class="results">
                   {{ if $hasYes }}
-                    <os-icon-container icon="check_circle" iconClass="yes">
+                    <projector-icon-container icon="check_circle" iconClass="yes">
                       <span class="amount">{{ .TotalYes }}</span>
-                    </os-icon-container>
+                    </projector-icon-container>
                   {{ end }}
                   {{ if $hasNo }}
-                    <os-icon-container icon="cancel" iconClass="no">
+                    <projector-icon-container icon="cancel" iconClass="no">
                       <span class="amount">{{ .TotalNo }}</span>
-                    </os-icon-container>
+                    </projector-icon-container>
                   {{ end }}
                   {{ if $hasAbstain }}
-                    <os-icon-container icon="circle" iconClass="abstain">
+                    <projector-icon-container icon="circle" iconClass="abstain">
                       <span class="amount">{{ .TotalAbstain }}</span>
-                    </os-icon-container>
+                    </projector-icon-container>
                   {{ end }}
                 </div>
               {{ end }}
@@ -151,12 +151,12 @@
                 {{ $iconName = "circle" }}
                 {{ $iconClass = "abstain" }}
               {{ end }}
-              <os-icon-container icon="{{ $iconName }}" iconClass="{{ $iconClass }}">
+              <projector-icon-container icon="{{ $iconName }}" iconClass="{{ $iconClass }}">
                 <span class="vote-name {{ if not .Present }}not-present{{ end }}">
                   {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
                   {{ .FirstName }}
                 </span>
-              </os-icon-container>
+              </projector-icon-container>
             </div>
           {{ end }}
         {{ end }}
