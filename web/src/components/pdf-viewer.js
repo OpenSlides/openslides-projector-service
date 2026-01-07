@@ -37,9 +37,11 @@ export class PdfViewer extends HTMLElement {
       // We can use pdfViewer now, e.g. let's change default scale.
       this.pdfViewer.currentScaleValue = 'page-width';
 
-      this.pdfViewer.scrollPageIntoView({
-        pageNumber: +this.initialPage
-      });
+      if (+this.initialPage) {
+        this.pdfViewer.scrollPageIntoView({
+          pageNumber: +this.initialPage
+        });
+      }
     });
 
     getDocument({
