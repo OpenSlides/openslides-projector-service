@@ -10,6 +10,7 @@ export class PdfViewer extends HTMLElement {
     super();
 
     this.src = this.getAttribute(`src`);
+    this.initialPage = this.getAttribute(`initial-page`);
   }
 
   connectedCallback() {
@@ -35,6 +36,10 @@ export class PdfViewer extends HTMLElement {
     eventBus.on('pagesinit', () => {
       // We can use pdfViewer now, e.g. let's change default scale.
       this.pdfViewer.currentScaleValue = 'page-width';
+
+      this.pdfViewer.scrollPageIntoView({
+        pageNumber: +this.initialPage
+      });
     });
 
     getDocument({

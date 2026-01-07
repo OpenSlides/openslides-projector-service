@@ -22,7 +22,7 @@
         inset: 0;
       }
       #pdf-container {
-        top: calc(var(--projector-scroll) * -1px);
+        top: calc(var(--projector-scroll) * -50px);
       }
     }
   }
