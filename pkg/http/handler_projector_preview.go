@@ -41,7 +41,7 @@ func (s *projectorHttp) ProjectorPreviewHandler() http.HandlerFunc {
 			return
 		}
 
-		tmpl, err := template.ParseFiles("templates/projector.html")
+		tmpl, err := template.ParseFiles("templates/projector-preview.html")
 		if err != nil {
 			writeResponse(w, `{"error": true, "msg": "Error providing projector content"}`)
 			return

@@ -1,5 +1,4 @@
-export function setPageWidthVar(shadowDom) {
-  const pageEl = shadowDom.host;
+export function setPageWidthVar(pageEl, shadowDom) {
   function update() {
     const container = shadowDom.querySelector(`#projector-container`);
     if (!container) {

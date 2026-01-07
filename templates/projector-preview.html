@@ -17,8 +17,7 @@
     <script type="module">
       import { Projector } from '/system/projector/static/projector.js';
 
-      let id = window.location.href.substring(window.location.href.lastIndexOf('/') + 1);
-      Projector(document.getElementById(`projector-page`), id);
+      Projector(document.getElementById(`projector-page`), null, null, true);
     </script>
   </body>
 </html>
