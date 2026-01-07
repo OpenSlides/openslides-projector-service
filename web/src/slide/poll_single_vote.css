@@ -64,7 +64,7 @@
       flex: 1 0 0;
       font-size: 14px;
     }
-    os-icon-container {
+    projector-icon-container {
       display: flex;
       align-items: center;
       width: fit-content;
@@ -121,7 +121,7 @@
     font-size: 14px;
     font-weight: 400;
     line-height: 29px;
-    os-icon-container {
+    projector-icon-container {
       display: flex;
       align-items: center;
       max-width: 100%;
@@ -172,7 +172,7 @@
     }
     .results {
       display: inline-flex;
-      os-icon-container {
+      projector-icon-container {
         display: inline-flex;
         align-items: center;
         white-space: nowrap;

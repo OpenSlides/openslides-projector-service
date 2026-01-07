@@ -20,9 +20,9 @@
               {{ range $i, $o := .Data.Options }}
                 <tr style="color: var(--chart-bg-color-{{ $i }})">
                   <td class="label-column" style="min-width: 300px">
-                    <os-icon-container icon="{{ $o.Icon }}">
+                    <projector-icon-container icon="{{ $o.Icon }}">
                       <span class="option-name">{{ $o.Name }}</span>
-                    </os-icon-container>
+                    </projector-icon-container>
                   </td>
                   <td style="min-width: 80px">
                     <div class="result-cell-definition">

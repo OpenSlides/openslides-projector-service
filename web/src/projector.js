@@ -11,7 +11,7 @@ import { ProjectorMotionAmendment, ProjectorMotionText, ProjectorMotionTitle } f
 import { ProjectorPollChart } from './slide/poll_chart.js';
 
 customElements.define('projector-countdown', ProjectorCountdown);
-customElements.define('os-icon-container', OsIconContainer);
+customElements.define('projector-icon-container', OsIconContainer);
 customElements.define('projector-motion-amendment', ProjectorMotionAmendment);
 customElements.define('projector-motion-block', ProjectorMotionBlock);
 customElements.define('projector-motion-title', ProjectorMotionTitle);
