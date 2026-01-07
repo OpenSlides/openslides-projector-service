@@ -43,6 +43,7 @@ func (s *projectorHttp) ProjectorPreviewHandler() http.HandlerFunc {
 
 		tmpl, err := template.ParseFiles("templates/projector-preview.html")
 		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			writeResponse(w, `{"error": true, "msg": "Error providing projector content"}`)
 			return
 		}
@@ -51,6 +52,7 @@ func (s *projectorHttp) ProjectorPreviewHandler() http.HandlerFunc {
 		if err := tmpl.Execute(&content, map[string]any{
 			"ProjectorContent": template.HTML(*projectorContent),
 		}); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			writeResponse(w, `{"error": true, "msg": "Error providing projector content"}`)
 			return
 		}
