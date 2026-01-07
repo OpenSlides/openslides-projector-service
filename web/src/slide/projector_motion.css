@@ -181,6 +181,7 @@
   word-break: break-word;
 
   h3 {
+    font-weight: 500;
     margin-top: 10px;
     margin-bottom: 0px;
   }
