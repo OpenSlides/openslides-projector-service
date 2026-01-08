@@ -1,14 +1,12 @@
 export class ProjectorMotionBlock extends HTMLElement {
-  MAX_COLUMNS = 3;
-
   constructor() {
     super();
   }
 
   connectedCallback() {
     this.observer = new ResizeObserver(() => {
-      this.updateWidth(this.querySelectorAll(`.motion-number`));
-      this.updateWidth(this.querySelectorAll(`.motion-detail`));
+      this.updateMotionNumberWidths();
+      this.updateGridColumnCount();
       this.updateDisplayMotionTitle();
     });
 
@@ -19,16 +17,17 @@ export class ProjectorMotionBlock extends HTMLElement {
     this.observer.disconnect();
   }
 
-  updateWidth(nodeList) {
-    let motionWidths = {};
-    for (const number of nodeList) {
+  updateMotionNumberWidths() {
+    const motionNumbers = this.querySelectorAll(`.motion-number`);
+    let maxNumberWidths = {};
+    for (const number of motionNumbers) {
       const span = number.querySelector(`span`);
-      motionWidths[span.offsetLeft] = Math.max(motionWidths[span.offsetLeft] || 0, span.offsetWidth);
+      maxNumberWidths[span.offsetLeft] = Math.max(maxNumberWidths[span.offsetLeft] || 0, span.offsetWidth);
     }
 
-    for (const number of nodeList) {
+    for (const number of motionNumbers) {
       const span = number.querySelector(`span`);
-      number.style.width = motionWidths[span.offsetLeft] + `px`;
+      number.style.minWidth = maxNumberWidths[span.offsetLeft] + `px`;
     }
   }
 
@@ -40,8 +39,19 @@ export class ProjectorMotionBlock extends HTMLElement {
     }
 
     const display = offsets.size > 1 ? `none` : null;
-    for (const motion of motions) {
-      motion.querySelector(`.motion-title`).style.display = display;
+    const gridContainer = this.querySelector(`.motion-grid-container`);
+    gridContainer.style.setProperty(`--title-display`, display);
+  }
+
+  updateGridColumnCount() {
+    const gridContainer = this.querySelector(`.motion-grid-container`);
+    const maxColumns = +gridContainer.style.getPropertyValue(`--max-columns`) || 3;
+    for (let i = 0; i < maxColumns; i++) {
+      gridContainer.style.setProperty(`--grid-column-count`, i + 1);
+
+      if (this.offsetHeight >= gridContainer.offsetHeight) {
+        return;
+      }
     }
   }
 }
