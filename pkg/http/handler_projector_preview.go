@@ -2,12 +2,16 @@ package http
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
 )
 
-func (s *projectorHttp) ProjectorGetHandler() http.HandlerFunc {
+func (s *projectorHttp) ProjectorPreviewHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
@@ -16,7 +20,15 @@ func (s *projectorHttp) ProjectorGetHandler() http.HandlerFunc {
 			return
 		}
 
-		projectorContent, err := s.projector.GetProjectorContent(id, getRequestLanguage(r))
+		decoder := json.NewDecoder(r.Body)
+		var settings projector.ProjectorPreviewSettings
+		if err := decoder.Decode(&settings); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			writeResponse(w, fmt.Sprintf(`{"error": true, "msg": "Could not parse json", "error": "%s"}`, err.Error()))
+			return
+		}
+
+		projectorContent, err := s.projector.GetProjectorPreview(id, getRequestLanguage(r), settings)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			writeResponse(w, `{"error": true, "msg": "Error reading projector content"}`)
@@ -29,7 +41,7 @@ func (s *projectorHttp) ProjectorGetHandler() http.HandlerFunc {
 			return
 		}
 
-		tmpl, err := template.ParseFiles("templates/projector.html")
+		tmpl, err := template.ParseFiles("templates/projector-preview.html")
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			writeResponse(w, `{"error": true, "msg": "Error providing projector content"}`)

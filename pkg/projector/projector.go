@@ -22,6 +22,27 @@ import (
 	"golang.org/x/text/language"
 )
 
+type ProjectorPreviewSettings struct {
+	Scale                  int    `json:"scale"`
+	Scroll                 int    `json:"scroll"`
+	Width                  int    `json:"width"`
+	AspectRatioNumerator   int    `json:"aspect_ratio_numerator"`
+	AspectRatioDenominator int    `json:"aspect_ratio_denominator"`
+	Color                  string `json:"color"`
+	BackgroundColor        string `json:"background_color"`
+	HeaderBackgroundColor  string `json:"header_background_color"`
+	HeaderFontColor        string `json:"header_font_color"`
+	HeaderH1Color          string `json:"header_h1_color"`
+	ChyronBackgroundColor  string `json:"chyron_background_color"`
+	ChyronBackgroundColor2 string `json:"chyron_background_color2"`
+	ChyronFontColor        string `json:"chyron_font_color"`
+	ChyronFontColor2       string `json:"chyron_font_color_2"`
+	ShowHeaderFooter       bool   `json:"show_header_footer"`
+	ShowTitle              bool   `json:"show_title"`
+	ShowLogo               bool   `json:"show_logo"`
+	ShowClock              bool   `json:"show_clock"`
+}
+
 type ProjectorSettings struct {
 	MeetingName            string
 	MeetingDescription     string
@@ -51,18 +72,19 @@ type ProjectorSettings struct {
 }
 
 type projector struct {
-	ctxCancel       context.CancelFunc
-	db              *database.Datastore
-	slideRouter     *slide.SlideRouter
-	projector       *dsmodels.Projector
-	pSettings       *ProjectorSettings
-	listeners       []chan *ProjectorUpdateEvent
-	locale          *gotext.Locale
-	Content         string
-	Projections     map[int]template.HTML
-	ProjectionsHash map[int]uint64
-	AddListener     chan chan *ProjectorUpdateEvent
-	RemoveListener  chan (<-chan *ProjectorUpdateEvent)
+	ctxCancel          context.CancelFunc
+	db                 *database.Datastore
+	slideRouter        *slide.SlideRouter
+	projector          *dsmodels.Projector
+	pSettings          *ProjectorSettings
+	pSettingsOverwrite *ProjectorPreviewSettings
+	listeners          []chan *ProjectorUpdateEvent
+	locale             *gotext.Locale
+	Content            string
+	Projections        map[int]template.HTML
+	ProjectionsHash    map[int]uint64
+	AddListener        chan chan *ProjectorUpdateEvent
+	RemoveListener     chan (<-chan *ProjectorUpdateEvent)
 }
 
 type ProjectorUpdateEvent struct {
@@ -94,8 +116,45 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		RemoveListener:  make(chan (<-chan *ProjectorUpdateEvent)),
 	}
 
-	p.locale.AddDomain("default")
+	p.initProjector(ctx)
 
+	return p, nil
+}
+
+func projectorPreview(ctx context.Context, id int, lang language.Tag, db *database.Datastore, ds flow.Flow, settings ProjectorPreviewSettings) (string, error) {
+	ctx, cancel := context.WithCancel(ctx)
+
+	data, err := db.Fetch.Projector(id).First(ctx)
+	if err != nil {
+		cancel()
+		return "", fmt.Errorf("error fetching projector from db %w", err)
+	}
+
+	langName, _ := lang.Base()
+	locale := gotext.NewLocale("locale", langName.String())
+	p := &projector{
+		ctxCancel:          cancel,
+		db:                 db,
+		projector:          &data,
+		pSettings:          &ProjectorSettings{},
+		pSettingsOverwrite: &settings,
+		slideRouter:        slide.New(ctx, db, ds, locale),
+		locale:             locale,
+		Projections:        make(map[int]template.HTML),
+		ProjectionsHash:    make(map[int]uint64),
+		AddListener:        make(chan chan *ProjectorUpdateEvent),
+		RemoveListener:     make(chan (<-chan *ProjectorUpdateEvent)),
+	}
+
+	p.initProjector(ctx)
+	content := p.Content
+
+	cancel()
+	return content, nil
+}
+
+func (p *projector) initProjector(ctx context.Context) {
+	p.locale.AddDomain("default")
 	go p.subscribeProjector(ctx)
 
 	if len(p.projector.CurrentProjectionIDs) > 0 {
@@ -112,8 +171,6 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		}
 		p.RemoveListener <- initListener
 	}
-
-	return p, nil
 }
 
 func (p *projector) subscribeProjector(ctx context.Context) {
@@ -130,27 +187,83 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 		}
 	}()
 
+	p.subscribeSettings(ctx)
+
+	projectionUpdate, projections, err := p.getProjectionSubscription(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not open projection subscription")
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case listener := <-p.AddListener:
+			p.listeners = append(p.listeners, listener)
+			listener <- &ProjectorUpdateEvent{
+				Event: "connected",
+				Data:  strconv.Itoa(int(time.Now().Unix())),
+			}
+		case listener := <-p.RemoveListener:
+			i := slices.IndexFunc(p.listeners, func(el chan *ProjectorUpdateEvent) bool { return el == listener })
+			if i > -1 {
+				close(p.listeners[i])
+				p.listeners[i] = p.listeners[len(p.listeners)-1]
+				p.listeners = p.listeners[:len(p.listeners)-1]
+			}
+		case data, ok := <-projectionUpdate:
+			if !ok {
+				return
+			}
+
+			p.processProjectionUpdate(data, projections)
+		}
+	}
+}
+
+func (p *projector) subscribeSettings(ctx context.Context) {
 	p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 		f.Projector_Name(p.projector.ID).Lazy(&p.pSettings.Name)
 		f.Projector_IsInternal(p.projector.ID).Lazy(&p.pSettings.IsInternal)
-		f.Projector_Scale(p.projector.ID).Lazy(&p.pSettings.Scale)
-		f.Projector_Scroll(p.projector.ID).Lazy(&p.pSettings.Scroll)
-		f.Projector_Width(p.projector.ID).Lazy(&p.pSettings.Width)
-		f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&p.pSettings.AspectRatioNumerator)
-		f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&p.pSettings.AspectRatioDenominator)
-		f.Projector_Color(p.projector.ID).Lazy(&p.pSettings.Color)
-		f.Projector_BackgroundColor(p.projector.ID).Lazy(&p.pSettings.BackgroundColor)
-		f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&p.pSettings.HeaderBackgroundColor)
-		f.Projector_HeaderFontColor(p.projector.ID).Lazy(&p.pSettings.HeaderFontColor)
-		f.Projector_HeaderH1Color(p.projector.ID).Lazy(&p.pSettings.HeaderH1Color)
-		f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor)
-		f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor2)
-		f.Projector_ChyronFontColor(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor)
-		f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor2)
-		f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&p.pSettings.ShowHeaderFooter)
-		f.Projector_ShowTitle(p.projector.ID).Lazy(&p.pSettings.ShowTitle)
-		f.Projector_ShowLogo(p.projector.ID).Lazy(&p.pSettings.ShowLogo)
-		f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
+		if p.pSettingsOverwrite == nil {
+			f.Projector_Scale(p.projector.ID).Lazy(&p.pSettings.Scale)
+			f.Projector_Scroll(p.projector.ID).Lazy(&p.pSettings.Scroll)
+			f.Projector_Width(p.projector.ID).Lazy(&p.pSettings.Width)
+			f.Projector_AspectRatioNumerator(p.projector.ID).Lazy(&p.pSettings.AspectRatioNumerator)
+			f.Projector_AspectRatioDenominator(p.projector.ID).Lazy(&p.pSettings.AspectRatioDenominator)
+			f.Projector_Color(p.projector.ID).Lazy(&p.pSettings.Color)
+			f.Projector_BackgroundColor(p.projector.ID).Lazy(&p.pSettings.BackgroundColor)
+			f.Projector_HeaderBackgroundColor(p.projector.ID).Lazy(&p.pSettings.HeaderBackgroundColor)
+			f.Projector_HeaderFontColor(p.projector.ID).Lazy(&p.pSettings.HeaderFontColor)
+			f.Projector_HeaderH1Color(p.projector.ID).Lazy(&p.pSettings.HeaderH1Color)
+			f.Projector_ChyronBackgroundColor(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor)
+			f.Projector_ChyronBackgroundColor2(p.projector.ID).Lazy(&p.pSettings.ChyronBackgroundColor2)
+			f.Projector_ChyronFontColor(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor)
+			f.Projector_ChyronFontColor2(p.projector.ID).Lazy(&p.pSettings.ChyronFontColor2)
+			f.Projector_ShowHeaderFooter(p.projector.ID).Lazy(&p.pSettings.ShowHeaderFooter)
+			f.Projector_ShowTitle(p.projector.ID).Lazy(&p.pSettings.ShowTitle)
+			f.Projector_ShowLogo(p.projector.ID).Lazy(&p.pSettings.ShowLogo)
+			f.Projector_ShowClock(p.projector.ID).Lazy(&p.pSettings.ShowClock)
+		} else {
+			p.pSettings.Scale = p.pSettingsOverwrite.Scale
+			p.pSettings.Scroll = p.pSettingsOverwrite.Scroll
+			p.pSettings.Width = p.pSettingsOverwrite.Width
+			p.pSettings.AspectRatioNumerator = p.pSettingsOverwrite.AspectRatioNumerator
+			p.pSettings.AspectRatioDenominator = p.pSettingsOverwrite.AspectRatioDenominator
+			p.pSettings.Color = p.pSettingsOverwrite.Color
+			p.pSettings.BackgroundColor = p.pSettingsOverwrite.BackgroundColor
+			p.pSettings.HeaderBackgroundColor = p.pSettingsOverwrite.HeaderBackgroundColor
+			p.pSettings.HeaderFontColor = p.pSettingsOverwrite.HeaderFontColor
+			p.pSettings.HeaderH1Color = p.pSettingsOverwrite.HeaderH1Color
+			p.pSettings.ChyronBackgroundColor = p.pSettingsOverwrite.ChyronBackgroundColor
+			p.pSettings.ChyronBackgroundColor2 = p.pSettingsOverwrite.ChyronBackgroundColor2
+			p.pSettings.ChyronFontColor = p.pSettingsOverwrite.ChyronFontColor
+			p.pSettings.ChyronFontColor2 = p.pSettingsOverwrite.ChyronFontColor2
+			p.pSettings.ShowHeaderFooter = p.pSettingsOverwrite.ShowHeaderFooter
+			p.pSettings.ShowTitle = p.pSettingsOverwrite.ShowTitle
+			p.pSettings.ShowLogo = p.pSettingsOverwrite.ShowLogo
+			p.pSettings.ShowClock = p.pSettingsOverwrite.ShowClock
+		}
 
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
@@ -199,37 +312,6 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 			log.Error().Err(err).Msg("error generating projector content after settings update")
 		}
 	})
-
-	projectionUpdate, projections, err := p.getProjectionSubscription(ctx)
-	if err != nil {
-		log.Fatal().Err(err).Msg("could not open projection subscription")
-	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case listener := <-p.AddListener:
-			p.listeners = append(p.listeners, listener)
-			listener <- &ProjectorUpdateEvent{
-				Event: "connected",
-				Data:  strconv.Itoa(int(time.Now().Unix())),
-			}
-		case listener := <-p.RemoveListener:
-			i := slices.IndexFunc(p.listeners, func(el chan *ProjectorUpdateEvent) bool { return el == listener })
-			if i > -1 {
-				close(p.listeners[i])
-				p.listeners[i] = p.listeners[len(p.listeners)-1]
-				p.listeners = p.listeners[:len(p.listeners)-1]
-			}
-		case data, ok := <-projectionUpdate:
-			if !ok {
-				return
-			}
-
-			p.processProjectionUpdate(data, projections)
-		}
-	}
 }
 
 func (p *projector) processProjectionUpdate(updated []int, projections map[int]string) {
