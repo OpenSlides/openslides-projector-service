@@ -80,6 +80,7 @@ LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-
 
 COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
 COPY --from=builder /root/openslides-projector-service/templates /templates
+COPY --from=builder /root/openslides-projector-service/locale /locale
 COPY --from=builder-web /static /static
 EXPOSE 9051
 CMD ["/openslides-projector-service"]
