@@ -141,16 +141,16 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				Locale:          r.locale,
 			})
 
+			if err != nil {
+				onError(err, "failed executing projection handler")
+				return
+			}
+
 			if projectionContent == nil {
 				updateChannel <- &projectionUpdate{
 					ID:      id,
 					Content: "",
 				}
-				return
-			}
-
-			if err != nil {
-				onError(err, "failed executing projection handler")
 				return
 			}
 
