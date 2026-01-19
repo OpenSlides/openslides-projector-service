@@ -113,7 +113,7 @@
         {{ $hasNo := .PollMethod.No }}
         {{ $hasAbstain := .PollMethod.Abstain }}
         {{ range .Data.GroupedVotes }}
-          {{ if and .Title (not $isLiveVoting) }}
+          {{ if or .Title (not $isLiveVoting) }}
             <div class="structure-level">
               <h3>{{ .Title }}</h3>
               {{ if not $isLiveVoting }}
