@@ -65,6 +65,7 @@ EXPOSE 9051
 
 CMD ["make", "build-live-all"]
 
+HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health || exit 1
 
 # Productive build
 FROM alpine:3 AS prod
@@ -84,3 +85,5 @@ COPY --from=builder /root/openslides-projector-service/locale /locale
 COPY --from=builder-web /static /static
 EXPOSE 9051
 CMD ["/openslides-projector-service"]
+
+HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health || exit 1
