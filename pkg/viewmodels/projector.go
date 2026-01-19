@@ -13,22 +13,21 @@ func Projector_ListOfSpeakersID(ctx context.Context, fetch *dsmodels.Fetch, proj
 		return nil, fmt.Errorf("could not load reference projector: %w", err)
 	}
 
-	losID := 0
 	for _, pID := range projections {
 		content, err := fetch.Projection_ContentObjectID(pID).Value(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load projection: %w", err)
 		}
 
-		losID, err = GetContentObjectField[int](ctx, fetch, "list_of_speakers_id", content)
+		losID, err := GetContentObjectField[int](ctx, fetch, "list_of_speakers_id", content)
 		if err != nil {
-			continue
+			return nil, err
+		}
+
+		if losID != nil {
+			return losID, nil
 		}
 	}
 
-	if losID == 0 {
-		return nil, nil
-	}
-
-	return &losID, nil
+	return nil, nil
 }
