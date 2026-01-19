@@ -2,8 +2,10 @@ package viewmodels
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/OpenSlides/openslides-go/datastore/dskey"
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
@@ -20,6 +22,12 @@ func Projector_ListOfSpeakersID(ctx context.Context, fetch *dsmodels.Fetch, proj
 		}
 
 		losID, err := GetContentObjectField[int](ctx, fetch, "list_of_speakers_id", content)
+
+		invalidKeyErr := dskey.InvalidKeyError{}
+		if errors.As(err, &invalidKeyErr) {
+			continue
+		}
+
 		if err != nil {
 			return nil, err
 		}
