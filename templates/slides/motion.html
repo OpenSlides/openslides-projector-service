@@ -63,18 +63,14 @@
           <!-- Recommendation -->
           {{ if and .Recommender .Recommendation }}
             <tr class="{{ if not .HideMetadataBackground }}topline{{ end }}">
-              <td class="min">
-                <b>{{ .Recommender }}:</b>
-              </td>
+              <td class="min">{{ .Recommender }}:</td>
               <td>{{ .Recommendation }}</td>
             </tr>
           {{ end }}
           <!-- recommendation referencing motions -->
           {{ if .ReferencedRecoMotions }}
             <tr class="{{ if not .HideMetadataBackground }}topline{{ end }}">
-              <td class="min">
-                <b>{{ Loc.Get "Referring motions" }}:</b>
-              </td>
+              <td class="min">{{ Loc.Get "Referring motions" }}:</td>
               <td>
                 {{ .ReferencedRecoMotions }}
               </td>
