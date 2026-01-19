@@ -31,7 +31,7 @@ FROM base AS builder
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
 
-FROM node:22.13 AS builder-web
+FROM node:24.13 AS builder-web
 
 COPY web /web
 COPY Makefile /Makefile
