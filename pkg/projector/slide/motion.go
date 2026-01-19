@@ -134,7 +134,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 			if motion.RecommendationExtension != "" && val.ShowRecommendationExtensionField {
 				ext, err := data.motionParseRecommendationExtension(ctx)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("error parsing motion recommendation: %w", err)
 				}
 				data.Recommendation = fmt.Sprintf("%s %s", data.Recommendation, ext)
 			}

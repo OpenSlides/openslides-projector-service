@@ -10,28 +10,27 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
 
-func GetContentObjectField[V any](ctx context.Context, fetch *dsmodels.Fetch, field string, fqid string) (V, error) {
-	var result V
-
+func GetContentObjectField[V any](ctx context.Context, fetch *dsmodels.Fetch, field string, fqid string) (*V, error) {
 	dsKey, err := dskey.FromStringf("%s/%s", fqid, field)
 	if err != nil {
-		return result, err
+		return nil, fmt.Errorf("constructing content object dskey: %w", err)
 	}
 
 	keys, err := fetch.Get(ctx, dsKey)
 	if err != nil {
-		return result, fmt.Errorf("load los id: %w", err)
+		return nil, fmt.Errorf("load content object field: %w", err)
 	}
 
 	if val, ok := keys[dsKey]; !ok || len(val) == 0 {
-		return result, fmt.Errorf("not found id: %w", err)
+		return nil, nil
 	}
 
+	var result V
 	if err := json.Unmarshal(keys[dsKey], &result); err != nil {
-		return result, fmt.Errorf("parse los id: %w", err)
+		return nil, fmt.Errorf("parse content object field: %w", err)
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 type TitleInformation struct {
@@ -59,12 +58,14 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 			return TitleInformation{}, fmt.Errorf("could not fetch agenda item id: %w", err)
 		}
 
-		agendaItemNumber, err := fetch.AgendaItem_ItemNumber(agendaItemID).Value(ctx)
-		if err != nil {
-			return TitleInformation{}, fmt.Errorf("could not fetch agenda item number: %w", err)
-		}
+		if agendaItemID != nil {
+			agendaItemNumber, err := fetch.AgendaItem_ItemNumber(*agendaItemID).Value(ctx)
+			if err != nil {
+				return TitleInformation{}, fmt.Errorf("could not fetch agenda item number: %w", err)
+			}
 
-		result.AgendaItemNumber = agendaItemNumber
+			result.AgendaItemNumber = agendaItemNumber
+		}
 	}
 
 	// Number
@@ -75,7 +76,9 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 			return TitleInformation{}, fmt.Errorf("could not fetch title: %w", err)
 		}
 
-		result.Number = number
+		if number != nil {
+			result.Number = *number
+		}
 	}
 
 	// Title
@@ -86,7 +89,9 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 			return TitleInformation{}, fmt.Errorf("could not fetch title: %w", err)
 		}
 
-		result.Title = title
+		if title != nil {
+			result.Title = *title
+		}
 	}
 
 	return result, nil
