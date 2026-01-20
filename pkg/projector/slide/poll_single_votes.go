@@ -109,22 +109,27 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	} else if poll.LiveVotingEnabled {
 		var liveVotes map[int]string
 		if err := json.Unmarshal(poll.LiveVotes, &liveVotes); err != nil {
-			return nil, fmt.Errorf("parse los id: %w", err)
+			return nil, fmt.Errorf("parse live votes: %w", err)
 		}
 
 		for uid, voteJson := range liveVotes {
 			var liveVoteEntry struct {
 				RequestUserID int             `json:"request_user_id"`
 				VoteUserID    int             `json:"vote_user_id"`
-				Value         map[int]string  `json:"value"`
+				Value         map[int]any     `json:"value"`
 				Weight        decimal.Decimal `json:"weight"`
 			}
 			if err := json.Unmarshal([]byte(voteJson), &liveVoteEntry); err != nil {
-				return nil, fmt.Errorf("parse los id: %w", err)
+				fmt.Println(voteJson)
+				return nil, fmt.Errorf("parse live vote entry: %w", err)
 			}
 
-			if val, ok := liveVoteEntry.Value[pollOption.ID]; ok {
-				voteMap[uid] = val
+			if len(liveVoteEntry.Value) > 1 {
+				// pollOption
+			} else {
+				if val, ok := liveVoteEntry.Value[pollOption.ID]; ok {
+					voteMap[uid] = val.(string)
+				}
 			}
 		}
 	}
