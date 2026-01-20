@@ -43,7 +43,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	var options pollSlideOptions
 	if len(req.Projection.Options) > 0 {
 		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
-			return nil, fmt.Errorf("could not parse slide options: %w", err)
+			return nil, fmt.Errorf("could not parse poll slide options: %w", err)
 		}
 	}
 
