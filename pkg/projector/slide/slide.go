@@ -142,7 +142,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 			})
 
 			if err != nil {
-				onError(err, "failed executing projection handler")
+				onError(err, fmt.Sprintf("failed executing projection handler %s", projectionType))
 				return
 			}
 
