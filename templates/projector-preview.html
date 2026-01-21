@@ -17,7 +17,9 @@
     <script type="module">
       import { Projector } from '/system/projector/static/projector.js';
 
-      Projector(document.getElementById(`projector-page`), null, null, true);
+      Projector(document.getElementById(`projector-page`), null, null, {
+        standalone: true
+      });
     </script>
   </body>
 </html>

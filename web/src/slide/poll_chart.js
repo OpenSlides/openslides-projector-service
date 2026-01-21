@@ -1,6 +1,6 @@
-import { ArcElement, Chart, Colors, PieController } from 'chart.js';
+import { ArcElement, Chart, PieController } from 'chart.js';
 
-Chart.register(PieController, ArcElement, Colors);
+Chart.register(PieController, ArcElement);
 
 export class ProjectorPollChart extends HTMLElement {
   connectedCallback() {
@@ -16,11 +16,27 @@ export class ProjectorPollChart extends HTMLElement {
   render() {
     this.style.display = `block`;
 
+    const pollChartColors = [
+      `#5fbfa2`,
+      `#f94144`,
+      `#317796`,
+      `#d4520c`,
+      `#509191`,
+      `#f9ac4e`,
+      `#6788a2`,
+      `#f8793a`,
+      `#6bbadb`,
+      `#eca809`
+    ];
+
     const data = [];
     const backgroundColor = [];
-    for (const entry of this.config) {
+    for (let i = 0; i < this.config.length; i++) {
+      const entry = this.config[i];
       if (entry.color) {
         backgroundColor.push(window.getComputedStyle(this).getPropertyValue(entry.color));
+      } else {
+        backgroundColor.push(pollChartColors[i % pollChartColors.length]);
       }
       data.push(entry.val);
     }

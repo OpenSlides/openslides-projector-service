@@ -30,7 +30,7 @@ func MeetingMediafileSlideHandler(ctx context.Context, req *projectionRequest) (
 
 	if len(req.Projection.Options) > 0 {
 		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
-			return nil, fmt.Errorf("could not parse slide options: %w", err)
+			return nil, fmt.Errorf("could not parse meeting mediafile slide options: %w", err)
 		}
 	}
 

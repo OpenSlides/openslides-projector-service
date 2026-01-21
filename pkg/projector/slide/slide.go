@@ -108,7 +108,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 		projection, err := fetch.Projection(id).First(ctx)
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				onError(err, "getting projection from db")
+				onError(err, fmt.Sprintf("getting projection %d from db", id))
 			}
 
 			return
@@ -141,16 +141,16 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				Locale:          r.locale,
 			})
 
+			if err != nil {
+				onError(err, fmt.Sprintf("failed executing projection handler %s for %d", projectionType, id))
+				return
+			}
+
 			if projectionContent == nil {
 				updateChannel <- &projectionUpdate{
 					ID:      id,
 					Content: "",
 				}
-				return
-			}
-
-			if err != nil {
-				onError(err, "failed executing projection handler")
 				return
 			}
 
@@ -176,7 +176,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 			var content bytes.Buffer
 			err = tmpl.Lookup(tmplName).Execute(&content, projectionContent)
 			if err != nil {
-				onError(err, fmt.Sprintf("could not execute %s template", projectionType))
+				onError(err, fmt.Sprintf("could not execute %s template for projection %d", projectionType, id))
 				return
 			}
 

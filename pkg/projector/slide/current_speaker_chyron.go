@@ -54,7 +54,7 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 
 	var options currentSpeakerChyronSlideOptions
 	if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
-		return nil, fmt.Errorf("could not parse slide options: %w", err)
+		return nil, fmt.Errorf("could not parse current speaker chyron slide options: %w", err)
 	}
 
 	currentSpeaker, err := viewmodels.ListOfSpeakers_CurrentSpeaker(ctx, &los)
