@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
 func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -41,11 +43,16 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 			recoName = reco.RecommendationLabel
 			recoColor = reco.CssClass
 		}
+
+		ext, err := viewmodels.Motion_RecommendationParsed(ctx, req.Fetch, &motion)
+		if err != nil {
+			return nil, fmt.Errorf("error reading motion extension for %d: %w", motion.ID, err)
+		}
 		motionList = append(motionList, motionListEntry{
 			Number:                  motion.Number,
 			Title:                   motion.Title,
 			Recommendation:          recoName,
-			RecommendationExtension: motion.RecommendationExtension,
+			RecommendationExtension: ext,
 			RecommendationColor:     recoColor,
 		})
 	}

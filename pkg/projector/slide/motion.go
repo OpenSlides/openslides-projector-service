@@ -104,7 +104,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 
 	if len(req.Projection.Options) > 0 {
 		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
-			return nil, fmt.Errorf("could not parse slide options: %w", err)
+			return nil, fmt.Errorf("could not parse motion slide options: %w", err)
 		}
 	}
 
@@ -132,9 +132,9 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 		if val, ok := motion.Recommendation.Value(); ok {
 			data.Recommendation = val.RecommendationLabel
 			if motion.RecommendationExtension != "" && val.ShowRecommendationExtensionField {
-				ext, err := data.motionParseRecommendationExtension(ctx)
+				ext, err := viewmodels.Motion_RecommendationParsed(ctx, req.Fetch, &motion)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("error parsing motion recommendation: %w", err)
 				}
 				data.Recommendation = fmt.Sprintf("%s %s", data.Recommendation, ext)
 			}
@@ -355,17 +355,4 @@ func (m *motionSlideCommonData) motionAmendments(ctx context.Context) (map[strin
 	return m.templateData(map[string]any{
 		"Amendments": tmplAmendments,
 	}), nil
-}
-
-func (m *motionSlideCommonData) motionParseRecommendationExtension(ctx context.Context) (string, error) {
-	ext := m.Motion.RecommendationExtension
-	for _, refMotion := range m.Motion.RecommendationExtensionReferenceIDs {
-		title, err := viewmodels.GetTitleInformationByContentObject(ctx, m.ProjectionReq.Fetch, refMotion)
-		if err != nil {
-			return "", fmt.Errorf("could not fetch recommendation motion: %w", err)
-		}
-
-		ext = strings.ReplaceAll(ext, fmt.Sprintf("[%s]", refMotion), title.Number)
-	}
-	return ext, nil
 }

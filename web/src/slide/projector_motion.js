@@ -248,10 +248,6 @@ export class ProjectorMotionText extends HTMLElement {
     const lineNumbering = this.getAttribute(`line-numbering`);
     const currentChange = changes[idx];
 
-    if (currentChange.changeTitle != null && !currentChange.changeTitle) {
-      return '';
-    }
-
     if (!HtmlDiff.changeHasCollissions(currentChange, changes) && currentChange.changeType != `unknown`) {
       return '';
     }
@@ -272,12 +268,17 @@ export class ProjectorMotionText extends HTMLElement {
       changeHeader.push(`<span class="amendment-nr-n-icon" style="margin-left: 40px">`);
     }
 
-    changeHeader.push(`<span class="amendment-nr">`);
-    changeHeader.push(currentChange.changeTitle);
-    if (currentChange.changeType == `unknown`) {
-      changeHeader.push(`: `);
+    if (currentChange.changeTitle) {
+      changeHeader.push(`<span class="amendment-nr">`);
+      changeHeader.push(currentChange.changeTitle);
+
+      if (currentChange.changeType == `unknown`) {
+        changeHeader.push(`: `);
+      }
+      changeHeader.push(`</span>`);
     }
-    changeHeader.push(`</span></span>`);
+
+    changeHeader.push(`</span>`);
     return changeHeader.join(``);
   }
 

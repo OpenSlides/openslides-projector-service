@@ -32,7 +32,7 @@ func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (ma
 
 	if len(req.Projection.Options) > 0 {
 		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
-			return nil, fmt.Errorf("could not parse slide options: %w", err)
+			return nil, fmt.Errorf("could not parse agenda item list slide options: %w", err)
 		}
 	}
 

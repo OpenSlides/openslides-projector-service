@@ -25,8 +25,16 @@ window.serverTime = () => new Date();
 /**
  * Creates a projector on the given element
  */
-export function Projector(host, id, auth = () => ``, standalone = false) {
-  const container = standalone ? host : host.attachShadow({ mode: `open` });
+export function Projector(host, id, auth = () => ``, config = {}) {
+  config = Object.assign(
+    {
+      standalone: false,
+      lang: null
+    },
+    config
+  );
+
+  const container = config.standalone ? host : host.attachShadow({ mode: `open` });
   const initContent = host.querySelector(`#current-content`)?.innerHTML;
   const sizeListener = setPageWidthVar(host, container);
   const clock = createProjectorClock(container);
@@ -52,6 +60,10 @@ export function Projector(host, id, auth = () => ``, standalone = false) {
     fetch: (input, init) => {
       if (needsInit) {
         input.searchParams.set(`init`, `1`);
+      }
+
+      if (config.lang) {
+        input.searchParams.set(`lang`, config.lang);
       }
 
       needsInit = true;

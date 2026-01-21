@@ -91,13 +91,14 @@
 
 
     <div id="slides">
-      <div class="overlay-container"></div>
-
       {{ range $index, $element := .Projections }}
         <div class="slide" data-id="{{ $index }}">
           {{ $element }}
         </div>
       {{ end }}
+
+
+      <div class="overlay-container"></div>
     </div>
 
     {{ if .Projector.ShowHeaderFooter }}

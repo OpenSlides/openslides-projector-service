@@ -7,6 +7,6 @@ import (
 func (s *projectorHttp) HealthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		writeResponse(w, `{"healthy": true}`)
+		writeResponse(w, `{"healthy": true, "service":"projector"}`)
 	}
 }
