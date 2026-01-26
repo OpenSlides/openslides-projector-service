@@ -55,11 +55,17 @@ func ListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		return nil, nil
 	}
 
+	showNumSpeakers, err := req.Fetch.Meeting_ListOfSpeakersShowAmountOfSpeakersOnSlide(req.Projection.MeetingID).Value(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch los amount of speakers setting %w", err)
+	}
+
 	return map[string]any{
-		"_template":    "list_of_speakers",
-		"LoS":          los,
-		"Speakers":     speakers,
-		"ContentTitle": titleInfo,
-		"Overlay":      req.Projection.Stable,
+		"_template":       "list_of_speakers",
+		"LoS":             los,
+		"ShowNumSpeakers": showNumSpeakers,
+		"Speakers":        speakers,
+		"ContentTitle":    titleInfo,
+		"Overlay":         req.Projection.Stable,
 	}, nil
 }

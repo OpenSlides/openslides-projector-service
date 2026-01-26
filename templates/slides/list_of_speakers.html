@@ -53,7 +53,7 @@
         {{ if .ContentTitle.Title }}
           {{ .ContentTitle.Title }}
         {{ end }}
-        {{ if .Speakers.WaitingSpeakers }}
+        {{ if and .Speakers.WaitingSpeakers .ShowNumSpeakers }}
           &ndash;
           {{ len .Speakers.WaitingSpeakers }}
           {{ Loc.Get "Speakers" }}
