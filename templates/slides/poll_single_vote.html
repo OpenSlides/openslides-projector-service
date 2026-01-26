@@ -138,24 +138,38 @@
         {{ end }}
         {{ range .Votes }}
           <div class="vote-entry">
-            {{ $iconName := "radio_button_unchecked" }}
-            {{ $iconClass := "no-content" }}
-            {{ if eq .Value "Y" }}
-              {{ $iconName = "check_circle" }}
-              {{ $iconClass = "yes" }}
-            {{ else if eq .Value "N" }}
-              {{ $iconName = "cancel" }}
-              {{ $iconClass = "no" }}
-            {{ else if eq .Value "A" }}
-              {{ $iconName = "circle" }}
-              {{ $iconClass = "abstain" }}
+            {{ if eq (len $.Data.Options) 1 }}
+              {{ $iconName := "radio_button_unchecked" }}
+              {{ $iconClass := "no-content" }}
+              {{ if eq .Value "Y" }}
+                {{ $iconName = "check_circle" }}
+                {{ $iconClass = "yes" }}
+              {{ else if eq .Value "N" }}
+                {{ $iconName = "cancel" }}
+                {{ $iconClass = "no" }}
+              {{ else if eq .Value "A" }}
+                {{ $iconName = "circle" }}
+                {{ $iconClass = "abstain" }}
+              {{ end }}
+              <projector-icon-container icon="{{ $iconName }}" iconClass="{{ $iconClass }}">
+                <span class="vote-name {{ if not .Present }}not-present{{ end }}">
+                  {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
+                  {{ .FirstName }}
+                </span>
+              </projector-icon-container>
+            {{ else }}
+              <div class="vote-wrapper">
+                <span class="vote-value">
+                  {{ if ne .Value "" }}
+                    {{ .Value }}
+                  {{ end }}
+                </span>
+                <span class="vote-name {{ if not .Present }}not-present{{ end }}">
+                  {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
+                  {{ .FirstName }}
+                </span>
+              </div>
             {{ end }}
-            <projector-icon-container icon="{{ $iconName }}" iconClass="{{ $iconClass }}">
-              <span class="vote-name {{ if not .Present }}not-present{{ end }}">
-                {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
-                {{ .FirstName }}
-              </span>
-            </projector-icon-container>
           </div>
         {{ end }}
       {{ end }}

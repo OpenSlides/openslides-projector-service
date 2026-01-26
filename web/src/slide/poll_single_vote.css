@@ -122,10 +122,18 @@
     font-weight: 400;
     line-height: 1.8125em;
     border-bottom: 1px solid;
+    .vote-wrapper,
     projector-icon-container {
       display: flex;
       align-items: center;
       max-width: 100%;
+      span.vote-value {
+        font-size: 0.875em;
+        min-width: 1em;
+        text-align: center;
+        margin-right: 5px;
+      }
+
       span.material-icons {
         font-size: 1.125em;
         margin-right: 5px;

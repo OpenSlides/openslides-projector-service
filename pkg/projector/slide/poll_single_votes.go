@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
@@ -58,6 +59,11 @@ func (e *pollSingleVotesSlideVoteEntryGroup) TotalAbstain() int {
 }
 
 type pollSingleVotesSlideData struct {
+	Options      []*pollSingleVotesSlideOption
+	GroupedVotes []*pollSingleVotesSlideVoteEntryGroup
+}
+
+type pollSingleVotesSlideOption struct {
 	TotalYes        decimal.Decimal
 	TotalNo         decimal.Decimal
 	TotalAbstain    decimal.Decimal
@@ -66,7 +72,6 @@ type pollSingleVotesSlideData struct {
 	PercNo          decimal.Decimal
 	PercAbstain     decimal.Decimal
 	PercVotesvalid  decimal.Decimal
-	GroupedVotes    []*pollSingleVotesSlideVoteEntryGroup
 }
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -94,44 +99,9 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		nameOrderString = "last_name"
 	}
 
-	pollOption := dsmodels.Option{}
-	if len(poll.OptionList) > 0 {
-		pollOption = poll.OptionList[0]
-	}
-
-	voteMap := map[int]string{}
-	if poll.EntitledUsersAtStop != nil {
-		for _, entry := range pollOption.VoteList {
-			if val, ok := entry.UserID.Value(); ok {
-				voteMap[val] = entry.Value
-			}
-		}
-	} else if poll.LiveVotingEnabled {
-		var liveVotes map[int]string
-		if err := json.Unmarshal(poll.LiveVotes, &liveVotes); err != nil {
-			return nil, fmt.Errorf("parse live votes: %w", err)
-		}
-
-		for uid, voteJson := range liveVotes {
-			var liveVoteEntry struct {
-				RequestUserID int             `json:"request_user_id"`
-				VoteUserID    int             `json:"vote_user_id"`
-				Value         map[int]any     `json:"value"`
-				Weight        decimal.Decimal `json:"weight"`
-			}
-			if err := json.Unmarshal([]byte(voteJson), &liveVoteEntry); err != nil {
-				fmt.Println(voteJson)
-				return nil, fmt.Errorf("parse live vote entry: %w", err)
-			}
-
-			if len(liveVoteEntry.Value) > 1 {
-				// pollOption
-			} else {
-				if val, ok := liveVoteEntry.Value[pollOption.ID]; ok {
-					voteMap[uid] = val.(string)
-				}
-			}
-		}
+	voteMap, err := mapUsersToVote(&poll)
+	if err != nil {
+		return nil, fmt.Errorf("mapping users to vote: %w", err)
 	}
 
 	meetingUserMap := map[int]dsmodels.MeetingUser{}
@@ -139,6 +109,14 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		for _, mu := range group.MeetingUserList {
 			meetingUserMap[mu.UserID] = mu
 		}
+	}
+
+	slices.SortFunc(poll.OptionList, func(a dsmodels.Option, b dsmodels.Option) int {
+		return a.Weight - b.Weight
+	})
+	optionIndexMap := map[string]int{}
+	for idx, option := range poll.OptionList {
+		optionIndexMap[strconv.Itoa(option.ID)] = idx
 	}
 
 	slideData := pollSingleVotesSlideData{}
@@ -164,7 +142,14 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 			LastName:  user.LastName,
 			Present:   isPresent || hasDelegate,
-			Value:     voteMap[user.ID],
+		}
+
+		if voteVal, ok := voteMap[user.ID]; ok {
+			if len(poll.OptionList) > 1 {
+				vote.Value = strconv.Itoa(optionIndexMap[voteVal] + 1)
+			} else {
+				vote.Value = voteVal
+			}
 		}
 
 		structureLevel := &dsmodels.StructureLevel{
@@ -211,16 +196,23 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	slideData.GroupedVotes = voteEntryGroups
-	slideData.TotalYes = pollOption.Yes
-	slideData.TotalNo = pollOption.No
-	slideData.TotalAbstain = pollOption.Abstain
-	slideData.TotalVotesvalid = poll.Votesvalid
-	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
-	if !onehundredPercentBase.IsZero() {
-		slideData.PercYes = slideData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-		slideData.PercNo = slideData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-		slideData.PercAbstain = slideData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-		slideData.PercVotesvalid = slideData.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+	slideData.Options = []*pollSingleVotesSlideOption{}
+	for _, pollOption := range poll.OptionList {
+		option := pollSingleVotesSlideOption{
+			TotalYes:        pollOption.Yes,
+			TotalNo:         pollOption.No,
+			TotalAbstain:    pollOption.Abstain,
+			TotalVotesvalid: poll.Votesvalid,
+		}
+		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
+		if !onehundredPercentBase.IsZero() {
+			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			option.PercVotesvalid = option.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		}
+
+		slideData.Options = append(slideData.Options, &option)
 	}
 
 	return map[string]any{
@@ -231,10 +223,56 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
-		"PollOption":       pollOption,
 		"NumVotes":         len(voteMap),
 		"NumNotVoted":      len(entitledUsers) - len(voteMap),
 		"NumEntitledUsers": len(entitledUsers),
 		"MaxColumns":       maxColumns,
 	}, nil
+}
+
+func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
+	pollOption := dsmodels.Option{}
+	if len(poll.OptionList) > 0 {
+		pollOption = poll.OptionList[0]
+	}
+
+	voteMap := map[int]string{}
+	if poll.EntitledUsersAtStop != nil {
+		for _, entry := range pollOption.VoteList {
+			if val, ok := entry.UserID.Value(); ok {
+				voteMap[val] = entry.Value
+			}
+		}
+	} else if poll.LiveVotingEnabled {
+		var liveVotes map[int]string
+		if err := json.Unmarshal(poll.LiveVotes, &liveVotes); err != nil {
+			return nil, fmt.Errorf("parse live votes: %w", err)
+		}
+
+		for uid, voteJson := range liveVotes {
+			var liveVoteEntry struct {
+				RequestUserID int             `json:"request_user_id"`
+				VoteUserID    int             `json:"vote_user_id"`
+				Value         map[int]any     `json:"value"`
+				Weight        decimal.Decimal `json:"weight"`
+			}
+			if err := json.Unmarshal([]byte(voteJson), &liveVoteEntry); err != nil {
+				return nil, fmt.Errorf("parse live vote entry: %w", err)
+			}
+
+			if len(liveVoteEntry.Value) > 1 {
+				for optionID, valRaw := range liveVoteEntry.Value {
+					if val, ok := valRaw.(float64); ok && val == 1 {
+						voteMap[uid] = strconv.Itoa(optionID)
+					}
+				}
+			} else {
+				if val, ok := liveVoteEntry.Value[pollOption.ID]; ok {
+					voteMap[uid], _ = val.(string)
+				}
+			}
+		}
+	}
+
+	return voteMap, nil
 }
