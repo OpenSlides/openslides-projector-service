@@ -53,9 +53,9 @@
         {{ if .ContentTitle.Title }}
           {{ .ContentTitle.Title }}
         {{ end }}
-        {{ if .Speakers.WaitingSpeakers }}
+        {{ if and .Speakers.WaitingSpeakers .ShowNumSpeakers }}
           &ndash;
-          {{ len .Speakers.WaitingSpeakers }}
+          {{ .WaitingSpeakers }}
           {{ Loc.Get "Speakers" }}
         {{ end }}
       </h2>
@@ -68,6 +68,15 @@
           {{ template "speaker" .Speakers.CurrentSpeaker }}
         </div>
       {{ end }}
+
+
+      <div class="last-speakers">
+        {{ range .Speakers.FinishedSpeakers }}
+          <div>
+            {{ template "speaker" . }}
+          </div>
+        {{ end }}
+      </div>
 
       {{ if .Speakers.CurrentInterposedQuestion }}
         <div class="speaker current interposed-question">

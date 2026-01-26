@@ -165,7 +165,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 
 	if poll.GlobalOption != nil && !poll.GlobalOption.Null() {
 		globalOption, _ := poll.GlobalOption.Value()
-		if poll.GlobalYes && !globalOption.Yes.IsZero() {
+		if poll.GlobalYes && !globalOption.Yes.IsZero() && poll.Pollmethod != "N" {
 			data.Sums = append(data.Sums, pollSlideTableSum{
 				Name:  req.Locale.Get("General approval"),
 				Total: globalOption.Yes,

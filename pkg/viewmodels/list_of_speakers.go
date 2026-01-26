@@ -42,6 +42,7 @@ type SpeakerListItem struct {
 type ListOfSpeakersLists struct {
 	CurrentSpeaker             *SpeakerListItem
 	WaitingSpeakers            []SpeakerListItem
+	FinishedSpeakers           []SpeakerListItem
 	CurrentInterposedQuestion  *SpeakerListItem
 	WaitingInterposedQuestions []SpeakerListItem
 }
@@ -62,6 +63,7 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 
 	waitingSpeakers := []SpeakerListItem{}
 	interposedQuestions := []SpeakerListItem{}
+	finishedSpeakers := []SpeakerListItem{}
 	var currentSpeaker *SpeakerListItem
 	var currentInterposedQuestion *SpeakerListItem
 	for _, speaker := range los.SpeakerList {
@@ -118,6 +120,9 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 			} else {
 				currentSpeaker = &item
 			}
+		} else {
+			item.Weight = speaker.EndTime
+			finishedSpeakers = append(finishedSpeakers, item)
 		}
 	}
 
@@ -129,9 +134,14 @@ func ListOfSpeakers_CategorizedLists(ctx context.Context, fetch *dsmodels.Fetch,
 		return interposedQuestions[i].Weight < interposedQuestions[j].Weight
 	})
 
+	sort.Slice(finishedSpeakers, func(i, j int) bool {
+		return finishedSpeakers[i].Weight < finishedSpeakers[j].Weight
+	})
+
 	return ListOfSpeakersLists{
 		CurrentSpeaker:             currentSpeaker,
 		WaitingSpeakers:            waitingSpeakers,
+		FinishedSpeakers:           finishedSpeakers,
 		CurrentInterposedQuestion:  currentInterposedQuestion,
 		WaitingInterposedQuestions: interposedQuestions,
 	}, nil
