@@ -76,7 +76,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			})
 		}
 
-		if strings.Contains(poll.Pollmethod, "A") && poll.OnehundredPercentBase != "YN" {
+		if strings.Contains(poll.Pollmethod, "A") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
 				Color:      "--theme-abstain",
 				Icon:       "circle",
@@ -131,10 +131,9 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	}
 
 	return map[string]any{
-		"_template":             "poll_chart",
-		"_fullHeight":           true,
-		"Poll":                  poll,
-		"Data":                  data,
-		"OneHundredPercentBase": poll.OnehundredPercentBase,
+		"_template":   "poll_chart",
+		"_fullHeight": true,
+		"Poll":        poll,
+		"Data":        data,
 	}, nil
 }
