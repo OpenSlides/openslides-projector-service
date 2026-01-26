@@ -58,9 +58,9 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				Icon:       "check_circle",
 				Name:       req.Locale.Get("Yes"),
 				TotalVotes: opt.Yes,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y") ||
-					poll.OnehundredPercentBase == "cast" ||
-					poll.OnehundredPercentBase == "valid",
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y") &&
+					poll.OnehundredPercentBase != "cast" &&
+					poll.OnehundredPercentBase != "valid",
 			})
 		}
 
@@ -70,9 +70,9 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				Icon:       "cancel",
 				Name:       req.Locale.Get("No"),
 				TotalVotes: opt.No,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N") ||
-					poll.OnehundredPercentBase == "cast" ||
-					poll.OnehundredPercentBase == "valid",
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N") &&
+					poll.OnehundredPercentBase != "cast" &&
+					poll.OnehundredPercentBase != "valid",
 			})
 		}
 
@@ -82,9 +82,9 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				Icon:       "circle",
 				Name:       req.Locale.Get("Abstain"),
 				TotalVotes: opt.Abstain,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A") ||
-					poll.OnehundredPercentBase == "cast" ||
-					poll.OnehundredPercentBase == "valid",
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A") &&
+					poll.OnehundredPercentBase != "cast" &&
+					poll.OnehundredPercentBase != "valid",
 			})
 		}
 	} else {
@@ -126,7 +126,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	data.ChartData = string(chartDataJSON)
 
 	data.TotalValidvotes = poll.Votesvalid
-	if !onehundredPercentBase.IsZero() {
+	if !onehundredPercentBase.IsZero() && poll.OnehundredPercentBase != "YN" && poll.OnehundredPercentBase != "YNA" {
 		data.PercValidvotes = poll.Votesvalid.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 	}
 
