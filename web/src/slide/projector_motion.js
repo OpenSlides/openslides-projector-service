@@ -61,6 +61,11 @@ export class ProjectorMotionText extends HTMLElement {
     this.lineLength = this.getAttribute(`line-length`) ? +this.getAttribute(`line-length`) : null;
     this.firstLine = this.getAttribute(`first-line`) ? +this.getAttribute(`first-line`) : null;
     this.mode = this.getAttribute(`mode`);
+    this.i18n = this.getAttribute(`i18n`)
+      ? JSON.parse(this.getAttribute(`i18n`))
+      : {
+          line: `Line`
+        };
   }
 
   readChangeRecos() {
@@ -336,9 +341,11 @@ export class ProjectorMotionAmendment extends ProjectorMotionText {
     const text = [];
     for (const p of amendmentParagraphs) {
       if (p.diffLineFrom === p.diffLineTo) {
-        text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom}</h3>`);
+        text.push(`<h3 class="amendment-line-header"><span>${this.i18n.line}</span> ${p.diffLineFrom}</h3>`);
       } else {
-        text.push(`<h3 class="amendment-line-header"><span>Line</span> ${p.diffLineFrom} - ${p.diffLineTo}</h3>`);
+        text.push(
+          `<h3 class="amendment-line-header"><span>${this.i18n.line}</span> ${p.diffLineFrom} - ${p.diffLineTo}</h3>`
+        );
       }
       text.push(p.text);
     }

@@ -11,6 +11,8 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
+	"github.com/leonelquinteros/gotext"
+	"github.com/rs/zerolog/log"
 )
 
 type motionSlideMode string
@@ -28,6 +30,7 @@ type motionSlideOptions struct {
 }
 
 type motionSlideCommonData struct {
+	Locale                *gotext.Locale
 	ProjectionReq         *projectionRequest
 	Mode                  string
 	Motion                *dsmodels.Motion
@@ -47,6 +50,13 @@ type motionSlideCommonData struct {
 }
 
 func (m *motionSlideCommonData) templateData(additional map[string]any) map[string]any {
+	motionTextI18n, err := json.Marshal(map[string]string{
+		"line": m.Locale.Get("Line"),
+	})
+	if err != nil {
+		log.Err(err).Msg("could not marshal motion slide i18n")
+	}
+
 	data := map[string]any{
 		"IsParagraphBasedAmendment": !m.Motion.LeadMotionID.Null(),
 		"LineLength":                m.LineLength,
@@ -54,6 +64,7 @@ func (m *motionSlideCommonData) templateData(additional map[string]any) map[stri
 		"Mode":                      m.Mode,
 		"Motion":                    m.Motion,
 		"MotionText":                template.HTML(m.Motion.Text),
+		"MotionTextI18n":            string(motionTextI18n),
 		"Preamble":                  m.Preamble,
 		"ReferencedRecoMotions":     m.ReferencedRecoMotions,
 		"ShowSidebox":               m.ShowSidebox,
@@ -109,6 +120,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 	}
 
 	data := motionSlideCommonData{
+		Locale:        req.Locale,
 		ProjectionReq: req,
 		Mode:          string(options.Mode),
 		Motion:        &motion,
