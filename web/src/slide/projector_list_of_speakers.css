@@ -34,6 +34,11 @@
   }
 }
 
+.last-speakers {
+  color: #9a9898;
+  margin: 20px 0 10px 33px;
+}
+
 .next-speakers {
   margin: 20px 0 10px 0;
   padding-left: 6px;
