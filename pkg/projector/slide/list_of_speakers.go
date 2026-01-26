@@ -55,9 +55,24 @@ func ListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		return nil, nil
 	}
 
-	showNumSpeakers, err := req.Fetch.Meeting_ListOfSpeakersShowAmountOfSpeakersOnSlide(req.Projection.MeetingID).Value(ctx)
-	if err != nil {
+	numWaitingSpeakers := len(speakers.WaitingSpeakers)
+
+	var maxLastSpeakers int
+	var maxNextSpeakers int
+	var showNumSpeakers bool
+	req.Fetch.Meeting_ListOfSpeakersAmountLastOnProjector(req.Projection.MeetingID).Lazy(&maxLastSpeakers)
+	req.Fetch.Meeting_ListOfSpeakersAmountNextOnProjector(req.Projection.MeetingID).Lazy(&maxNextSpeakers)
+	req.Fetch.Meeting_ListOfSpeakersShowAmountOfSpeakersOnSlide(req.Projection.MeetingID).Lazy(&showNumSpeakers)
+	if err := req.Fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("could not fetch los amount of speakers setting %w", err)
+	}
+
+	if maxLastSpeakers >= 0 && len(speakers.FinishedSpeakers) > maxLastSpeakers {
+		speakers.FinishedSpeakers = speakers.FinishedSpeakers[len(speakers.FinishedSpeakers)-maxLastSpeakers:]
+	}
+
+	if maxNextSpeakers >= 0 && len(speakers.WaitingSpeakers) > maxNextSpeakers {
+		speakers.WaitingSpeakers = speakers.WaitingSpeakers[:maxNextSpeakers]
 	}
 
 	return map[string]any{
@@ -65,6 +80,7 @@ func ListOfSpeakersSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		"LoS":             los,
 		"ShowNumSpeakers": showNumSpeakers,
 		"Speakers":        speakers,
+		"WaitingSpeakers": numWaitingSpeakers,
 		"ContentTitle":    titleInfo,
 		"Overlay":         req.Projection.Stable,
 	}, nil
