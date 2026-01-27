@@ -197,15 +197,39 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		slideData.Options = append(slideData.Options, &option)
 	}
 
+	var globalOption *pollSingleVotesSlideOption
+	var globalPollMethod map[string]bool
+	if pollOption, ok := poll.GlobalOption.Value(); ok {
+		option := pollSingleVotesSlideOption{
+			TotalYes:     pollOption.Yes,
+			TotalNo:      pollOption.No,
+			TotalAbstain: pollOption.Abstain,
+		}
+		if !onehundredPercentBase.IsZero() {
+			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		}
+
+		globalOption = &option
+		globalPollMethod = map[string]bool{
+			"Yes":     poll.GlobalYes,
+			"No":      poll.GlobalNo,
+			"Abstain": poll.GlobalAbstain,
+		}
+	}
+
 	return map[string]any{
 		"_template":        "poll_single_vote",
 		"_fullHeight":      true,
 		"Data":             slideData,
+		"GlobalOption":     globalOption,
 		"Title":            poll.Title,
 		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
 		"HasResults":       poll.State == "published",
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
+		"GlobalPollMethod": globalPollMethod,
 		"NumVotes":         len(voteMap),
 		"NumNotVoted":      len(entitledUsers) - len(voteMap),
 		"NumEntitledUsers": len(entitledUsers),

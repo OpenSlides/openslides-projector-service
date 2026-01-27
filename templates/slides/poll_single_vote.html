@@ -105,6 +105,43 @@
                 </projector-icon-container>
               {{ end }}
             {{ end }}
+            {{ if .GlobalOption }}
+              {{ if .GlobalPollMethod.Yes }}
+                <projector-icon-container icon="check_circle" iconClass="yes">
+                  <div class="total-result-wrapper">
+                    <span class="yes number">
+                      {{ Loc.Get "Yes" }}:
+                      {{ .GlobalOption.TotalYes }}
+                    </span>
+                    <div class="yes percent">({{ .GlobalOption.PercYes }} %)</div>
+                  </div>
+                </projector-icon-container>
+              {{ end }}
+              {{ if .GlobalPollMethod.No }}
+                <projector-icon-container icon="cancel" iconClass="no">
+                  <div class="total-result-wrapper">
+                    <span class="no number">
+                      {{ Loc.Get "No" }}:
+                      {{ .GlobalOption.TotalNo }}
+                    </span>
+                    <div class="no percent">({{ .GlobalOption.PercNo }} %)</div>
+                  </div>
+                </projector-icon-container>
+              {{ end }}
+              {{ if .GlobalPollMethod.Abstain }}
+                <projector-icon-container icon="circle" iconClass="abstain">
+                  <div class="total-result-wrapper">
+                    <span class="abstain number">
+                      {{ Loc.Get "Abstain" }}:
+                      {{ .GlobalOption.TotalAbstain }}
+                    </span>
+                    {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
+                      <div class="abstain percent">({{ .GlobalOption.PercAbstain }} %)</div>
+                    {{ end }}
+                  </div>
+                </projector-icon-container>
+              {{ end }}
+            {{ end }}
           {{ end }}
         </div>
       </div>
@@ -117,7 +154,7 @@
       {{ $hasNo := .PollMethod.No }}
       {{ $hasAbstain := .PollMethod.Abstain }}
       {{ range .Data.GroupedVotes }}
-        {{ if or .Title $hasResults }}
+        {{ if or .Title (and $hasResults $singleOption) }}
           <div class="structure-level">
             <h3>{{ .Title }}</h3>
             {{ if and $hasResults $singleOption }}
