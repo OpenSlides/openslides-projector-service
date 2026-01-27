@@ -59,25 +59,26 @@ func (e *pollSingleVotesSlideVoteEntryGroup) TotalAbstain() int {
 }
 
 type pollSingleVotesSlideData struct {
-	Options      []*pollSingleVotesSlideOption
-	GroupedVotes []*pollSingleVotesSlideVoteEntryGroup
+	TotalVotesvalid decimal.Decimal
+	PercVotesvalid  decimal.Decimal
+	Options         []*pollSingleVotesSlideOption
+	GroupedVotes    []*pollSingleVotesSlideVoteEntryGroup
 }
 
 type pollSingleVotesSlideOption struct {
-	TotalYes        decimal.Decimal
-	TotalNo         decimal.Decimal
-	TotalAbstain    decimal.Decimal
-	TotalVotesvalid decimal.Decimal
-	PercYes         decimal.Decimal
-	PercNo          decimal.Decimal
-	PercAbstain     decimal.Decimal
-	PercVotesvalid  decimal.Decimal
+	TotalYes     decimal.Decimal
+	TotalNo      decimal.Decimal
+	TotalAbstain decimal.Decimal
+	PercYes      decimal.Decimal
+	PercNo       decimal.Decimal
+	PercAbstain  decimal.Decimal
 }
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	pQ := req.Fetch.Poll()
 	poll, err := req.Fetch.Poll(*req.ContentObjectID).
 		Preload(pQ.OptionList().VoteList()).
+		Preload(pQ.GlobalOption().VoteList()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().User()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedTo().User()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedTo().User().IsPresentInMeetingList()).
@@ -198,19 +199,22 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	slideData.GroupedVotes = voteEntryGroups
 	slideData.Options = []*pollSingleVotesSlideOption{}
+	slideData.TotalVotesvalid = poll.Votesvalid
+	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
+	if !onehundredPercentBase.IsZero() {
+		slideData.PercVotesvalid = poll.Votesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+	}
+
 	for _, pollOption := range poll.OptionList {
 		option := pollSingleVotesSlideOption{
-			TotalYes:        pollOption.Yes,
-			TotalNo:         pollOption.No,
-			TotalAbstain:    pollOption.Abstain,
-			TotalVotesvalid: poll.Votesvalid,
+			TotalYes:     pollOption.Yes,
+			TotalNo:      pollOption.No,
+			TotalAbstain: pollOption.Abstain,
 		}
-		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
 		if !onehundredPercentBase.IsZero() {
 			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			option.PercVotesvalid = option.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
 		slideData.Options = append(slideData.Options, &option)
@@ -232,19 +236,34 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 }
 
 func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
-	pollOption := dsmodels.Option{}
-	if len(poll.OptionList) > 0 {
-		pollOption = poll.OptionList[0]
-	}
-
 	voteMap := map[int]string{}
 	if poll.EntitledUsersAtStop != nil {
-		for _, entry := range pollOption.VoteList {
-			if val, ok := entry.UserID.Value(); ok {
-				voteMap[val] = entry.Value
+		globalOption, hasGlobalOption := poll.GlobalOption.Value()
+		if hasGlobalOption {
+			for _, entry := range globalOption.VoteList {
+				if val, ok := entry.UserID.Value(); ok {
+					voteMap[val] = entry.Value
+				}
+			}
+		}
+
+		for _, pollOption := range poll.OptionList {
+			for _, entry := range pollOption.VoteList {
+				if val, ok := entry.UserID.Value(); ok {
+					if hasGlobalOption || len(poll.OptionList) > 1 {
+						voteMap[val] = strconv.Itoa(pollOption.ID)
+					} else {
+						voteMap[val] = entry.Value
+					}
+				}
 			}
 		}
 	} else if poll.LiveVotingEnabled {
+		pollOption := dsmodels.Option{}
+		if len(poll.OptionList) > 0 {
+			pollOption = poll.OptionList[0]
+		}
+
 		var liveVotes map[int]string
 		if err := json.Unmarshal(poll.LiveVotes, &liveVotes); err != nil {
 			return nil, fmt.Errorf("parse live votes: %w", err)

@@ -26,14 +26,16 @@
               <div class="bg-abstain" style="flex: {{ .NumNotVoted }} 0 auto"></div>
             {{ end }}
           {{ else }}
-            {{ if .Data.TotalYes.IsPositive }}
-              <div class="bg-yes" style="flex: {{ .Data.TotalYes }} 0 auto"></div>
-            {{ end }}
-            {{ if .Data.TotalNo.IsPositive }}
-              <div class="bg-no" style="flex: {{ .Data.TotalNo }} 0 auto"></div>
-            {{ end }}
-            {{ if and .Data.TotalAbstain.IsPositive (ne .Poll.OnehundredPercentBase "YN") }}
-              <div class="bg-abstain" style="flex: {{ .Data.TotalAbstain }} 0 auto"></div>
+            {{ range .Data.Options }}
+              {{ if .TotalYes.IsPositive }}
+                <div class="bg-yes" style="flex: {{ .TotalYes }} 0 auto"></div>
+              {{ end }}
+              {{ if .TotalNo.IsPositive }}
+                <div class="bg-no" style="flex: {{ .TotalNo }} 0 auto"></div>
+              {{ end }}
+              {{ if and .TotalAbstain.IsPositive (ne .Poll.OnehundredPercentBase "YN") }}
+                <div class="bg-abstain" style="flex: {{ .TotalAbstain }} 0 auto"></div>
+              {{ end }}
             {{ end }}
           {{ end }}
         </div>
@@ -66,40 +68,42 @@
             <div class="spacer"></div>
           {{ else }}
             <div class="spacer"></div>
-            {{ if .PollMethod.Yes }}
-              <projector-icon-container icon="check_circle" iconClass="yes">
-                <div class="total-result-wrapper">
-                  <span class="yes number">
-                    {{ Loc.Get "Yes" }}:
-                    {{ .Data.TotalYes }}
-                  </span>
-                  <div class="yes percent">({{ .Data.PercYes }} %)</div>
-                </div>
-              </projector-icon-container>
-            {{ end }}
-            {{ if .PollMethod.No }}
-              <projector-icon-container icon="cancel" iconClass="no">
-                <div class="total-result-wrapper">
-                  <span class="no number">
-                    {{ Loc.Get "No" }}:
-                    {{ .Data.TotalNo }}
-                  </span>
-                  <div class="no percent">({{ .Data.PercNo }} %)</div>
-                </div>
-              </projector-icon-container>
-            {{ end }}
-            {{ if .PollMethod.Abstain }}
-              <projector-icon-container icon="circle" iconClass="abstain">
-                <div class="total-result-wrapper">
-                  <span class="abstain number">
-                    {{ Loc.Get "Abstain" }}:
-                    {{ .Data.TotalAbstain }}
-                  </span>
-                  {{ if eq .Poll.OnehundredPercentBase "YNA" }}
-                    <div class="abstain percent">({{ .Data.PercAbstain }} %)</div>
-                  {{ end }}
-                </div>
-              </projector-icon-container>
+            {{ range .Data.Options }}
+              {{ if $.PollMethod.Yes }}
+                <projector-icon-container icon="check_circle" iconClass="yes">
+                  <div class="total-result-wrapper">
+                    <span class="yes number">
+                      {{ Loc.Get "Yes" }}:
+                      {{ .TotalYes }}
+                    </span>
+                    <div class="yes percent">({{ .PercYes }} %)</div>
+                  </div>
+                </projector-icon-container>
+              {{ end }}
+              {{ if $.PollMethod.No }}
+                <projector-icon-container icon="cancel" iconClass="no">
+                  <div class="total-result-wrapper">
+                    <span class="no number">
+                      {{ Loc.Get "No" }}:
+                      {{ .TotalNo }}
+                    </span>
+                    <div class="no percent">({{ .PercNo }} %)</div>
+                  </div>
+                </projector-icon-container>
+              {{ end }}
+              {{ if $.PollMethod.Abstain }}
+                <projector-icon-container icon="circle" iconClass="abstain">
+                  <div class="total-result-wrapper">
+                    <span class="abstain number">
+                      {{ Loc.Get "Abstain" }}:
+                      {{ .TotalAbstain }}
+                    </span>
+                    {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
+                      <div class="abstain percent">({{ .PercAbstain }} %)</div>
+                    {{ end }}
+                  </div>
+                </projector-icon-container>
+              {{ end }}
             {{ end }}
           {{ end }}
         </div>
@@ -108,6 +112,7 @@
 
     <div class="content-wrapper font-scale votes-area" style="--visible-columns: {{ .MaxColumns }};">
       {{ $isLiveVoting := .LiveVoting }}
+      {{ $singleOption := eq (len .Data.Options) 1 }}
       {{ $hasYes := .PollMethod.Yes }}
       {{ $hasNo := .PollMethod.No }}
       {{ $hasAbstain := .PollMethod.Abstain }}
@@ -115,7 +120,7 @@
         {{ if or .Title (not $isLiveVoting) }}
           <div class="structure-level">
             <h3>{{ .Title }}</h3>
-            {{ if not $isLiveVoting }}
+            {{ if and (not $isLiveVoting) $singleOption }}
               <div class="results">
                 {{ if $hasYes }}
                   <projector-icon-container icon="check_circle" iconClass="yes">
@@ -138,7 +143,7 @@
         {{ end }}
         {{ range .Votes }}
           <div class="vote-entry">
-            {{ if eq (len $.Data.Options) 1 }}
+            {{ if $singleOption }}
               {{ $iconName := "radio_button_unchecked" }}
               {{ $iconClass := "no-content" }}
               {{ if eq .Value "Y" }}
@@ -159,7 +164,9 @@
               </projector-icon-container>
             {{ else }}
               <div class="vote-wrapper">
-                {{ if eq .Value "N" }}
+                {{ if eq .Value "Y" }}
+                  <span class="vote-value material-icons yes">check_circle</span>
+                {{ else if eq .Value "N" }}
                   <span class="vote-value material-icons no">cancel</span>
                 {{ else if eq .Value "A" }}
                   <span class="vote-value material-icons abstain">circle</span>
