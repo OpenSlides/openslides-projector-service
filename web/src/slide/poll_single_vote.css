@@ -83,6 +83,7 @@
       white-space: nowrap;
       .percent {
         font-size: 12px;
+        text-align: right;
       }
       .number {
         font-weight: 500;

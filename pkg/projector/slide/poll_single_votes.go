@@ -66,6 +66,8 @@ type pollSingleVotesSlideData struct {
 }
 
 type pollSingleVotesSlideOption struct {
+	Title        string
+	Majority     bool
 	TotalYes     decimal.Decimal
 	TotalNo      decimal.Decimal
 	TotalAbstain decimal.Decimal
@@ -184,10 +186,21 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	for _, pollOption := range poll.OptionList {
 		option := pollSingleVotesSlideOption{
+			Title:        pollOption.Text,
 			TotalYes:     pollOption.Yes,
 			TotalNo:      pollOption.No,
 			TotalAbstain: pollOption.Abstain,
 		}
+
+		if contentObjectID, ok := pollOption.ContentObjectID.Value(); ok {
+			title, err := viewmodels.GetTitleInformationByContentObject(ctx, req.Fetch, contentObjectID)
+			if err != nil {
+				return nil, fmt.Errorf("could not get poll option title: %w", err)
+			}
+
+			option.Title = title.Title
+		}
+
 		if !onehundredPercentBase.IsZero() {
 			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
@@ -227,6 +240,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Title":            poll.Title,
 		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
 		"HasResults":       poll.State == "published",
+		"HasMultiOptions":  !poll.GlobalOption.Null() || len(poll.OptionList) > 1,
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
 		"GlobalPollMethod": globalPollMethod,

@@ -27,14 +27,22 @@
             {{ end }}
           {{ else if .HasResults }}
             {{ range .Data.Options }}
-              {{ if .TotalYes.IsPositive }}
-                <div class="bg-yes" style="flex: {{ .TotalYes }} 0 auto"></div>
-              {{ end }}
-              {{ if .TotalNo.IsPositive }}
-                <div class="bg-no" style="flex: {{ .TotalNo }} 0 auto"></div>
-              {{ end }}
-              {{ if and .TotalAbstain.IsPositive (ne .Poll.OnehundredPercentBase "YN") }}
-                <div class="bg-abstain" style="flex: {{ .TotalAbstain }} 0 auto"></div>
+              {{ if $.HasMultiOptions }}
+                {{ if .Majority }}
+                  <div class="bg-yes" style="flex: {{ .TotalYes }} 0 auto"></div>
+                {{ else }}
+                  <div class="bg-non-majority" style="flex: {{ .TotalYes }} 0 auto"></div>
+                {{ end }}
+              {{ else }}
+                {{ if .TotalYes.IsPositive }}
+                  <div class="bg-yes" style="flex: {{ .TotalYes }} 0 auto"></div>
+                {{ end }}
+                {{ if .TotalNo.IsPositive }}
+                  <div class="bg-no" style="flex: {{ .TotalNo }} 0 auto"></div>
+                {{ end }}
+                {{ if and .TotalAbstain.IsPositive (ne .Poll.OnehundredPercentBase "YN") }}
+                  <div class="bg-abstain" style="flex: {{ .TotalAbstain }} 0 auto"></div>
+                {{ end }}
               {{ end }}
             {{ end }}
           {{ end }}
@@ -69,40 +77,62 @@
           {{ else if .HasResults }}
             <div class="spacer"></div>
             {{ range .Data.Options }}
-              {{ if $.PollMethod.Yes }}
-                <projector-icon-container icon="check_circle" iconClass="yes">
+              {{ if $.HasMultiOptions }}
+                {{ if $.PollMethod.Majority }}
+                  <projector-icon-container icon="check_circle" iconClass="yes">
+                    <div class="total-result-wrapper">
+                      <span class="yes number">
+                        {{ .Title }}:
+                        {{ .TotalYes }}
+                      </span>
+                      <div class="yes percent">{{ .PercYes }} %</div>
+                    </div>
+                  </projector-icon-container>
+                {{ else }}
                   <div class="total-result-wrapper">
-                    <span class="yes number">
-                      {{ Loc.Get "Yes" }}:
+                    <span class="non-majority number">
+                      {{ .Title }}:
                       {{ .TotalYes }}
                     </span>
-                    <div class="yes percent">({{ .PercYes }} %)</div>
+                    <div class="non-majority percent">{{ .PercYes }} %</div>
                   </div>
-                </projector-icon-container>
-              {{ end }}
-              {{ if $.PollMethod.No }}
-                <projector-icon-container icon="cancel" iconClass="no">
-                  <div class="total-result-wrapper">
-                    <span class="no number">
-                      {{ Loc.Get "No" }}:
-                      {{ .TotalNo }}
-                    </span>
-                    <div class="no percent">({{ .PercNo }} %)</div>
-                  </div>
-                </projector-icon-container>
-              {{ end }}
-              {{ if $.PollMethod.Abstain }}
-                <projector-icon-container icon="circle" iconClass="abstain">
-                  <div class="total-result-wrapper">
-                    <span class="abstain number">
-                      {{ Loc.Get "Abstain" }}:
-                      {{ .TotalAbstain }}
-                    </span>
-                    {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
-                      <div class="abstain percent">({{ .PercAbstain }} %)</div>
-                    {{ end }}
-                  </div>
-                </projector-icon-container>
+                {{ end }}
+              {{ else }}
+                {{ if $.PollMethod.Yes }}
+                  <projector-icon-container icon="check_circle" iconClass="yes">
+                    <div class="total-result-wrapper">
+                      <span class="yes number">
+                        {{ Loc.Get "Yes" }}:
+                        {{ .TotalYes }}
+                      </span>
+                      <div class="yes percent">{{ .PercYes }} %</div>
+                    </div>
+                  </projector-icon-container>
+                {{ end }}
+                {{ if $.PollMethod.No }}
+                  <projector-icon-container icon="cancel" iconClass="no">
+                    <div class="total-result-wrapper">
+                      <span class="no number">
+                        {{ Loc.Get "No" }}:
+                        {{ .TotalNo }}
+                      </span>
+                      <div class="no percent">{{ .PercNo }} %</div>
+                    </div>
+                  </projector-icon-container>
+                {{ end }}
+                {{ if $.PollMethod.Abstain }}
+                  <projector-icon-container icon="circle" iconClass="abstain">
+                    <div class="total-result-wrapper">
+                      <span class="abstain number">
+                        {{ Loc.Get "Abstain" }}:
+                        {{ .TotalAbstain }}
+                      </span>
+                      {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
+                        <div class="abstain percent">{{ .PercAbstain }} %</div>
+                      {{ end }}
+                    </div>
+                  </projector-icon-container>
+                {{ end }}
               {{ end }}
             {{ end }}
             {{ if .GlobalOption }}
@@ -113,7 +143,7 @@
                       {{ Loc.Get "Yes" }}:
                       {{ .GlobalOption.TotalYes }}
                     </span>
-                    <div class="yes percent">({{ .GlobalOption.PercYes }} %)</div>
+                    <div class="yes percent">{{ .GlobalOption.PercYes }} %</div>
                   </div>
                 </projector-icon-container>
               {{ end }}
@@ -124,7 +154,7 @@
                       {{ Loc.Get "No" }}:
                       {{ .GlobalOption.TotalNo }}
                     </span>
-                    <div class="no percent">({{ .GlobalOption.PercNo }} %)</div>
+                    <div class="no percent">{{ .GlobalOption.PercNo }} %</div>
                   </div>
                 </projector-icon-container>
               {{ end }}
@@ -136,7 +166,7 @@
                       {{ .GlobalOption.TotalAbstain }}
                     </span>
                     {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
-                      <div class="abstain percent">({{ .GlobalOption.PercAbstain }} %)</div>
+                      <div class="abstain percent">{{ .GlobalOption.PercAbstain }} %</div>
                     {{ end }}
                   </div>
                 </projector-icon-container>

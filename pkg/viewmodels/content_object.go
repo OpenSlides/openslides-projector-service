@@ -83,6 +83,34 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 
 	// Title
 	switch result.Collection {
+	case "user":
+		firstName, err := GetContentObjectField[string](ctx, fetch, "first_name", fqid)
+		if err != nil {
+			return TitleInformation{}, fmt.Errorf("could not fetch first_name: %w", err)
+		}
+
+		lastName, err := GetContentObjectField[string](ctx, fetch, "last_name", fqid)
+		if err != nil {
+			return TitleInformation{}, fmt.Errorf("could not fetch last_name: %w", err)
+		}
+
+		title, err := GetContentObjectField[string](ctx, fetch, "title", fqid)
+		if err != nil {
+			return TitleInformation{}, fmt.Errorf("could not fetch title: %w", err)
+		}
+
+		var fullName string
+		if title != nil && *title != "" {
+			fullName = fmt.Sprintf("%s %s", *title, *firstName)
+		} else {
+			fullName = *firstName
+		}
+
+		if lastName != nil && *lastName != "" {
+			fullName = fmt.Sprintf("%s %s", fullName, *lastName)
+		}
+
+		result.Title = fullName
 	default:
 		title, err := GetContentObjectField[string](ctx, fetch, "title", fqid)
 		if err != nil {
