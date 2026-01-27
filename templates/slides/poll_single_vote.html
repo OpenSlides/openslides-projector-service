@@ -78,7 +78,7 @@
             <div class="spacer"></div>
             {{ range .Data.Options }}
               {{ if $.HasMultiOptions }}
-                {{ if $.PollMethod.Majority }}
+                {{ if .Majority }}
                   <projector-icon-container icon="check_circle" iconClass="yes">
                     <div class="total-result-wrapper">
                       <span class="yes number">
