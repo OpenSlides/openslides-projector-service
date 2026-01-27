@@ -205,11 +205,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		structureLevelIDs = append(structureLevelIDs, slID)
 	}
 
-	slices.SortFunc(structureLevelIDs, func(aID, bID int) int {
-		nameA := voteEntryGroupsMap[aID].Title
-		nameB := voteEntryGroupsMap[bID].Title
-		return strings.Compare(nameA, nameB)
-	})
+	slices.Sort(structureLevelIDs)
 
 	voteEntryGroups := make([]*pollSingleVotesSlideVoteEntryGroup, 0, len(structureLevelIDs))
 	for _, slID := range structureLevelIDs {
