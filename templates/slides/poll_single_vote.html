@@ -25,7 +25,7 @@
             {{ if .NumNotVoted }}
               <div class="bg-abstain" style="flex: {{ .NumNotVoted }} 0 auto"></div>
             {{ end }}
-          {{ else }}
+          {{ else if .HasResults }}
             {{ range .Data.Options }}
               {{ if .TotalYes.IsPositive }}
                 <div class="bg-yes" style="flex: {{ .TotalYes }} 0 auto"></div>
@@ -46,7 +46,7 @@
                 {{ Loc.Get "Received votes" }}:
                 {{ .NumVotes }}
               </div>
-            {{ else }}
+            {{ else if .HasResults }}
               <div>
                 {{ Loc.Get "Valid votes" }}:
                 {{ .Data.TotalVotesvalid }}
@@ -66,7 +66,7 @@
           {{ if .LiveVoting }}
             <div class="vote-now">{{ Loc.Get "Please vote now!" }}</div>
             <div class="spacer"></div>
-          {{ else }}
+          {{ else if .HasResults }}
             <div class="spacer"></div>
             {{ range .Data.Options }}
               {{ if $.PollMethod.Yes }}
@@ -111,16 +111,16 @@
     </div>
 
     <div class="content-wrapper font-scale votes-area" style="--visible-columns: {{ .MaxColumns }};">
-      {{ $isLiveVoting := .LiveVoting }}
+      {{ $hasResults := .HasResults }}
       {{ $singleOption := eq (len .Data.Options) 1 }}
       {{ $hasYes := .PollMethod.Yes }}
       {{ $hasNo := .PollMethod.No }}
       {{ $hasAbstain := .PollMethod.Abstain }}
       {{ range .Data.GroupedVotes }}
-        {{ if or .Title (not $isLiveVoting) }}
+        {{ if or .Title $hasResults }}
           <div class="structure-level">
             <h3>{{ .Title }}</h3>
-            {{ if and (not $isLiveVoting) $singleOption }}
+            {{ if and $hasResults $singleOption }}
               <div class="results">
                 {{ if $hasYes }}
                   <projector-icon-container icon="check_circle" iconClass="yes">

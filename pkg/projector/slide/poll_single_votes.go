@@ -203,6 +203,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Data":             slideData,
 		"Title":            poll.Title,
 		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
+		"HasResults":       poll.State == "published",
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
 		"NumVotes":         len(voteMap),
@@ -269,7 +270,7 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 				}
 			}
 		}
-	} else if poll.LiveVotingEnabled {
+	} else if poll.LiveVotingEnabled && len(poll.LiveVotes) > 0 {
 		pollOption := dsmodels.Option{}
 		if len(poll.OptionList) > 0 {
 			pollOption = poll.OptionList[0]
