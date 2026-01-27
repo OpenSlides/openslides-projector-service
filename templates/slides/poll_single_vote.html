@@ -40,7 +40,7 @@
                 {{ if .TotalNo.IsPositive }}
                   <div class="bg-no" style="flex: {{ .TotalNo }} 0 auto"></div>
                 {{ end }}
-                {{ if and .TotalAbstain.IsPositive (ne .Poll.OnehundredPercentBase "YN") }}
+                {{ if and .TotalAbstain.IsPositive (ne $.Poll.OnehundredPercentBase "YN") }}
                   <div class="bg-abstain" style="flex: {{ .TotalAbstain }} 0 auto"></div>
                 {{ end }}
               {{ end }}

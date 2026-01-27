@@ -152,6 +152,15 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 				}
 			}
 		}
+
+		slices.SortFunc(slideData.Options, func(a *pollSingleVotesSlideOption, b *pollSingleVotesSlideOption) int {
+			if a.Majority && !b.Majority {
+				return -1
+			} else if b.Majority && !a.Majority {
+				return 1
+			}
+			return a.Weight - b.Weight
+		})
 	}
 
 	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
@@ -216,7 +225,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Title":            poll.Title,
 		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
 		"HasResults":       isPublished,
-		"HasMultiOptions":  !poll.GlobalOption.Null() || len(poll.OptionList) > 1,
+		"HasMultiOptions":  len(poll.OptionList) > 1,
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
 		"GlobalPollMethod": slideData.GlobalOptionMethods,
@@ -369,15 +378,6 @@ func pollSingleVotesResult(
 
 		slideData.Options = append(slideData.Options, &option)
 	}
-
-	slices.SortFunc(slideData.Options, func(a *pollSingleVotesSlideOption, b *pollSingleVotesSlideOption) int {
-		if a.Majority && !b.Majority {
-			return -1
-		} else if b.Majority && !a.Majority {
-			return 1
-		}
-		return a.Weight - b.Weight
-	})
 
 	if pollOption, ok := poll.GlobalOption.Value(); ok {
 		option := pollSingleVotesSlideOption{

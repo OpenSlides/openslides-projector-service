@@ -101,16 +101,18 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 
 		var fullName string
 		if title != nil && *title != "" {
-			fullName = fmt.Sprintf("%s %s", *title, *firstName)
-		} else {
-			fullName = *firstName
+			fullName = *title
+		}
+
+		if firstName != nil && *firstName != "" {
+			fullName = fmt.Sprintf("%s %s", fullName, *firstName)
 		}
 
 		if lastName != nil && *lastName != "" {
 			fullName = fmt.Sprintf("%s %s", fullName, *lastName)
 		}
 
-		result.Title = fullName
+		result.Title = strings.Trim(fullName, " ")
 	default:
 		title, err := GetContentObjectField[string](ctx, fetch, "title", fqid)
 		if err != nil {
