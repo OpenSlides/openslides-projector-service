@@ -141,8 +141,15 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			}
 		}
 
-		for _, option := range slideData.Options {
+		winner := -1
+		for oIdx, option := range slideData.Options {
 			if option.TotalYes.Equal(maxVotes) {
+				if winner != -1 {
+					slideData.Options[winner].Majority = false
+					break
+				}
+
+				winner = oIdx
 				option.Majority = true
 				idx := strconv.Itoa(option.ID)
 				for key, val := range voteMap {
