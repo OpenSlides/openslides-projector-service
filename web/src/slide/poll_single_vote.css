@@ -83,6 +83,7 @@
       white-space: nowrap;
       .percent {
         font-size: 12px;
+        text-align: right;
       }
       .number {
         font-weight: 500;
@@ -122,14 +123,28 @@
     font-weight: 400;
     line-height: 1.8125em;
     border-bottom: 1px solid;
+    .vote-wrapper,
     projector-icon-container {
       display: flex;
       align-items: center;
       max-width: 100%;
+      span.vote-value {
+        font-size: 0.875em;
+        min-width: 1.8125em;
+        text-align: center;
+        margin-right: 5px;
+      }
+
+      span.vote-value.material-icons {
+        --factor: calc(0.875 / 1.125);
+        min-width: calc(var(--factor) * 1.8125em);
+      }
+
       span.material-icons {
         font-size: 1.125em;
         margin-right: 5px;
       }
+
       span.vote-name {
         font-size: 0.875em;
         white-space: nowrap;
@@ -145,6 +160,7 @@
     }
   }
 
+  .vote-entry:last-child,
   .vote-entry:has(+ .structure-level) {
     margin-bottom: 1px;
     border-color: transparent;
