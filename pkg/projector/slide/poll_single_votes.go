@@ -115,6 +115,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	slices.SortFunc(poll.OptionList, func(a dsmodels.Option, b dsmodels.Option) int {
 		return a.Weight - b.Weight
 	})
+
 	optionIndexMap := map[string]int{}
 	for idx, option := range poll.OptionList {
 		optionIndexMap[strconv.Itoa(option.ID)] = idx
@@ -127,31 +128,6 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		mu, exists := meetingUserMap[userID]
 		if !exists {
 			continue
-		}
-
-		user := mu.User
-		isPresent := slices.Contains(user.IsPresentInMeetingIDs, poll.MeetingID)
-		hasDelegate := false
-
-		if !isPresent && mu.VoteDelegatedTo != nil {
-			if delegateMU, ok := mu.VoteDelegatedTo.Value(); ok {
-				hasDelegate = slices.Contains(delegateMU.User.IsPresentInMeetingIDs, poll.MeetingID)
-			}
-		}
-
-		vote := pollSingleVotesSlideVoteEntry{
-			FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
-			LastName:  user.LastName,
-			Present:   isPresent || hasDelegate,
-		}
-
-		if voteVal, ok := voteMap[user.ID]; ok {
-			vote.Value = voteVal
-			if len(poll.OptionList) > 1 {
-				if idx, ok := optionIndexMap[voteVal]; ok {
-					vote.Value = strconv.Itoa(idx + 1)
-				}
-			}
 		}
 
 		structureLevel := &dsmodels.StructureLevel{
@@ -169,6 +145,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			}
 		}
 
+		vote := pollSingleVotesVoteEntry(&poll, &mu, voteMap, optionIndexMap)
 		voteEntryGroupsMap[structureLevel.ID].Votes = append(
 			voteEntryGroupsMap[structureLevel.ID].Votes,
 			&vote,
@@ -233,6 +210,40 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"NumEntitledUsers": len(entitledUsers),
 		"MaxColumns":       maxColumns,
 	}, nil
+}
+
+func pollSingleVotesVoteEntry(
+	poll *dsmodels.Poll,
+	mu *dsmodels.MeetingUser,
+	voteMap map[int]string,
+	optionIndexMap map[string]int,
+) pollSingleVotesSlideVoteEntry {
+	user := mu.User
+	isPresent := slices.Contains(user.IsPresentInMeetingIDs, poll.MeetingID)
+	hasDelegate := false
+
+	if !isPresent && mu.VoteDelegatedTo != nil {
+		if delegateMU, ok := mu.VoteDelegatedTo.Value(); ok {
+			hasDelegate = slices.Contains(delegateMU.User.IsPresentInMeetingIDs, poll.MeetingID)
+		}
+	}
+
+	vote := pollSingleVotesSlideVoteEntry{
+		FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
+		LastName:  user.LastName,
+		Present:   isPresent || hasDelegate,
+	}
+
+	if voteVal, ok := voteMap[user.ID]; ok {
+		vote.Value = voteVal
+		if len(poll.OptionList) > 1 {
+			if idx, ok := optionIndexMap[voteVal]; ok {
+				vote.Value = strconv.Itoa(idx + 1)
+			}
+		}
+	}
+
+	return vote
 }
 
 func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
