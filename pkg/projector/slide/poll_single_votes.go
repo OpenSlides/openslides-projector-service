@@ -220,6 +220,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Poll":             poll,
 		"PollMethod":       pollMethod,
 		"GlobalPollMethod": slideData.GlobalOptionMethods,
+		"SingleOption":     len(poll.OptionList) == 1,
 		"NumVotes":         len(voteMap),
 		"NumNotVoted":      len(entitledUsers) - len(voteMap),
 		"NumEntitledUsers": len(entitledUsers),
