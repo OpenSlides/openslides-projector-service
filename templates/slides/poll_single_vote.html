@@ -159,11 +159,13 @@
               </projector-icon-container>
             {{ else }}
               <div class="vote-wrapper">
-                <span class="vote-value">
-                  {{ if ne .Value "" }}
-                    {{ .Value }}
-                  {{ end }}
-                </span>
+                {{ if eq .Value "N" }}
+                  <span class="vote-value material-icons no">cancel</span>
+                {{ else if eq .Value "A" }}
+                  <span class="vote-value material-icons abstain">circle</span>
+                {{ else }}
+                  <span class="vote-value">{{ .Value }}</span>
+                {{ end }}
                 <span class="vote-name {{ if not .Present }}not-present{{ end }}">
                   {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
                   {{ .FirstName }}

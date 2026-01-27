@@ -145,10 +145,11 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 
 		if voteVal, ok := voteMap[user.ID]; ok {
+			vote.Value = voteVal
 			if len(poll.OptionList) > 1 {
-				vote.Value = strconv.Itoa(optionIndexMap[voteVal] + 1)
-			} else {
-				vote.Value = voteVal
+				if idx, ok := optionIndexMap[voteVal]; ok {
+					vote.Value = strconv.Itoa(idx + 1)
+				}
 			}
 		}
 
@@ -253,23 +254,27 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 			var liveVoteEntry struct {
 				RequestUserID int             `json:"request_user_id"`
 				VoteUserID    int             `json:"vote_user_id"`
-				Value         map[int]any     `json:"value"`
+				Value         any             `json:"value"`
 				Weight        decimal.Decimal `json:"weight"`
 			}
 			if err := json.Unmarshal([]byte(voteJson), &liveVoteEntry); err != nil {
 				return nil, fmt.Errorf("parse live vote entry: %w", err)
 			}
 
-			if len(liveVoteEntry.Value) > 1 {
-				for optionID, valRaw := range liveVoteEntry.Value {
-					if val, ok := valRaw.(float64); ok && val == 1 {
-						voteMap[uid] = strconv.Itoa(optionID)
+			if voteValue, ok := liveVoteEntry.Value.(map[string]any); ok {
+				if len(voteValue) > 1 {
+					for optionID, valRaw := range voteValue {
+						if val, ok := valRaw.(float64); ok && val == 1 {
+							voteMap[uid] = optionID
+						}
+					}
+				} else {
+					if val, ok := voteValue[strconv.Itoa(pollOption.ID)]; ok {
+						voteMap[uid], _ = val.(string)
 					}
 				}
-			} else {
-				if val, ok := liveVoteEntry.Value[pollOption.ID]; ok {
-					voteMap[uid], _ = val.(string)
-				}
+			} else if voteValue, ok := liveVoteEntry.Value.(string); ok && voteValue != "" {
+				voteMap[uid] = voteValue
 			}
 		}
 	}
