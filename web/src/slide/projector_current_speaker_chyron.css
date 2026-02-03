@@ -6,6 +6,7 @@
 }
 
 .chyron .inner {
+  font-family: customChyronNameFont, OSFont, sans-serif;
   display: table-cell;
   vertical-align: middle;
   padding-left: 18px;
