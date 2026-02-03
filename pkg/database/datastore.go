@@ -30,5 +30,7 @@ func (db *Datastore) NewContext(ctx context.Context, handler func(*dsmodels.Fetc
 		listener.keys = recorder.Keys()
 	}
 
+	db.mu.Lock()
+	defer db.mu.Unlock()
 	db.dsListeners = append(db.dsListeners, &listener)
 }
