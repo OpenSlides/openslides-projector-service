@@ -430,8 +430,10 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 			case <-ctx.Done():
 				return
 			case update := <-projectionChannel:
-				projections[update.ID] = update.Content
-				updateChannel <- []int{update.ID}
+				if update != nil {
+					projections[update.ID] = update.Content
+					updateChannel <- []int{update.ID}
+				}
 			}
 		}
 	}()
