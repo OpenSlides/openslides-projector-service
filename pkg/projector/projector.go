@@ -157,20 +157,20 @@ func (p *projector) initProjector(ctx context.Context) {
 	p.locale.AddDomain("default")
 	go p.subscribeProjector(ctx)
 
-	if len(p.projector.CurrentProjectionIDs) > 0 {
-		initListener := make(chan *ProjectorUpdateEvent)
-		p.AddListener <- initListener
-		updateCnt := 0
-		for event := range initListener {
-			if event.Event == "projection-updated" {
-				updateCnt++
-				if updateCnt >= len(p.projector.CurrentProjectionIDs) {
-					break
-				}
+	initListener := make(chan *ProjectorUpdateEvent)
+	p.AddListener <- initListener
+	updateCnt := 0
+	for event := range initListener {
+		if event.Event == "projection-updated" {
+			updateCnt++
+			if updateCnt >= len(p.projector.CurrentProjectionIDs) {
+				break
 			}
+		} else if len(p.projector.CurrentProjectionIDs) == 0 {
+			break
 		}
-		p.RemoveListener <- initListener
 	}
+	p.RemoveListener <- initListener
 }
 
 func (p *projector) subscribeProjector(ctx context.Context) {
