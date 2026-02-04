@@ -311,6 +311,12 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		if err = p.updateFullContent(); err != nil {
 			log.Error().Err(err).Msg("error generating projector content after settings update")
 		}
+
+		currentContent, err := json.Marshal(p.Content)
+		if err != nil {
+			log.Error().Err(err).Msg("error marshalling projector replace content")
+		}
+		p.sendToAll(&ProjectorUpdateEvent{"projector-replace", string(currentContent)})
 	})
 }
 
