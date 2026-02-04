@@ -15,6 +15,7 @@ import (
 	"github.com/OpenSlides/openslides-go/redis"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
 )
@@ -33,12 +34,12 @@ type projectorHttp struct {
 	auth      *auth.Auth
 }
 
-func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db *database.Datastore, ds flow.Flow) {
+func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db *database.Datastore, ds flow.Flow, dbPool *pgxpool.Pool) {
 	projectorPool := projector.NewProjectorPool(ctx, db, ds)
 
 	lookup := new(environment.ForProduction)
 	redis := redis.New(lookup)
-	authService, authBackground, err := auth.New(lookup, redis)
+	authService, authBackground, err := auth.New(lookup, redis, dbPool)
 	if err != nil {
 		log.Err(err).Msg("auth error")
 	}

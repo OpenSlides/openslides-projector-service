@@ -87,7 +87,7 @@ func run(cfg config) error {
 	serverMux := http.NewServeMux()
 	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
 		RestricterUrl: cfg.RestricterUrl,
-	}, serverMux, ds, dsFlow)
+	}, serverMux, ds, dsFlow, dsFlow.Pool)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)
 
