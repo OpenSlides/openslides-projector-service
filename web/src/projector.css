@@ -172,7 +172,7 @@ h3 {
 }
 
 .font-scale {
-  font-size: calc(100% + calc(var(--projector-scale) * 10%));
+  font-size: calc(100% + calc(var(--projector-scale) * 5%));
 }
 
 .transform-scale {
