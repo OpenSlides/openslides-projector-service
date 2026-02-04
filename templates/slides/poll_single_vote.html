@@ -223,6 +223,9 @@
                 {{ $iconClass = "abstain" }}
               {{ end }}
               <projector-icon-container icon="{{ $iconName }}" iconClass="{{ $iconClass }}">
+                {{ if .Delegated }}
+                  <span class="material-icons">forward</span>
+                {{ end }}
                 <span class="vote-name {{ if not .Present }}not-present{{ end }}">
                   {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
                   {{ .FirstName }}
@@ -238,6 +241,9 @@
                   <span class="vote-value material-icons abstain">circle</span>
                 {{ else }}
                   <span class="vote-value">{{ .Value }}</span>
+                {{ end }}
+                {{ if .Delegated }}
+                  <span class="material-icons">forward</span>
                 {{ end }}
                 <span class="vote-name {{ if not .Present }}not-present{{ end }}">
                   {{ .LastName }}{{ if and .LastName .FirstName }},{{ end }}
