@@ -12,8 +12,6 @@ export class ProjectorCountdown extends HTMLElement {
    * Updates the countdown time and string format it.
    */
   get countdownTimeFormatted() {
-    this.seconds = this.secondsRemaining;
-
     const negative = this.seconds < 0;
     let seconds = this.seconds;
     if (negative) {
@@ -30,6 +28,10 @@ export class ProjectorCountdown extends HTMLElement {
     } else {
       return timeString;
     }
+  }
+
+  updateRemaining() {
+    this.seconds = this.secondsRemaining;
   }
 
   constructor() {
@@ -80,6 +82,7 @@ export class ProjectorCountdown extends HTMLElement {
   }
 
   updateComponent() {
+    this.updateRemaining();
     if (this.showCountdown) {
       this.countdownEl.innerText = this.countdownTimeFormatted;
     }
