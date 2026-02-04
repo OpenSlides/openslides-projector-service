@@ -11,7 +11,7 @@
 }
 
 .non-majority {
-  color: var(--projector-color);
+  color: #5b5b5b;
 }
 
 .bg-yes {
@@ -31,5 +31,5 @@
 }
 
 .bg-non-majority {
-  background-color: var(--projector-color);
+  background-color: #5b5b5b;
 }
