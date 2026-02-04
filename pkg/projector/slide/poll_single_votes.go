@@ -16,6 +16,7 @@ import (
 type pollSingleVotesSlideVoteEntry struct {
 	Value     string
 	Present   bool
+	Delegated bool
 	FirstName string
 	LastName  string
 }
@@ -269,6 +270,7 @@ func pollSingleVotesVoteEntry(
 		FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 		LastName:  user.LastName,
 		Present:   isPresent || hasDelegate,
+		Delegated: hasDelegate,
 	}
 
 	if voteVal, ok := voteMap[user.ID]; ok {
