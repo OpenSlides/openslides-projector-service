@@ -160,7 +160,9 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 }
 
 func pollPermissions(w http.ResponseWriter, reader *bufio.Reader, resp *http.Response, id int, ctx context.Context) {
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	for {
 		select {
