@@ -16,6 +16,7 @@ import (
 type pollSingleVotesSlideVoteEntry struct {
 	Value     string
 	Present   bool
+	Delegated bool
 	FirstName string
 	LastName  string
 }
@@ -134,40 +135,49 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			return nil, fmt.Errorf("calculating poll result: %w", err)
 		}
 
-		maxVotes := decimal.Decimal{}
-		for _, pollOption := range poll.OptionList {
-			if maxVotes.LessThan(pollOption.Yes) {
-				maxVotes = pollOption.Yes
-			}
-		}
-
-		winner := -1
-		for oIdx, option := range slideData.Options {
-			if option.TotalYes.Equal(maxVotes) {
-				if winner != -1 {
-					slideData.Options[winner].Majority = false
-					break
+		if len(poll.OptionList) > 1 {
+			maxVotes := decimal.Decimal{}
+			for _, pollOption := range poll.OptionList {
+				if maxVotes.LessThan(pollOption.Yes) {
+					maxVotes = pollOption.Yes
 				}
+			}
 
-				winner = oIdx
-				option.Majority = true
-				idx := strconv.Itoa(option.ID)
-				for key, val := range voteMap {
-					if val == idx {
-						voteMap[key] = "Y"
+			winner := -1
+			for oIdx, option := range slideData.Options {
+				if option.TotalYes.Equal(maxVotes) {
+					// If >1 winners found reset and stop
+					if winner != -1 {
+						slideData.Options[winner].Majority = false
+						idx := strconv.Itoa(slideData.Options[winner].ID)
+						for key, val := range voteMap {
+							if val == "Y" {
+								voteMap[key] = idx
+							}
+						}
+						break
+					}
+
+					winner = oIdx
+					option.Majority = true
+					idx := strconv.Itoa(option.ID)
+					for key, val := range voteMap {
+						if val == idx {
+							voteMap[key] = "Y"
+						}
 					}
 				}
 			}
-		}
 
-		slices.SortFunc(slideData.Options, func(a *pollSingleVotesSlideOption, b *pollSingleVotesSlideOption) int {
-			if a.Majority && !b.Majority {
-				return -1
-			} else if b.Majority && !a.Majority {
-				return 1
-			}
-			return a.Weight - b.Weight
-		})
+			slices.SortFunc(slideData.Options, func(a, b *pollSingleVotesSlideOption) int {
+				if a.Majority && !b.Majority {
+					return -1
+				} else if b.Majority && !a.Majority {
+					return 1
+				}
+				return a.Weight - b.Weight
+			})
+		}
 	}
 
 	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
@@ -260,6 +270,7 @@ func pollSingleVotesVoteEntry(
 		FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 		LastName:  user.LastName,
 		Present:   isPresent || hasDelegate,
+		Delegated: hasDelegate,
 	}
 
 	if voteVal, ok := voteMap[user.ID]; ok {
@@ -289,7 +300,7 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 		for _, pollOption := range poll.OptionList {
 			for _, entry := range pollOption.VoteList {
 				if val, ok := entry.UserID.Value(); ok {
-					if hasGlobalOption || len(poll.OptionList) > 1 {
+					if len(poll.OptionList) > 1 {
 						voteMap[val] = strconv.Itoa(pollOption.ID)
 					} else {
 						voteMap[val] = entry.Value
