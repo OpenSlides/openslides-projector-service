@@ -106,6 +106,7 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 			writeResponse(w, `{"error": true, "msg": "authenticate request failed"}`)
 			return
 		}
+
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -141,7 +142,6 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		}
 
 		reader := bufio.NewReader(resp.Body)
-		// Read Lines
 		line, err := reader.ReadBytes('\n')
 		if err != nil || !strings.Contains(string(line), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
 			w.WriteHeader(http.StatusUnauthorized)
