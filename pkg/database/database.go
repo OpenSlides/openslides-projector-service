@@ -59,3 +59,7 @@ func New(addr string, redisAddr string, dsFlow flow.Flow) (*Datastore, error) {
 
 	return &ds, nil
 }
+
+func (ds *Datastore) NumDsListeners() int {
+	return len(ds.dsListeners)
+}
