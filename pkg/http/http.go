@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/OpenSlides/openslides-go/auth"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
@@ -20,7 +21,8 @@ import (
 )
 
 type ProjectorConfig struct {
-	RestricterUrl string
+	RestricterUrl  string
+	MetricInterval time.Duration
 }
 
 type projectorHttp struct {
@@ -35,6 +37,7 @@ type projectorHttp struct {
 
 func New(ctx context.Context, cfg ProjectorConfig, serverMux *http.ServeMux, db *database.Datastore, ds flow.Flow) {
 	projectorPool := projector.NewProjectorPool(ctx, db, ds)
+	go projector.MetricLoop(ctx, cfg.MetricInterval, projectorPool)
 
 	lookup := new(environment.ForProduction)
 	redis := redis.New(lookup)
