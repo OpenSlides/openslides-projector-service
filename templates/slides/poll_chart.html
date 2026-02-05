@@ -18,7 +18,7 @@
           <table class="result-table">
             <tbody>
               {{ range $i, $o := .Data.Options }}
-                <tr style="color: var(--chart-bg-color-{{ $i }})">
+                <tr style="color: var(--chart-bg-color-{{ $i }}{{ if $o.Color }}, var({{ $o.Color }}){{ end }})">
                   <td class="label-column" style="min-width: 300px">
                     <projector-icon-container icon="{{ $o.Icon }}">
                       <span class="option-name">{{ $o.Name }}</span>
