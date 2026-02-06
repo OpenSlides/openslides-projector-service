@@ -30,7 +30,7 @@
               {{ if $.HasMultiOptions }}
                 {{ if .Majority }}
                   <div class="bg-yes" style="flex: {{ .TotalYes }} 0 auto"></div>
-                {{ else }}
+                {{ else if .TotalYes.IsPositive }}
                   <div class="bg-non-majority" style="flex: {{ .TotalYes }} 0 auto"></div>
                 {{ end }}
               {{ else }}
