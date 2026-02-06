@@ -58,7 +58,7 @@
               <div>
                 {{ Loc.Get "Valid votes" }}:
                 {{ .Data.TotalVotesvalid }}
-                {{ if ne .Poll.OnehundredPercentBase "YN" }}
+                {{ if .ShowValidVotesPercent }}
                   ({{ .Data.PercVotesvalid }} %)
                 {{ end }}
               </div>
@@ -143,7 +143,9 @@
                       {{ Loc.Get "Yes" }}:
                       {{ .GlobalOption.TotalYes }}
                     </span>
-                    <div class="yes percent">{{ .GlobalOption.PercYes }} %</div>
+                    {{ if .GlobalOptionInBase }}
+                      <div class="yes percent">{{ .GlobalOption.PercYes }} %</div>
+                    {{ end }}
                   </div>
                 </projector-icon-container>
               {{ end }}
@@ -154,7 +156,9 @@
                       {{ Loc.Get "No" }}:
                       {{ .GlobalOption.TotalNo }}
                     </span>
-                    <div class="no percent">{{ .GlobalOption.PercNo }} %</div>
+                    {{ if .GlobalOptionInBase }}
+                      <div class="no percent">{{ .GlobalOption.PercNo }} %</div>
+                    {{ end }}
                   </div>
                 </projector-icon-container>
               {{ end }}
