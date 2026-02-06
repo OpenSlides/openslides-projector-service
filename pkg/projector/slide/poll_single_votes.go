@@ -232,7 +232,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	showValidVotesPercent := poll.OnehundredPercentBase != "disabled" &&
 		poll.OnehundredPercentBase != "YN" &&
-		!(slideData.GlobalOption != nil && poll.OnehundredPercentBase[0] == 'Y')
+		(slideData.GlobalOption == nil || poll.OnehundredPercentBase[0] != 'Y')
 
 	return map[string]any{
 		"_template":             "poll_single_vote",
