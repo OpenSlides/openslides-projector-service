@@ -85,7 +85,9 @@
                         {{ .Title }}:
                         {{ .TotalYes }}
                       </span>
-                      <div class="yes percent">{{ .PercYes }} %</div>
+                      {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                        <div class="yes percent">{{ .PercYes }} %</div>
+                      {{ end }}
                     </div>
                   </projector-icon-container>
                 {{ else }}
@@ -94,7 +96,9 @@
                       {{ .Title }}:
                       {{ .TotalYes }}
                     </span>
-                    <div class="non-majority percent">{{ .PercYes }} %</div>
+                    {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                      <div class="non-majority percent">{{ .PercYes }} %</div>
+                    {{ end }}
                   </div>
                 {{ end }}
               {{ else }}
@@ -105,7 +109,9 @@
                         {{ Loc.Get "Yes" }}:
                         {{ .TotalYes }}
                       </span>
-                      <div class="yes percent">{{ .PercYes }} %</div>
+                      {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                        <div class="yes percent">{{ .PercYes }} %</div>
+                      {{ end }}
                     </div>
                   </projector-icon-container>
                 {{ end }}
@@ -116,7 +122,9 @@
                         {{ Loc.Get "No" }}:
                         {{ .TotalNo }}
                       </span>
-                      <div class="no percent">{{ .PercNo }} %</div>
+                      {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                        <div class="no percent">{{ .PercNo }} %</div>
+                      {{ end }}
                     </div>
                   </projector-icon-container>
                 {{ end }}
@@ -127,7 +135,7 @@
                         {{ Loc.Get "Abstain" }}:
                         {{ .TotalAbstain }}
                       </span>
-                      {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
+                      {{ if $.DisplayPercAbstain }}
                         <div class="abstain percent">{{ .PercAbstain }} %</div>
                       {{ end }}
                     </div>
@@ -169,7 +177,7 @@
                       {{ Loc.Get "Abstain" }}:
                       {{ .GlobalOption.TotalAbstain }}
                     </span>
-                    {{ if eq $.Poll.OnehundredPercentBase "YNA" }}
+                    {{ if $.DisplayPercAbstain }}
                       <div class="abstain percent">{{ .GlobalOption.PercAbstain }} %</div>
                     {{ end }}
                   </div>
