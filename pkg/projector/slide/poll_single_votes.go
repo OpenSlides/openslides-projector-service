@@ -230,23 +230,29 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	slideData.GroupedVotes = voteEntryGroups
 
+	showValidVotesPercent := poll.OnehundredPercentBase != "disabled" &&
+		poll.OnehundredPercentBase != "YN" &&
+		(slideData.GlobalOption == nil || poll.OnehundredPercentBase[0] != 'Y')
+
 	return map[string]any{
-		"_template":        "poll_single_vote",
-		"_fullHeight":      true,
-		"Data":             slideData,
-		"GlobalOption":     slideData.GlobalOption,
-		"Title":            poll.Title,
-		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
-		"HasResults":       isPublished,
-		"HasMultiOptions":  len(poll.OptionList) > 1,
-		"Poll":             poll,
-		"PollMethod":       pollMethod,
-		"GlobalPollMethod": slideData.GlobalOptionMethods,
-		"SingleOption":     len(poll.OptionList) == 1,
-		"NumVotes":         len(voteMap),
-		"NumNotVoted":      len(entitledUsers) - len(voteMap),
-		"NumEntitledUsers": len(entitledUsers),
-		"MaxColumns":       maxColumns,
+		"_template":             "poll_single_vote",
+		"_fullHeight":           true,
+		"Data":                  slideData,
+		"GlobalOption":          slideData.GlobalOption,
+		"GlobalOptionInBase":    poll.OnehundredPercentBase[0] != 'Y',
+		"ShowValidVotesPercent": showValidVotesPercent,
+		"Title":                 poll.Title,
+		"LiveVoting":            poll.State == "started" && poll.LiveVotingEnabled,
+		"HasResults":            isPublished,
+		"HasMultiOptions":       len(poll.OptionList) > 1,
+		"Poll":                  poll,
+		"PollMethod":            pollMethod,
+		"GlobalPollMethod":      slideData.GlobalOptionMethods,
+		"SingleOption":          len(poll.OptionList) == 1,
+		"NumVotes":              len(voteMap),
+		"NumNotVoted":           len(entitledUsers) - len(voteMap),
+		"NumEntitledUsers":      len(entitledUsers),
+		"MaxColumns":            maxColumns,
 	}, nil
 }
 
@@ -399,7 +405,8 @@ func pollSingleVotesResult(
 			TotalNo:      pollOption.No,
 			TotalAbstain: pollOption.Abstain,
 		}
-		if !onehundredPercentBase.IsZero() {
+
+		if !onehundredPercentBase.IsZero() && poll.OnehundredPercentBase[0] != 'Y' {
 			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
