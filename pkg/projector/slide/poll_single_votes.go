@@ -238,12 +238,19 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		poll.OnehundredPercentBase != "YN" &&
 		(slideData.GlobalOption == nil || poll.OnehundredPercentBase[0] != 'Y')
 
+	displayPercAbstain := strings.Contains(poll.OnehundredPercentBase, "A") ||
+		poll.OnehundredPercentBase == "cast" ||
+		poll.OnehundredPercentBase == "entitled" ||
+		poll.OnehundredPercentBase == "entitled_present" ||
+		poll.OnehundredPercentBase == "valid"
+
 	return map[string]any{
 		"_template":             "poll_single_vote",
 		"_fullHeight":           true,
 		"Data":                  slideData,
 		"GlobalOption":          slideData.GlobalOption,
-		"GlobalOptionInBase":    poll.OnehundredPercentBase[0] != 'Y',
+		"DisplayPercAbstain":    displayPercAbstain,
+		"GlobalOptionInBase":    poll.OnehundredPercentBase[0] != 'Y' && poll.OnehundredPercentBase != "disabled",
 		"ShowValidVotesPercent": showValidVotesPercent,
 		"Title":                 poll.Title,
 		"LiveVoting":            poll.State == "started" && poll.LiveVotingEnabled,
