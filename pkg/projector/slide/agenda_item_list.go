@@ -19,6 +19,7 @@ type agendaListEntry struct {
 
 type agendaItemListSlideOptions struct {
 	OnlyMainItems bool `json:"only_main_items"`
+	ShowInternal  bool `json:"-"`
 }
 
 func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -28,12 +29,18 @@ func AgendaItemListSlideHandler(ctx context.Context, req *projectionRequest) (ma
 
 	options := agendaItemListSlideOptions{
 		OnlyMainItems: false,
+		ShowInternal:  false,
 	}
 
 	if len(req.Projection.Options) > 0 {
 		if err := json.Unmarshal(req.Projection.Options, &options); err != nil {
 			return nil, fmt.Errorf("could not parse agenda item list slide options: %w", err)
 		}
+	}
+
+	req.Fetch.Meeting_AgendaShowInternalItemsOnProjector(req.Projection.MeetingID).Lazy(&options.ShowInternal)
+	if err := req.Fetch.Execute(ctx); err != nil {
+		return nil, fmt.Errorf("failed fetching agenda show internal option: %w", err)
 	}
 
 	agendaItemIds, err := req.Fetch.Meeting_AgendaItemIDs(*req.ContentObjectID).Value(ctx)
@@ -60,7 +67,7 @@ func recBuildAgendaList(ctx context.Context, fetch *dsmodels.Fetch, agendaItems 
 	agenda := []agendaListEntry{}
 	for _, agendaItem := range agendaItems {
 		parentId, _ := agendaItem.ParentID.Value()
-		if parentId == currentParent && agendaItem.Type != "internal" && agendaItem.Type != "hidden" {
+		if parentId == currentParent && (options.ShowInternal || agendaItem.Type != "internal") && agendaItem.Type != "hidden" {
 			titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, fetch, agendaItem.ContentObjectID)
 			if err != nil {
 				return nil, fmt.Errorf("could not get title information: %w", err)
