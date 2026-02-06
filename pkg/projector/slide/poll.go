@@ -165,21 +165,21 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 
 	if poll.GlobalOption != nil && !poll.GlobalOption.Null() {
 		globalOption, _ := poll.GlobalOption.Value()
-		if poll.GlobalYes && !globalOption.Yes.IsZero() && poll.Pollmethod != "N" {
+		if poll.GlobalYes && poll.Pollmethod != "N" {
 			data.Sums = append(data.Sums, pollSlideTableSum{
 				Name:  req.Locale.Get("General approval"),
 				Total: globalOption.Yes,
 			})
 		}
 
-		if poll.GlobalNo && !globalOption.No.IsZero() {
+		if poll.GlobalNo {
 			data.Sums = append(data.Sums, pollSlideTableSum{
 				Name:  req.Locale.Get("General rejection"),
 				Total: globalOption.No,
 			})
 		}
 
-		if poll.GlobalAbstain && !globalOption.Abstain.IsZero() {
+		if poll.GlobalAbstain {
 			data.Sums = append(data.Sums, pollSlideTableSum{
 				Name:  req.Locale.Get("General abstain"),
 				Total: globalOption.Abstain,
@@ -207,7 +207,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 	}
 
 	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
-	if !onehundredPercentBase.IsZero() {
+	if !onehundredPercentBase.IsZero() && (poll.GlobalOption.Null() || poll.OnehundredPercentBase[0] != 'Y') {
 		for i, sum := range data.Sums {
 			data.Sums[i].Perc = sum.Total.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 		}
