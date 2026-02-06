@@ -228,9 +228,16 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		})
 	}
 
-	slices.SortFunc(data.Options, func(a, b pollSlideTableOption) int {
-		return b.TotalYes.Cmp(a.TotalYes)
-	})
+	sortResult, err := req.Fetch.Meeting_AssignmentPollSortPollResultByVotes(poll.MeetingID).Value(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch meeting poll sort option: %w", err)
+	}
+
+	if sortResult {
+		slices.SortFunc(data.Options, func(a, b pollSlideTableOption) int {
+			return b.TotalYes.Cmp(a.TotalYes)
+		})
+	}
 
 	return map[string]any{
 		"_fullHeight": true,
