@@ -97,8 +97,10 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	var maxColumns int
 	var nameOrderString string
+	var sortByResult bool
 	req.Fetch.Meeting_MotionPollProjectionMaxColumns(poll.MeetingID).Lazy(&maxColumns)
 	req.Fetch.Meeting_MotionPollProjectionNameOrderFirst(poll.MeetingID).Lazy(&nameOrderString)
+	req.Fetch.Meeting_AssignmentPollSortPollResultByVotes(poll.MeetingID).Lazy(&sortByResult)
 	if err := req.Fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("could not load meeting settings: %w", err)
 	}
@@ -169,14 +171,16 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 				}
 			}
 
-			slices.SortFunc(slideData.Options, func(a, b *pollSingleVotesSlideOption) int {
-				if a.Majority && !b.Majority {
-					return -1
-				} else if b.Majority && !a.Majority {
-					return 1
-				}
-				return a.Weight - b.Weight
-			})
+			if sortByResult {
+				slices.SortFunc(slideData.Options, func(a, b *pollSingleVotesSlideOption) int {
+					if a.Majority && !b.Majority {
+						return -1
+					} else if b.Majority && !a.Majority {
+						return 1
+					}
+					return a.Weight - b.Weight
+				})
+			}
 		}
 	}
 
