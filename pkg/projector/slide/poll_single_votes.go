@@ -357,7 +357,7 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 				} else {
 					if val, ok := voteValue[strconv.Itoa(pollOption.ID)]; ok {
 						if strVote, ok := val.(string); ok {
-							voteMap[uid] = strVote;
+							voteMap[uid] = strVote
 						} else if intVote, ok := val.(float64); ok && intVote > 0 {
 							voteMap[uid] = "Y"
 						}
