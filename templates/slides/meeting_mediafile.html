@@ -1,0 +1,20 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_mediafile.css" />
+
+<div class="mediafile-slide">
+  {{ if eq .FileType "pdf" }}
+    <div class="mediafile-inner mediafile-pdf fullscreen">
+      <projector-pdf-viewer
+        {{ if gt .Options.Page 1 }}initial-page="{{ .Options.Page }}"{{ end }}
+        src="/system/media/get/{{ .Mediafile.ID }}"
+      >
+        <div id="pdf-container">
+          <div id="pdf-viewer" class="pdfViewer"></div>
+        </div>
+      </projector-pdf-viewer>
+    </div>
+  {{ else if eq .FileType "image" }}
+    <div class="mediafile-inner mediafile-image {{ if .Options.Fullscreen }}fullscreen{{ end }}">
+      <img src="/system/media/get/{{ .Mediafile.ID }}" />
+    </div>
+  {{ end }}
+</div>

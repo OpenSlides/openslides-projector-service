@@ -1,52 +1,40 @@
 package slide
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"html/template"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
-	"github.com/OpenSlides/openslides-projector-service/pkg/models"
-	"github.com/rs/zerolog/log"
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
-func AssignmentSlideHandler(ctx context.Context, req *projectionRequest) (<-chan string, error) {
-	content := make(chan string)
-	projection := req.Projection
-
-	var assignment models.Assignment
-	assignmentSub, err := datastore.Collection(req.DB, &models.Assignment{}).SetFqids(projection.ContentObjectID).SubscribeOne(&assignment)
+func AssignmentSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
+	aQ := req.Fetch.Assignment(*req.ContentObjectID)
+	assignment, err := aQ.Preload(aQ.CandidateList().MeetingUser().StructureLevelList()).Preload(aQ.CandidateList().MeetingUser().User()).First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("AssignmentSlideHandler: %w", err)
+		return nil, fmt.Errorf("could not load assignment id %w", err)
 	}
 
-	go func() {
-		content <- getAssignmentSlideContent(&assignment)
-
-		for range <-assignmentSub.Channel {
-			content <- getAssignmentSlideContent(&assignment)
+	candidates := []viewmodels.WeightedListEntry{}
+	for _, candidate := range assignment.CandidateList {
+		var meetingUser *dsmodels.MeetingUser
+		if val, isSet := candidate.MeetingUser.Value(); isSet {
+			meetingUser = &val
 		}
-	}()
 
-	return content, nil
-}
-
-func getAssignmentSlideContent(assignment *models.Assignment) string {
-	tmpl, err := template.ParseFiles("templates/slides/assignment.html")
-	if err != nil {
-		log.Error().Err(err).Msg("could not load assignment template")
-		return ""
+		candidates = append(candidates, viewmodels.WeightedListEntry{
+			Name:        req.Locale.Get("Unknown user"),
+			MeetingUser: meetingUser,
+			Weight:      candidate.Weight,
+		})
 	}
 
-	var content bytes.Buffer
-	err = tmpl.Execute(&content, map[string]interface{}{
-		"Assignment": assignment,
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("could not execute assignment template")
-		return ""
-	}
+	viewmodels.CalcWeightedListNames(candidates)
 
-	return content.String()
+	return map[string]any{
+		"Assignment":  assignment,
+		"Description": template.HTML(assignment.Description),
+		"Candidates":  candidates,
+	}, nil
 }

@@ -1,35 +1,45 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/datastore"
+	"github.com/OpenSlides/openslides-go/datastore"
+	"github.com/OpenSlides/openslides-go/datastore/flow"
+	"github.com/OpenSlides/openslides-go/environment"
+	"github.com/OpenSlides/openslides-go/redis"
+	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	projectorHttp "github.com/OpenSlides/openslides-projector-service/pkg/http"
-	"github.com/OpenSlides/openslides-projector-service/pkg/projector"
 )
 
 type config struct {
-	Bind                 string `env:"BIND" envDefault:":9051"`
-	Development          bool   `env:"OPENSLIDES_DEVELOPMENT" envDefault:"false"`
-	PostgresHost         string `env:"DATABASE_HOST" envDefault:"localhost"`
-	PostgresPort         string `env:"DATABASE_PORT" envDefault:"5432"`
-	PostgresDatabase     string `env:"DATABASE_NAME" envDefault:"openslides"`
-	PostgresUser         string `env:"DATABASE_USER" envDefault:"openslides"`
-	PostgresPasswordFile string `env:"DATABASE_PASSWORD_FILE" envDefault:"/run/secrets/postgres_password"`
-	MessageBusHost       string `env:"MESSAGE_BUS_HOST" envDetault:"localhost"`
-	MessageBusPort       string `env:"MESSAGE_BUS_PORT" envDetault:"6379"`
+	Bind                 string        `env:"BIND" envDefault:":9051"`
+	Development          bool          `env:"OPENSLIDES_DEVELOPMENT" envDefault:"false"`
+	MetricInterval       time.Duration `env:"METRIC_INTERVAL" envDefault:"5m"`
+	PostgresHost         string        `env:"DATABASE_HOST" envDefault:"localhost"`
+	PostgresPort         string        `env:"DATABASE_PORT" envDefault:"5432"`
+	PostgresDatabase     string        `env:"DATABASE_NAME" envDefault:"openslides"`
+	PostgresUser         string        `env:"DATABASE_USER" envDefault:"openslides"`
+	PostgresPasswordFile string        `env:"DATABASE_PASSWORD_FILE" envDefault:"/run/secrets/postgres_password"`
+	MessageBusHost       string        `env:"MESSAGE_BUS_HOST" envDetault:"localhost"`
+	MessageBusPort       string        `env:"MESSAGE_BUS_PORT" envDetault:"6379"`
+	RestricterUrl        string        `env:"RESTRICTER_URL" envDetault:"http://autoupdate:9012/internal/autoupdate"`
+	PublicAccessOnly     bool          `env:"OPENSLIDES_PUBLIC_ACCESS_ONLY" envDefault:"false"`
 }
 
 func main() {
 	var cfg config
 	err := env.Parse(&cfg)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	if err != nil {
 		log.Err(err).Msg("parsing config")
 	}
@@ -46,27 +56,51 @@ func main() {
 }
 
 func run(cfg config) error {
-	ds, err := getDatabase(cfg)
+	ctx := context.Background()
+
+	env := &environment.ForProduction{}
+	messageBus := redis.New(env)
+
+	dsFlow, err := datastore.NewFlowPostgres(env, messageBus)
+	if err != nil {
+		return fmt.Errorf("connecting to datastore: %w", err)
+	}
+
+	vote := datastore.NewFlowVoteCount(env)
+
+	var dataFlow flow.Flow = dsFlow
+	if !cfg.PublicAccessOnly {
+		dataFlow = flow.Combine(
+			dsFlow,
+			map[string]flow.Flow{"poll/live_votes": vote},
+		)
+
+		eventer := func() (<-chan time.Time, func() bool) {
+			timer := time.NewTimer(time.Second)
+			return timer.C, timer.Stop
+		}
+
+		go vote.Connect(ctx, eventer, func(err error) {})
+	}
+
+	ds, err := getDatabase(cfg, dataFlow)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
 	}
 
-	projectorPool := projector.NewProjectorPool(ds)
-
 	serverMux := http.NewServeMux()
-	projectorHandler := projectorHttp.ProjectorHttp{
-		ServerMux: serverMux,
-		DS:        ds,
-		Projector: projectorPool,
-	}
-	projectorHandler.RegisterRoutes()
+	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
+		RestricterUrl:  cfg.RestricterUrl,
+		MetricInterval: cfg.MetricInterval,
+	}, serverMux, ds, dsFlow)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)
 
 	log.Info().Msgf("Starting server on %s", cfg.Bind)
 	srv := &http.Server{
-		Addr:    cfg.Bind,
-		Handler: serverMux,
+		Addr:        cfg.Bind,
+		Handler:     serverMux,
+		BaseContext: func(net.Listener) context.Context { return ctx },
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
@@ -76,7 +110,7 @@ func run(cfg config) error {
 	return nil
 }
 
-func getDatabase(cfg config) (*datastore.Datastore, error) {
+func getDatabase(cfg config, dsFlow flow.Flow) (*database.Datastore, error) {
 	password, err := parseSecretsFile(cfg.PostgresPasswordFile)
 	if err != nil {
 		if cfg.Development {
@@ -96,7 +130,7 @@ func getDatabase(cfg config) (*datastore.Datastore, error) {
 	)
 	redisAddr := cfg.MessageBusHost + ":" + cfg.MessageBusPort
 
-	ds, err := datastore.New(pgAddr, redisAddr)
+	ds, err := database.New(pgAddr, redisAddr, dsFlow)
 	if err != nil {
 		return nil, fmt.Errorf("creating datastore: %w", err)
 	}

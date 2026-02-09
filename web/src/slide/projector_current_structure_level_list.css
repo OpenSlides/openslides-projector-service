@@ -1,0 +1,62 @@
+.struture-level-list-slide {
+  --grid-layout-gap: 4px;
+  --grid-column-count: 3;
+  --grid-item--min-width: 200px;
+
+  --gap-count: calc(var(--grid-column-count) - 1);
+  --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
+  --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
+  grid-gap: var(--grid-layout-gap);
+  margin-top: calc(var(--projector-scroll) * -25px);
+
+  .struture-level-list-countdown {
+    padding-top: 27px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .countdown-time-wrapper {
+    font-family: 'OSFont Monospace';
+    &.negative-time {
+      color: #c00;
+      .time-indicator-wrapper #timeIndicator {
+        background: #c00;
+      }
+    }
+  }
+
+  .level-time-list {
+    font-size: 80px;
+    line-height: 80px;
+    text-align: right;
+  }
+
+  .structure-level-name {
+    text-align: right;
+    font-size: 30px;
+    line-height: 30px;
+
+    .intervention {
+      white-space: normal;
+      word-wrap: break-word;
+    }
+  }
+
+  .structure-level-color {
+    height: 5px;
+    background-color: transparent;
+    width: 90%;
+    border-width: 0;
+    border-radius: 7px;
+    margin: 10px 0;
+  }
+
+  .align-right {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

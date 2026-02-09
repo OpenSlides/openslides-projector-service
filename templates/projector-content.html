@@ -1,0 +1,116 @@
+<style>
+#projector-container {
+    {{if .Projector.Color}}
+        --projector-color: {{.Projector.Color}};
+    {{end}}
+    {{if .Projector.BackgroundColor}}
+        --projector-background-color: {{.Projector.BackgroundColor}};
+    {{end}}
+    {{if .Projector.HeaderBackgroundColor}}
+        --projector-header-background-color: {{.Projector.HeaderBackgroundColor}};
+    {{end}}
+    {{if .Projector.HeaderFontColor}}
+        --projector-header-font-color: {{.Projector.HeaderFontColor}};
+    {{end}}
+    {{if .Projector.HeaderH1Color}}
+        --projector-header-h1-color: {{.Projector.HeaderH1Color}};
+    {{end}}
+    {{if .Projector.ChyronBackgroundColor}}
+        --projector-chyron-background-color: {{.Projector.ChyronBackgroundColor}};
+    {{end}}
+    {{if .Projector.ChyronBackgroundColor2}}
+        --projector-chyron-background-color2: {{.Projector.ChyronBackgroundColor2}};
+    {{end}}
+    {{if .Projector.ChyronFontColor}}
+        --projector-chyron-font-color: {{.Projector.ChyronFontColor}};
+    {{end}}
+    {{if .Projector.ChyronFontColor2}}
+        --projector-chyron-font-color2: {{.Projector.ChyronFontColor2}};
+    {{end}}
+    {{if .Projector.Width}}
+        --projector-width: {{.Projector.Width}};
+    {{end}}
+    {{if .Projector.AspectRatioDenominator}}
+        {{if .Projector.AspectRatioNumerator}}
+            --projector-aspect-ratio-numerator: {{.Projector.AspectRatioNumerator}};
+            --projector-aspect-ratio-denominator: {{.Projector.AspectRatioDenominator}};
+        {{end}}
+    {{end}}
+    {{if .Projector.Theme}}
+        --theme-yes: {{or .Projector.Theme.Yes "#4caf50"}};
+        --theme-no: {{or .Projector.Theme.No "#cc6c5b"}};
+        --theme-abstain: {{or .Projector.Theme.Abstain "#a6a6a6"}};
+    {{end}}
+    {{if .Projector.Scroll}}
+        --projector-scroll: {{.Projector.Scroll}};
+    {{else}}
+        --projector-scroll: 0;
+    {{end}}
+    {{if .Projector.Scale}}
+        --projector-scale: {{.Projector.Scale}};
+    {{else}}
+        --projector-scale: 0;
+    {{end}}
+}
+</style>
+
+<link rel="stylesheet" type="text/css" href="/system/projector/static/projector.css" />
+
+<div id="projector-container" class="nocursor">
+  <div id="projector">
+    {{ if .Projector.ShowHeaderFooter }}
+      <div
+        id="header"
+        class="header-footer"
+        {{ if  .Projector.MeetingLogo }}
+          style="background-image: url(/system/media/get/{{ .Projector.HeaderImage }});"
+        {{ end }}
+      >
+        {{ if .Projector.ShowLogo }}
+          {{ if  .Projector.MeetingLogo }}
+            <img id="projector-logo-main" src="/system/media/get/{{ .Projector.MeetingLogo }}" aria-hidden />
+          {{ end }}
+        {{ end }}
+
+        {{ if .Projector.ShowTitle }}
+          <div id="eventdata">
+            <div class="event-name ellipsis-overflow">{{ .Projector.MeetingName }}</div>
+            {{ if .Projector.MeetingDescription }}
+              <div class="event-description">{{ .Projector.MeetingDescription }}</div>
+            {{ end }}
+          </div>
+        {{ end }}
+
+        {{ if .Projector.ShowClock }}
+          <div id="clock">
+            <span id="clock-time"></span>
+          </div>
+        {{ end }}
+      </div>
+    {{ end }}
+
+
+    <div id="slides">
+      {{ range $index, $element := .Projections }}
+        <div class="slide" data-id="{{ $index }}">
+          {{ $element }}
+        </div>
+      {{ end }}
+
+
+      <div class="overlay-container"></div>
+    </div>
+
+    {{ if .Projector.ShowHeaderFooter }}
+      <div
+        id="footer"
+        class="header-footer"
+        {{ if  .Projector.MeetingLogo }}
+          style="background-image: url(/system/media/get/{{ .Projector.HeaderImage }});"
+        {{ end }}
+      >
+        <div class="footertext"></div>
+      </div>
+    {{ end }}
+  </div>
+</div>

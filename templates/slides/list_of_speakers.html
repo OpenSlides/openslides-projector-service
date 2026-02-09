@@ -1,0 +1,107 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_list_of_speakers.css" />
+
+{{ define "speaker" }}
+  {{ if .IsSpeaking }}
+    <span class="material-icons">mic</span>
+  {{ end }}
+  {{ if .Name }}
+    {{ .Name }}
+  {{ else }}
+    <i>{{ Loc.Get "Unknown user" }}</i>
+  {{ end }}
+  {{ if .IsContribution }}
+    <span class="material-icons">star</span>
+  {{ end }}
+  {{ if .IsIntervention }}
+    <span class="material-icons">error</span>
+  {{ end }}
+  {{ if .IsInterposedQuestion }}
+    <span class="material-icons">help</span>
+  {{ end }}
+  {{ if .IsPointOfOrder }}
+    <span class="material-icons point-of-order">warning</span>
+  {{ end }}
+  {{ if .IsForspeach }}
+    <span class="material-icons forspeach">add_circle</span>
+  {{ end }}
+  {{ if .IsCounterspeach }}
+    <span class="material-icons counterspeach">remove_circle</span>
+  {{ end }}
+{{ end }}
+
+
+<div class="content {{ if .Overlay }}overlay{{ end }} list-of-speakers font-scale">
+  {{ if .Overlay }}
+    <h3>
+      {{ Loc.Get "List of speakers" }}
+    </h3>
+  {{ else }}
+    <div class="slidetitle">
+      <h1>
+        {{ Loc.Get "List of speakers" }}
+        {{ if .LoS.Closed }}
+          <span class="material-icons los-lock">lock</span>
+        {{ end }}
+      </h1>
+      <h2>
+        {{ if .ContentTitle.AgendaItemNumber }}
+          {{ .ContentTitle.AgendaItemNumber }}
+        {{ end }}
+        {{ if and .ContentTitle.AgendaItemNumber .ContentTitle.Title }}
+          ·
+        {{ end }}
+        {{ if .ContentTitle.Title }}
+          {{ .ContentTitle.Title }}
+        {{ end }}
+        {{ if and .Speakers.WaitingSpeakers .ShowNumSpeakers }}
+          &ndash;
+          {{ .WaitingSpeakers }}
+          {{ Loc.Get "Speakers" }}
+        {{ end }}
+      </h2>
+    </div>
+  {{ end }}
+  <div class="scroll-inner">
+    <div class="detail-view-text">
+      {{ if .Speakers.CurrentSpeaker }}
+        <div class="speaker current">
+          {{ template "speaker" .Speakers.CurrentSpeaker }}
+        </div>
+      {{ end }}
+
+
+      <div class="last-speakers">
+        {{ range .Speakers.FinishedSpeakers }}
+          <div>
+            {{ template "speaker" . }}
+          </div>
+        {{ end }}
+      </div>
+
+      {{ if .Speakers.CurrentInterposedQuestion }}
+        <div class="speaker current interposed-question">
+          {{ template "speaker" .Speakers.CurrentInterposedQuestion }}
+        </div>
+      {{ end }}
+
+
+      <div class="interposed-questions">
+        <ol class="next-speakers">
+          {{ range .Speakers.WaitingInterposedQuestions }}
+            <li class="speaker">
+              {{ template "speaker" . }}
+            </li>
+          {{ end }}
+        </ol>
+      </div>
+
+      <ol class="next-speakers">
+        {{ range .Speakers.WaitingSpeakers }}
+          <li class="speaker">
+            {{ template "speaker" . }}
+          </li>
+        {{ end }}
+      </ol>
+    </div>
+  </div>
+</div>

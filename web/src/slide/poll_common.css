@@ -1,0 +1,35 @@
+.yes {
+  color: var(--theme-yes);
+}
+
+.no {
+  color: var(--theme-no);
+}
+
+.abstain {
+  color: var(--theme-abstain);
+}
+
+.non-majority {
+  color: #5b5b5b;
+}
+
+.bg-yes {
+  background-color: var(--theme-yes);
+}
+
+.bg-no {
+  background-color: var(--theme-no);
+}
+
+.bg-abstain {
+  background-color: var(--theme-abstain);
+}
+
+.bg-voted {
+  background-color: var(--projector-header-h1-color);
+}
+
+.bg-non-majority {
+  background-color: #5b5b5b;
+}

@@ -1,0 +1,14 @@
+.agenda-item-list-content {
+  ul {
+    list-style: none;
+    font-size: 0.9em;
+  }
+
+  & > ul {
+    font-size: 1.1em;
+    padding-left: 0;
+  }
+}
+.agenda-item-list-container {
+  margin-top: calc(var(--projector-scroll) * -25px);
+}

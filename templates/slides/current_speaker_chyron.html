@@ -1,0 +1,35 @@
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_current_speaker_chyron.css" />
+
+<div
+  class="content overlay chyron {{ if eq .Options.ChyronType "old" }}
+    old
+  {{ else if eq .Options.ChyronType "new" }}
+    new
+  {{ end }}"
+>
+  {{ if ne .Options.ChyronType "none" }}
+    {{ if .SpeakerName }}
+      <div class="chyron-speaker">
+        <div class="inner">
+          {{ if eq .Options.ChyronType "new" }}
+            {{ .SpeakerName }}
+          {{ else if eq .Options.ChyronType "old" }}
+            <div class="name">
+              {{ .SpeakerName }}
+            </div>
+            <div class="level">
+              {{ .StructureLevel }}
+            </div>
+          {{ end }}
+        </div>
+      </div>
+    {{ end }}
+  {{ end }}
+  {{ if and .Options.AgendaItem .AgendaItem }}
+    <div class="chyron-agenda-item">
+      <div class="inner">
+        {{ .AgendaItem }}
+      </div>
+    </div>
+  {{ end }}
+</div>

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OpenSlides</title>
+
+    <link href="/assets/img/favicon.png" rel="icon" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="/system/projector/static/projector-page.css" />
+  </head>
+
+  <body>
+    <div id="projector-page" class="projector-container">
+      {{ if .ProjectorContent }}
+        <template id="current-content">{{ .ProjectorContent }}</template>
+      {{ end }}
+    </div>
+
+    <script type="module">
+      import { Projector } from '/system/projector/static/projector.js';
+
+      Projector(document.getElementById(`projector-page`), null, null, {
+        standalone: true
+      });
+    </script>
+  </body>
+</html>

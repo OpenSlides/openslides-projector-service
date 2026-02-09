@@ -1,0 +1,30 @@
+@import 'fonts.css';
+@import 'material-icons/iconfont/material-icons.css';
+
+body {
+  margin: 0;
+  background-color: var(--projector-background-color);
+  color: var(--projector-color);
+  font-family:
+    OSFont,
+    Fira Sans,
+    Roboto,
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+#projector-page {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Needed for pdf.js */
+.hiddenCanvasElement {
+  position: absolute;
+}

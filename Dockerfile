@@ -1,12 +1,17 @@
-FROM golang:1.23.3-alpine as base
-WORKDIR /root
+ARG CONTEXT=prod
 
-RUN apk add git curl make
+FROM golang:1.25.5-alpine AS base
 
-ADD https://esbuild.github.io/dl/latest esbuild-install
-RUN sh esbuild-install
-RUN rm esbuild-install
-RUN mv esbuild /usr/bin
+## Setup
+ARG CONTEXT
+WORKDIR /root/openslides-projector-service
+ENV APP_CONTEXT=${CONTEXT}
+
+## Install
+RUN apk add --no-cache \
+    curl \
+    git \
+    make
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -15,41 +20,70 @@ COPY cmd cmd
 COPY pkg pkg
 COPY templates templates
 COPY web web
+COPY locale locale
 COPY Makefile Makefile
 RUN mkdir static
 
+
 # Build service in seperate stage.
-FROM base as builder
+FROM base AS builder
+
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
+
+FROM node:22.13 AS builder-web
+
+COPY web /web
+COPY Makefile /Makefile
 RUN make build-web-assets
 
 
 # Test build.
-FROM base as testing
+FROM base AS tests
 
-RUN apk add build-base
+RUN apk add --no-cache \
+    build-base
 
 CMD go vet ./... && go test -test.short ./...
 
 
 # Development build.
-FROM base as development
+FROM base AS dev
+WORKDIR /root/openslides-projector-service
 
-RUN ["go", "install", "github.com/githubnemo/CompileDaemon@latest"]
+RUN apk add --no-cache \
+    nodejs \
+    npm
+
+COPY --from=builder-web /static ./static
+COPY web web
+RUN cd web && npm ci
+COPY Makefile Makefile
+
+RUN ["go", "install", "github.com/githubnemo/CompileDaemon@v1.4.0"]
 EXPOSE 9051
 
-CMD CompileDaemon -log-prefix=false -build="go build -o openslides-projector-service cmd/projectord/main.go" -command="./openslides-projector-service"
+CMD ["make", "build-live-all"]
 
+HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health || exit 1
 
 # Productive build
-FROM alpine:3
+FROM alpine:3 AS prod
+
+## Setup
+ARG CONTEXT
+ENV APP_CONTEXT=prod
 
 LABEL org.opencontainers.image.title="OpenSlides Projector Service"
 LABEL org.opencontainers.image.description="The Projector Service is a http endpoint that serves projectors in Openslides."
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
-COPY --from=builder /root/openslides-projector-service .
+COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
+COPY --from=builder /root/openslides-projector-service/templates /templates
+COPY --from=builder /root/openslides-projector-service/locale /locale
+COPY --from=builder-web /static /static
 EXPOSE 9051
-ENTRYPOINT ["/openslides-projector-service"]
+CMD ["/openslides-projector-service"]
+
+HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health || exit 1

@@ -1,0 +1,243 @@
+@import 'fonts.css';
+@import 'colors.css';
+@import 'material-icons/iconfont/material-icons.css';
+
+:root {
+  --projector-color: #000000;
+  --projector-background-color: #ffffff;
+  --projector-header-background-color: #317796;
+  --projector-header-font-color: #ffffff;
+  --projector-header-h1-color: #317796;
+  --projector-chyron-background-color: #317796;
+  --projector-chyron-background-color2: #134768;
+  --projector-chyron-font-color: #ffffff;
+  --projector-chyron-font-color2: #ffffff;
+  --projector-width: 1200;
+}
+
+body {
+  margin: 0;
+  background-color: var(--projector-background-color);
+  color: var(--projector-color);
+  font-family:
+    customProjectorFont,
+    OSFont,
+    Fira Sans,
+    Roboto,
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+.header-footer {
+  background-color: var(--projector-header-background-color);
+  color: var(--projector-header-font-color);
+}
+
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 10;
+  height: 60px;
+  padding: 0 50px;
+  box-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+#projector-logo-main {
+  height: 50px;
+  padding-left: 50px;
+  padding-top: 10px;
+  float: left;
+  display: flex;
+}
+
+#eventdata {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  height: 50px;
+  overflow: hidden;
+  line-height: 1.1;
+}
+
+#eventdata .event-name {
+  font-size: 26px;
+  font-weight: 400;
+}
+
+#eventdata .event-description {
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+#clock {
+  padding-left: 30px;
+  font-size: 22px;
+  line-height: 24px;
+}
+
+#clock-time {
+  font-size: 24px;
+  padding-left: 5px;
+}
+
+.slide {
+  display: flex;
+  justify-content: center;
+}
+
+#slides {
+  position: relative;
+  height: 100%;
+}
+
+#header + #slides {
+  height: calc(100% - 105px);
+}
+
+#slides .slide > .full-height {
+  min-height: calc(var(--projector-inner-height) * 1px);
+}
+
+#slides .slide > .content {
+  width: calc(100% - 100px);
+  line-height: 1.5;
+  padding-top: 20px;
+  &.full-height {
+    min-height: calc(var(--projector-inner-height) * 1px - 20px);
+  }
+}
+
+#slides .slide > .content.overlay {
+  position: fixed;
+  z-index: 20;
+  margin-top: 0;
+}
+
+#footer {
+  position: fixed;
+  width: 100%;
+  height: 35px;
+  bottom: 0;
+  z-index: 9;
+}
+
+h1 {
+  font-family: 'OSFont projectorH1';
+  color: var(--projector-header-h1-color);
+  font-size: 1.8em;
+  font-weight: 500;
+  line-height: 1.1em;
+  margin: 0;
+  padding-bottom: 10px;
+}
+
+h2 {
+  font-family: 'OSFont projectorH2';
+  line-height: 40px;
+  font-weight: normal;
+}
+
+h3 {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.slidetitle {
+  margin-top: 0.1em;
+  border-bottom: 2px solid #d3d3d3;
+  padding-bottom: 0.4em;
+  padding-top: 0.8em;
+  position: relative;
+  z-index: 9;
+  background-color: var(--projector-background-color);
+}
+
+.slidetitle h1 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.slidetitle h2 {
+  color: #9a9898;
+  margin-top: 0.4em;
+  margin-bottom: -0.4em;
+  font-size: 1.3em;
+  font-weight: normal;
+  line-height: 1.45;
+}
+
+.font-scale {
+  font-size: calc(100% + calc(var(--projector-scale) * 5%));
+}
+
+.transform-scale {
+  transform-origin: 0px 0px 0px;
+  --actual-scale: pow(1.05, var(--projector-scale));
+  transform: scale(var(--actual-scale));
+  width: calc(100% / var(--actual-scale));
+}
+
+#projector-page {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#projector-container {
+  position: relative;
+  width: calc(var(--projector-container-width) * 1px);
+  height: calc(var(--projector-container-height) * 1px);
+}
+
+#projector {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: left top;
+  overflow: hidden;
+
+  background-color: var(--projector-background-color);
+  color: var(--projector-color);
+
+  width: calc(var(--projector-width) * 1px);
+  height: calc(var(--projector-height) * 1px);
+  transform: scale(calc(var(--projector-container-width) / var(--projector-width)));
+
+  font-family:
+    customProjectorFont,
+    OSFont,
+    Fira Sans,
+    Roboto,
+    Arial,
+    Helvetica,
+    sans-serif;
+  font-size: 22px;
+  line-height: 24px;
+}
+
+ol,
+ul {
+  margin: 0 0 10px 0;
+}
+
+/* Needed for pdf.js */
+.hiddenCanvasElement {
+  position: absolute;
+}
+
+projector-poll-chart {
+  display: none;
+}
+
+.scroll-inner {
+  margin-top: calc(var(--projector-scroll) * -25px);
+}

@@ -1,11 +1,40 @@
+override SERVICE=projector
+
+# Build images for different contexts
+
+build-prod:
+	docker build ./ $(ARGS) --tag "openslides-$(SERVICE)" --build-arg CONTEXT="prod" --target "prod"
+
 build-dev:
-	docker build . --target development --tag openslides-projector-dev
+	docker build ./ $(ARGS) --tag "openslides-$(SERVICE)-dev" --build-arg CONTEXT="dev" --target "dev"
 
-run-tests:
-	docker build . --target testing --tag openslides-projector-test
-	docker run openslides-projector-test
+build-tests:
+	docker build ./ $(ARGS) --tag "openslides-$(SERVICE)-tests" --build-arg CONTEXT="tests" --target "tests"
 
-all: gofmt gotest golinter
+build-live-all:
+	make build-watch-web-assets &
+	make build-live
+
+build-live:
+	go run github.com/githubnemo/CompileDaemon@v1.4.0 -log-prefix=false -include="*.html" -build="go build -o projector-service ./cmd/projectord/main.go" -command="./projector-service"
+
+install-web-asset-deps:
+	cd web && npm i
+
+build-web-assets: | install-web-asset-deps
+	cd web && npm run build
+
+build-watch-web-assets: | install-web-asset-deps
+	cd web && npm run build-watch
+
+extract-translations:
+	go run cmd/i18n-extract/main.go
+
+# Tests
+run-tests: | build-tests
+	docker run openslides-projector-tests
+
+lint: gofmt gotest golinter
 
 gotest:
 	go test ./...
@@ -16,8 +45,11 @@ golinter:
 gofmt:
 	gofmt -l -s -w .
 
-build-web-assets:
-	esbuild web/projector.js web/projector.css web/slide/*.css web/slide/*.js --outdir=static/ --external:*.woff --bundle --minify --sourcemap --target=chrome58,firefox57,safari11,edge16
+gogenertate:
+	go generate ./...
 
-build-watch-web-assets:
-	esbuild web/projector.js web/projector.css web/slide/*.css web/slide/*.js --outdir=static/ --external:*.woff --watch --bundle --minify --sourcemap --target=chrome58,firefox57,safari11,edge16
+nodelinter: | install-web-asset-deps
+	cd web && npm run lint
+
+nodelinter-fix: | install-web-asset-deps
+	cd web && npm run lint-fix

@@ -1,0 +1,54 @@
+name: CI - Build and Test Service
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  continuous-tests-go:
+    name: Test go
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+
+      - name: Go Format
+        run: gofmt -s -w . && git diff --exit-code
+
+      - name: Go Vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+
+      - name: Test
+        run: go test -v -count=1 -race -shuffle=on -coverprofile=coverage.txt -json ./... > test.json
+
+      - name: Annotate tests
+        if: always()
+        uses: guyarb/golang-test-annotations@v0.8.0
+        with:
+          test-results: test.json
+
+  continuous-tests-frontend:
+    name: Test web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure Node
+        uses: actions/setup-go@v6
+        with:
+          node-version: 22
+
+      - run: cd web && npm ci
+
+      - name: Node lint
+        run: cd web && npm run lint
