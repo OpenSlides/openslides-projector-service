@@ -16,8 +16,8 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
+	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
-	"github.com/leonelquinteros/gotext"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
 )
@@ -79,7 +79,7 @@ type projector struct {
 	pSettings          *ProjectorSettings
 	pSettingsOverwrite *ProjectorPreviewSettings
 	listeners          []chan *ProjectorUpdateEvent
-	locale             *gotext.Locale
+	locale             *i18n.ProjectorLocale
 	Content            string
 	Projections        map[int]template.HTML
 	ProjectionsHash    map[int]uint64
@@ -101,8 +101,7 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		return nil, fmt.Errorf("error fetching projector from db %w", err)
 	}
 
-	langName, _ := lang.Base()
-	locale := gotext.NewLocale("locale", langName.String())
+	locale := i18n.NewLocale(lang)
 	p := &projector{
 		ctxCancel:       cancel,
 		db:              db,
@@ -130,8 +129,7 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 		return "", fmt.Errorf("error fetching projector from db %w", err)
 	}
 
-	langName, _ := lang.Base()
-	locale := gotext.NewLocale("locale", langName.String())
+	locale := i18n.NewLocale(lang)
 	p := &projector{
 		ctxCancel:          cancel,
 		db:                 db,
@@ -154,7 +152,6 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 }
 
 func (p *projector) initProjector(ctx context.Context) {
-	p.locale.AddDomain("default")
 	go p.subscribeProjector(ctx)
 
 	initListener := make(chan *ProjectorUpdateEvent)

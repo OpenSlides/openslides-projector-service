@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/leonelquinteros/gotext"
+	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 )
 
-func Option_OptionLabel(ctx context.Context, fetch *dsmodels.Fetch, locale *gotext.Locale, option *dsmodels.Option, userMap map[int]int) (string, error) {
+func Option_OptionLabel(ctx context.Context, fetch *dsmodels.Fetch, locale *i18n.ProjectorLocale, option *dsmodels.Option, userMap map[int]int) (string, error) {
 	if option.Text != "" {
 		return option.Text, nil
 	} else if !option.ContentObjectID.Null() {
