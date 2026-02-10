@@ -6,7 +6,8 @@ import (
 )
 
 type ProjectorLocale struct {
-	locale *gotext.Locale
+	locale             *gotext.Locale
+	customTranslations map[string]string
 }
 
 func NewLocale(lang language.Tag) *ProjectorLocale {
@@ -20,5 +21,15 @@ func NewLocale(lang language.Tag) *ProjectorLocale {
 }
 
 func (p *ProjectorLocale) Get(str string, vars ...any) string {
-	return p.locale.Get(str, vars...)
+	str = p.locale.Get(str, vars...)
+
+	if custom, ok := p.customTranslations[str]; ok {
+		return custom
+	}
+
+	return str
+}
+
+func (p *ProjectorLocale) SetCustomTranslations(translation map[string]string) {
+	p.customTranslations = translation
 }
