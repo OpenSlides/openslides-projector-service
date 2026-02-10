@@ -265,6 +265,9 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
 
+		var customTranslationsRaw json.RawMessage
+		f.Meeting_CustomTranslations(p.projector.MeetingID).Lazy(&customTranslationsRaw)
+
 		var logo dsfetch.Maybe[int]
 		f.Meeting_LogoProjectorMainID(p.projector.MeetingID).Lazy(&logo)
 		var header dsfetch.Maybe[int]
@@ -282,6 +285,15 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		} else if err != nil {
 			log.Error().Err(err).Msg("failed to update projector data")
 			return
+		}
+
+		if len(customTranslationsRaw) > 0 {
+			var customTranslations map[string]string
+			if err := json.Unmarshal(customTranslationsRaw, &customTranslations); err != nil {
+				log.Error().Err(err).Msg("failed parsing custom translations")
+			} else {
+				p.locale.SetCustomTranslations(customTranslations)
+			}
 		}
 
 		if val, set := logo.Value(); set {
