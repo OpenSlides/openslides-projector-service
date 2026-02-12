@@ -159,21 +159,19 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 	})
 }
 
-func pollPermissions(w http.ResponseWriter, reader *bufio.Reader, resp *http.Response, id int, ctx context.Context) {
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
+func pollPermissions(w http.ResponseWriter, reader *bufio.Reader, resp *http.Response, id int, requestCtx context.Context) {
 	for {
 		select {
-		case <-ctx.Done():
+		case <-requestCtx.Done():
+			writeResponse(w, `{"error": true, "msg": "permissions denied. Context done"}`)
 			return
 		default:
 			line, err := reader.ReadBytes('\n')
 			if err != nil || !strings.Contains(string(line), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
 				// Permissions lost
-				writeResponse(w, `{"error": true, "msg": "permissions denied"}`)
-				ctx.Done()
+				writeResponse(w, `{"error": true, "msg": "permissions denied. Permissions lost"}`)
+				_ = resp.Body.Close()
+				requestCtx.Done()
 				return
 			}
 		}
