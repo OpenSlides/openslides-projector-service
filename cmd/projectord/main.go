@@ -89,7 +89,7 @@ func run(cfg config) error {
 	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
 		RestricterUrl:  cfg.RestricterUrl,
 		MetricInterval: cfg.MetricInterval,
-	}, serverMux, ds, dsFlow)
+	}, serverMux, ds, dsFlow, dsFlow.Pool)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)
 
