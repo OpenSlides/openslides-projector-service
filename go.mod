@@ -8,7 +8,7 @@ require (
 	github.com/leonelquinteros/gotext v1.7.2
 	github.com/rs/zerolog v1.34.0
 	github.com/shopspring/decimal v1.4.0
-	golang.org/x/text v0.33.0
+	golang.org/x/text v0.34.0
 )
 
 require (
