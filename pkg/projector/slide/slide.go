@@ -10,19 +10,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/leonelquinteros/gotext"
 	"github.com/rs/zerolog/log"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
+	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 )
 
 type projectionRequest struct {
 	ContentObjectID *int
 	Projection      *dsmodels.Projection
 	Fetch           *dsmodels.Fetch
-	Locale          *gotext.Locale
+	Locale          *i18n.ProjectorLocale
 }
 
 type projectionUpdate struct {
@@ -36,11 +36,11 @@ type SlideRouter struct {
 	ctx    context.Context
 	db     *database.Datastore
 	ds     flow.Flow
-	locale *gotext.Locale
+	locale *i18n.ProjectorLocale
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gotext.Locale) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *i18n.ProjectorLocale) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["agenda_item_list"] = AgendaItemListSlideHandler
 	routes["assignment"] = AssignmentSlideHandler
@@ -164,7 +164,7 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 				"RenderIndex": func(i int) int {
 					return i + 1
 				},
-				"Loc": func() *gotext.Locale {
+				"Loc": func() *i18n.ProjectorLocale {
 					return r.locale
 				},
 			}).ParseFiles(fmt.Sprintf("templates/slides/%s.html", templateName))
