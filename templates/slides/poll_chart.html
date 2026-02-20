@@ -18,7 +18,7 @@
           <table class="result-table">
             <tbody>
               {{ range $i, $o := .Data.Options }}
-                <tr style="color: var(--chart-bg-color-{{ $i }})">
+                <tr style="color: var(--chart-bg-color-{{ $i }}{{ if $o.Color }}, var({{ $o.Color }}){{ end }})">
                   <td class="label-column" style="min-width: 300px">
                     <projector-icon-container icon="{{ $o.Icon }}">
                       <span class="option-name">{{ $o.Name }}</span>
@@ -30,25 +30,19 @@
                     </div>
                   </td>
                   <td>
-                    {{ if or (eq $.OneHundredPercentBase "valid") (eq $.OneHundredPercentBase "cast") }}
-                    {{ else }}
-                      {{ if $o.PercVotes }}
-                        <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
-                      {{ end }}
+                    {{ if $o.PercVotes }}
+                      <div class="result-cell-definition">{{ $o.PercVotes }} %</div>
                     {{ end }}
                   </td>
                 </tr>
               {{ end }}
-              {{ if or (eq .OneHundredPercentBase "YN") (eq .OneHundredPercentBase "YNA") }}
-              {{ else }}
-                <tr class="valid-votes-row">
-                  <td>{{ Loc.Get "Valid votes" }}</td>
-                  <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
-                  {{ if .Data.PercValidvotes }}
-                    <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
-                  {{ end }}
-                </tr>
-              {{ end }}
+              <tr class="valid-votes-row">
+                <td>{{ Loc.Get "Valid votes" }}</td>
+                <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+                {{ if .Data.PercValidvotes }}
+                  <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
+                {{ end }}
+              </tr>
             </tbody>
           </table>
         </div>

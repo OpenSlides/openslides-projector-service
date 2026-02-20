@@ -21,17 +21,18 @@ import (
 )
 
 type config struct {
-	Bind                 string `env:"BIND" envDefault:":9051"`
-	Development          bool   `env:"OPENSLIDES_DEVELOPMENT" envDefault:"false"`
-	PostgresHost         string `env:"DATABASE_HOST" envDefault:"localhost"`
-	PostgresPort         string `env:"DATABASE_PORT" envDefault:"5432"`
-	PostgresDatabase     string `env:"DATABASE_NAME" envDefault:"openslides"`
-	PostgresUser         string `env:"DATABASE_USER" envDefault:"openslides"`
-	PostgresPasswordFile string `env:"DATABASE_PASSWORD_FILE" envDefault:"/run/secrets/postgres_password"`
-	MessageBusHost       string `env:"MESSAGE_BUS_HOST" envDetault:"localhost"`
-	MessageBusPort       string `env:"MESSAGE_BUS_PORT" envDetault:"6379"`
-	RestricterUrl        string `env:"RESTRICTER_URL" envDetault:"http://autoupdate:9012/internal/autoupdate"`
-	PublicAccessOnly     bool   `env:"OPENSLIDES_PUBLIC_ACCESS_ONLY" envDefault:"false"`
+	Bind                 string        `env:"BIND" envDefault:":9051"`
+	Development          bool          `env:"OPENSLIDES_DEVELOPMENT" envDefault:"false"`
+	MetricInterval       time.Duration `env:"METRIC_INTERVAL" envDefault:"5m"`
+	PostgresHost         string        `env:"DATABASE_HOST" envDefault:"localhost"`
+	PostgresPort         string        `env:"DATABASE_PORT" envDefault:"5432"`
+	PostgresDatabase     string        `env:"DATABASE_NAME" envDefault:"openslides"`
+	PostgresUser         string        `env:"DATABASE_USER" envDefault:"openslides"`
+	PostgresPasswordFile string        `env:"DATABASE_PASSWORD_FILE" envDefault:"/run/secrets/postgres_password"`
+	MessageBusHost       string        `env:"MESSAGE_BUS_HOST" envDetault:"localhost"`
+	MessageBusPort       string        `env:"MESSAGE_BUS_PORT" envDetault:"6379"`
+	RestricterUrl        string        `env:"RESTRICTER_URL" envDetault:"http://autoupdate:9012/internal/autoupdate"`
+	PublicAccessOnly     bool          `env:"OPENSLIDES_PUBLIC_ACCESS_ONLY" envDefault:"false"`
 }
 
 func main() {
@@ -86,7 +87,8 @@ func run(cfg config) error {
 
 	serverMux := http.NewServeMux()
 	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
-		RestricterUrl: cfg.RestricterUrl,
+		RestricterUrl:  cfg.RestricterUrl,
+		MetricInterval: cfg.MetricInterval,
 	}, serverMux, ds, dsFlow)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)

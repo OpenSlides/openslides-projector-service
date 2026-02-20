@@ -20,6 +20,7 @@ body {
   background-color: var(--projector-background-color);
   color: var(--projector-color);
   font-family:
+    customProjectorFont,
     OSFont,
     Fira Sans,
     Roboto,
@@ -126,6 +127,7 @@ body {
 }
 
 h1 {
+  font-family: 'OSFont projectorH1';
   color: var(--projector-header-h1-color);
   font-size: 1.8em;
   font-weight: 500;
@@ -135,6 +137,7 @@ h1 {
 }
 
 h2 {
+  font-family: 'OSFont projectorH2';
   line-height: 40px;
   font-weight: normal;
 }
@@ -169,7 +172,7 @@ h3 {
 }
 
 .font-scale {
-  font-size: calc(100% + calc(var(--projector-scale) * 10%));
+  font-size: calc(100% + calc(var(--projector-scale) * 5%));
 }
 
 .transform-scale {
@@ -209,6 +212,14 @@ h3 {
   height: calc(var(--projector-height) * 1px);
   transform: scale(calc(var(--projector-container-width) / var(--projector-width)));
 
+  font-family:
+    customProjectorFont,
+    OSFont,
+    Fira Sans,
+    Roboto,
+    Arial,
+    Helvetica,
+    sans-serif;
   font-size: 22px;
   line-height: 24px;
 }

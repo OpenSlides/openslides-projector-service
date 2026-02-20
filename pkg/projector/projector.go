@@ -16,8 +16,8 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
+	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
-	"github.com/leonelquinteros/gotext"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
 )
@@ -79,7 +79,7 @@ type projector struct {
 	pSettings          *ProjectorSettings
 	pSettingsOverwrite *ProjectorPreviewSettings
 	listeners          []chan *ProjectorUpdateEvent
-	locale             *gotext.Locale
+	locale             *i18n.ProjectorLocale
 	Content            string
 	Projections        map[int]template.HTML
 	ProjectionsHash    map[int]uint64
@@ -101,8 +101,7 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		return nil, fmt.Errorf("error fetching projector from db %w", err)
 	}
 
-	langName, _ := lang.Base()
-	locale := gotext.NewLocale("locale", langName.String())
+	locale := i18n.NewLocale(lang)
 	p := &projector{
 		ctxCancel:       cancel,
 		db:              db,
@@ -130,8 +129,7 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 		return "", fmt.Errorf("error fetching projector from db %w", err)
 	}
 
-	langName, _ := lang.Base()
-	locale := gotext.NewLocale("locale", langName.String())
+	locale := i18n.NewLocale(lang)
 	p := &projector{
 		ctxCancel:          cancel,
 		db:                 db,
@@ -154,23 +152,22 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 }
 
 func (p *projector) initProjector(ctx context.Context) {
-	p.locale.AddDomain("default")
 	go p.subscribeProjector(ctx)
 
-	if len(p.projector.CurrentProjectionIDs) > 0 {
-		initListener := make(chan *ProjectorUpdateEvent)
-		p.AddListener <- initListener
-		updateCnt := 0
-		for event := range initListener {
-			if event.Event == "projection-updated" {
-				updateCnt++
-				if updateCnt >= len(p.projector.CurrentProjectionIDs) {
-					break
-				}
+	initListener := make(chan *ProjectorUpdateEvent)
+	p.AddListener <- initListener
+	updateCnt := 0
+	for event := range initListener {
+		if event.Event == "projection-updated" {
+			updateCnt++
+			if updateCnt >= len(p.projector.CurrentProjectionIDs) {
+				break
 			}
+		} else if len(p.projector.CurrentProjectionIDs) == 0 {
+			break
 		}
-		p.RemoveListener <- initListener
 	}
+	p.RemoveListener <- initListener
 }
 
 func (p *projector) subscribeProjector(ctx context.Context) {
@@ -268,6 +265,9 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		f.Meeting_Name(p.projector.MeetingID).Lazy(&p.pSettings.MeetingName)
 		f.Meeting_Description(p.projector.MeetingID).Lazy(&p.pSettings.MeetingDescription)
 
+		var customTranslationsRaw json.RawMessage
+		f.Meeting_CustomTranslations(p.projector.MeetingID).Lazy(&customTranslationsRaw)
+
 		var logo dsfetch.Maybe[int]
 		f.Meeting_LogoProjectorMainID(p.projector.MeetingID).Lazy(&logo)
 		var header dsfetch.Maybe[int]
@@ -285,6 +285,15 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		} else if err != nil {
 			log.Error().Err(err).Msg("failed to update projector data")
 			return
+		}
+
+		if len(customTranslationsRaw) > 0 {
+			var customTranslations map[string]string
+			if err := json.Unmarshal(customTranslationsRaw, &customTranslations); err != nil {
+				log.Error().Err(err).Msg("failed parsing custom translations")
+			} else {
+				p.locale.SetCustomTranslations(customTranslations)
+			}
 		}
 
 		if val, set := logo.Value(); set {
@@ -311,6 +320,12 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		if err = p.updateFullContent(); err != nil {
 			log.Error().Err(err).Msg("error generating projector content after settings update")
 		}
+
+		currentContent, err := json.Marshal(p.Content)
+		if err != nil {
+			log.Error().Err(err).Msg("error marshalling projector replace content")
+		}
+		p.sendToAll(&ProjectorUpdateEvent{"projector-replace", string(currentContent)})
 	})
 }
 
@@ -430,8 +445,10 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 			case <-ctx.Done():
 				return
 			case update := <-projectionChannel:
-				projections[update.ID] = update.Content
-				updateChannel <- []int{update.ID}
+				if update != nil {
+					projections[update.ID] = update.Content
+					updateChannel <- []int{update.ID}
+				}
 			}
 		}
 	}()

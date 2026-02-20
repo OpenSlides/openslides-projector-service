@@ -13,6 +13,7 @@ import (
 )
 
 type pollSlideProjectionOptionData struct {
+	Type        rune
 	Color       template.CSS
 	Icon        string
 	Name        string
@@ -54,37 +55,40 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 		if strings.Contains(poll.Pollmethod, "Y") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type:       'Y',
 				Color:      "--theme-yes",
 				Icon:       "check_circle",
 				Name:       req.Locale.Get("Yes"),
 				TotalVotes: opt.Yes,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y") ||
-					poll.OnehundredPercentBase == "cast" ||
-					poll.OnehundredPercentBase == "valid",
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "Y") &&
+					poll.OnehundredPercentBase != "cast" &&
+					poll.OnehundredPercentBase != "valid",
 			})
 		}
 
 		if strings.Contains(poll.Pollmethod, "N") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type:       'N',
 				Color:      "--theme-no",
 				Icon:       "cancel",
 				Name:       req.Locale.Get("No"),
 				TotalVotes: opt.No,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N") ||
-					poll.OnehundredPercentBase == "cast" ||
-					poll.OnehundredPercentBase == "valid",
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "N") &&
+					poll.OnehundredPercentBase != "cast" &&
+					poll.OnehundredPercentBase != "valid",
 			})
 		}
 
-		if strings.Contains(poll.Pollmethod, "A") && poll.OnehundredPercentBase != "YN" {
+		if strings.Contains(poll.Pollmethod, "A") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type:       'A',
 				Color:      "--theme-abstain",
 				Icon:       "circle",
 				Name:       req.Locale.Get("Abstain"),
 				TotalVotes: opt.Abstain,
-				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A") ||
-					poll.OnehundredPercentBase == "cast" ||
-					poll.OnehundredPercentBase == "valid",
+				DisplayPerc: strings.Contains(poll.OnehundredPercentBase, "A") &&
+					poll.OnehundredPercentBase != "cast" &&
+					poll.OnehundredPercentBase != "valid",
 			})
 		}
 	} else {
@@ -109,6 +113,10 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 	chartData := []chartDataEntry{}
 	for i, option := range data.Options {
+		if poll.OnehundredPercentBase == "YN" && option.Type == 'A' {
+			continue
+		}
+
 		chartData = append(chartData, chartDataEntry{
 			Color: string(option.Color),
 			Val:   option.TotalVotes.InexactFloat64(),
@@ -126,15 +134,14 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	data.ChartData = string(chartDataJSON)
 
 	data.TotalValidvotes = poll.Votesvalid
-	if !onehundredPercentBase.IsZero() {
+	if !onehundredPercentBase.IsZero() && poll.OnehundredPercentBase != "YN" && poll.OnehundredPercentBase != "YNA" {
 		data.PercValidvotes = poll.Votesvalid.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 	}
 
 	return map[string]any{
-		"_template":             "poll_chart",
-		"_fullHeight":           true,
-		"Poll":                  poll,
-		"Data":                  data,
-		"OneHundredPercentBase": poll.OnehundredPercentBase,
+		"_template":   "poll_chart",
+		"_fullHeight": true,
+		"Poll":        poll,
+		"Data":        data,
 	}, nil
 }
