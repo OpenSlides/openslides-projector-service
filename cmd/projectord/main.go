@@ -16,7 +16,6 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-go/environment"
-	"github.com/OpenSlides/openslides-go/redis"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	projectorHttp "github.com/OpenSlides/openslides-projector-service/pkg/http"
 )
@@ -59,9 +58,7 @@ func run(cfg config) error {
 	ctx := context.Background()
 
 	env := &environment.ForProduction{}
-	messageBus := redis.New(env)
-
-	dsFlow, err := datastore.NewFlowPostgres(env, messageBus)
+	dsFlow, err := datastore.NewFlowPostgres(env)
 	if err != nil {
 		return fmt.Errorf("connecting to datastore: %w", err)
 	}
