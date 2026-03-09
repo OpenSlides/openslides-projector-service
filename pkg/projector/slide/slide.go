@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 )
 
@@ -35,12 +34,11 @@ type slideHandler func(context.Context, *projectionRequest) (map[string]any, err
 type SlideRouter struct {
 	ctx    context.Context
 	db     *database.Datastore
-	ds     flow.Flow
 	locale *gotext.Locale
 	Routes map[string]slideHandler
 }
 
-func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gotext.Locale) *SlideRouter {
+func New(ctx context.Context, db *database.Datastore, locale *gotext.Locale) *SlideRouter {
 	routes := make(map[string]slideHandler)
 	routes["agenda_item_list"] = AgendaItemListSlideHandler
 	routes["assignment"] = AssignmentSlideHandler
@@ -62,7 +60,6 @@ func New(ctx context.Context, db *database.Datastore, ds flow.Flow, locale *gote
 	return &SlideRouter{
 		ctx:    ctx,
 		db:     db,
-		ds:     ds,
 		locale: locale,
 		Routes: routes,
 	}

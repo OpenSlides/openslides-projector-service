@@ -39,7 +39,7 @@ func (pool *ProjectorPool) readOrCreateProjector(id int, lang language.Tag) (*pr
 		return projector, nil
 	}
 
-	projector, err := newProjector(pool.ctx, id, lang, pool.db, pool.ds)
+	projector, err := newProjector(pool.ctx, id, lang, pool.db)
 	if err != nil {
 		return nil, fmt.Errorf("error creating new projector: %w", err)
 	}
@@ -58,7 +58,7 @@ func (pool *ProjectorPool) GetProjectorContent(id int, lang language.Tag) (*stri
 }
 
 func (pool *ProjectorPool) GetProjectorPreview(id int, lang language.Tag, settings ProjectorPreviewSettings) (*string, error) {
-	content, err := projectorPreview(pool.ctx, id, lang, pool.db, pool.ds, settings)
+	content, err := projectorPreview(pool.ctx, id, lang, pool.db, settings)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving projector preview content: %w", err)
 	}
