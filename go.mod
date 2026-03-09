@@ -30,4 +30,4 @@ require (
 	golang.org/x/tools v0.41.0 // indirect
 )
 
-replace github.com/OpenSlides/openslides-go => github.com/kryptance/openslides-go v0.0.0-20260304131356-0e3dd680853b
+replace github.com/OpenSlides/openslides-go => github.com/kryptance/openslides-go v0.0.0-20260309113256-6b339dd8c5c3
