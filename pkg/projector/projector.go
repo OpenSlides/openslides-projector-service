@@ -14,7 +14,6 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
@@ -92,10 +91,10 @@ type ProjectorUpdateEvent struct {
 	Data  string
 }
 
-func newProjector(parentCtx context.Context, id int, lang language.Tag, db *database.Datastore, ds flow.Flow) (*projector, error) {
+func newProjector(parentCtx context.Context, id int, lang language.Tag, db *database.Datastore) (*projector, error) {
 	ctx, cancel := context.WithCancel(parentCtx)
 
-	data, err := db.Fetch.Projector(id).First(ctx)
+	data, err := dsmodels.New(db.Flow).Projector(id).First(ctx)
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("error fetching projector from db %w", err)
@@ -107,7 +106,7 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 		db:              db,
 		projector:       &data,
 		pSettings:       &ProjectorSettings{},
-		slideRouter:     slide.New(ctx, db, ds, locale),
+		slideRouter:     slide.New(ctx, db, locale),
 		locale:          locale,
 		Projections:     make(map[int]template.HTML),
 		ProjectionsHash: make(map[int]uint64),
@@ -120,10 +119,10 @@ func newProjector(parentCtx context.Context, id int, lang language.Tag, db *data
 	return p, nil
 }
 
-func projectorPreview(ctx context.Context, id int, lang language.Tag, db *database.Datastore, ds flow.Flow, settings ProjectorPreviewSettings) (string, error) {
+func projectorPreview(ctx context.Context, id int, lang language.Tag, db *database.Datastore, settings ProjectorPreviewSettings) (string, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	data, err := db.Fetch.Projector(id).First(ctx)
+	data, err := dsmodels.New(db.Flow).Projector(id).First(ctx)
 	if err != nil {
 		cancel()
 		return "", fmt.Errorf("error fetching projector from db %w", err)
@@ -136,7 +135,7 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 		projector:          &data,
 		pSettings:          &ProjectorSettings{},
 		pSettingsOverwrite: &settings,
-		slideRouter:        slide.New(ctx, db, ds, locale),
+		slideRouter:        slide.New(ctx, db, locale),
 		locale:             locale,
 		Projections:        make(map[int]template.HTML),
 		ProjectionsHash:    make(map[int]uint64),

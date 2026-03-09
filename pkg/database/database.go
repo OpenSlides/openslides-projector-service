@@ -5,24 +5,21 @@ import (
 	"sync"
 
 	"github.com/OpenSlides/openslides-go/datastore/dskey"
-	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 )
 
 type Datastore struct {
 	mu          sync.RWMutex
 	ctx         context.Context
-	ds          flow.Flow
 	dsListeners []*dsChangeListener
-	Fetch       *dsmodels.Fetch
+	Flow        flow.Flow
 }
 
 func New(addr string, redisAddr string, dsFlow flow.Flow) (*Datastore, error) {
 	ctx := context.Background()
 	ds := Datastore{
-		ctx:   context.Background(),
-		ds:    dsFlow,
-		Fetch: dsmodels.New(dsFlow),
+		ctx:  context.Background(),
+		Flow: dsFlow,
 	}
 	go dsFlow.Update(ctx, func(m map[dskey.Key][]byte, err error) {
 		hasCanceled := false
