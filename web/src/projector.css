@@ -49,7 +49,10 @@ body {
 
 #projector-logo-main {
   height: 50px;
-  display: block;
+  padding-left: 50px;
+  padding-top: 10px;
+  float: left;
+  display: flex;
 }
 
 #eventdata {
@@ -59,8 +62,6 @@ body {
   height: 50px;
   overflow: hidden;
   line-height: 1.1;
-  flex: 1;
-  padding-left: 50px;
 }
 
 #eventdata .event-name {

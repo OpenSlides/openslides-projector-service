@@ -62,13 +62,13 @@
       <div
         id="header"
         class="header-footer"
-        {{ if .Projector.HeaderImage }}
-          style="background-image: url(/system/media/get-meeting/{{ .Projector.HeaderImage }});"
+        {{ if  .Projector.MeetingLogo }}
+          style="background-image: url(/system/media/get/{{ .Projector.HeaderImage }});"
         {{ end }}
       >
         {{ if .Projector.ShowLogo }}
-          {{ if .Projector.MeetingLogo }}
-            <img id="projector-logo-main" src="/system/media/get-meeting/{{ .Projector.MeetingLogo }}" aria-hidden />
+          {{ if  .Projector.MeetingLogo }}
+            <img id="projector-logo-main" src="/system/media/get/{{ .Projector.MeetingLogo }}" aria-hidden />
           {{ end }}
         {{ end }}
 
@@ -105,8 +105,8 @@
       <div
         id="footer"
         class="header-footer"
-        {{ if .Projector.HeaderImage }}
-          style="background-image: url(/system/media/get-meeting/{{ .Projector.HeaderImage }});"
+        {{ if  .Projector.MeetingLogo }}
+          style="background-image: url(/system/media/get/{{ .Projector.HeaderImage }});"
         {{ end }}
       >
         <div class="footertext"></div>
