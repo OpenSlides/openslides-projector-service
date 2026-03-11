@@ -34,7 +34,7 @@ type pollSlideChartProjectionData struct {
 func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	pollID := *req.ContentObjectID
 	pQ := req.Fetch.Poll(pollID)
-	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
+	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).Preload(pQ.GlobalOption()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
@@ -109,6 +109,31 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	type chartDataEntry struct {
 		Color string  `json:"color,omitempty"`
 		Val   float64 `json:"val"`
+	}
+
+	if poll.GlobalOption != nil && !poll.GlobalOption.Null() {
+		globalOption, _ := poll.GlobalOption.Value()
+		if poll.GlobalYes && poll.Pollmethod != "N" {
+			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type: 'Y', Color: "--theme-yes", Icon: "check_circle",
+				Name:       req.Locale.Get("General approval"),
+				TotalVotes: globalOption.Yes,
+			})
+		}
+		if poll.GlobalNo {
+			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type: 'N', Color: "--theme-no", Icon: "cancel",
+				Name:       req.Locale.Get("General rejection"),
+				TotalVotes: globalOption.No,
+			})
+		}
+		if poll.GlobalAbstain {
+			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type: 'A', Color: "--theme-abstain", Icon: "circle",
+				Name:       req.Locale.Get("General abstain"),
+				TotalVotes: globalOption.Abstain,
+			})
+		}
 	}
 
 	chartData := []chartDataEntry{}
