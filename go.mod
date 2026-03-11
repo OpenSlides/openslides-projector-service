@@ -3,12 +3,12 @@ module github.com/OpenSlides/openslides-projector-service
 go 1.25.0
 
 require (
-	github.com/OpenSlides/openslides-go v0.0.0-20260120140533-2d76fa6923cd
+	github.com/OpenSlides/openslides-go v0.0.0-20260302105549-34b142ba9b5a
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/leonelquinteros/gotext v1.7.2
 	github.com/rs/zerolog v1.34.0
 	github.com/shopspring/decimal v1.4.0
-	golang.org/x/text v0.33.0
+	golang.org/x/text v0.34.0
 )
 
 require (
@@ -26,6 +26,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/mod v0.32.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/tools v0.41.0 // indirect
 )

@@ -15,7 +15,7 @@ type dsChangeListener struct {
 }
 
 func (db *Datastore) NewContext(ctx context.Context, handler func(*dsmodels.Fetch)) {
-	recorder := dsrecorder.New(db.ds)
+	recorder := dsrecorder.New(db.Flow)
 	fetch := dsmodels.New(recorder)
 
 	handler(fetch)
@@ -30,5 +30,7 @@ func (db *Datastore) NewContext(ctx context.Context, handler func(*dsmodels.Fetc
 		listener.keys = recorder.Keys()
 	}
 
+	db.mu.Lock()
+	defer db.mu.Unlock()
 	db.dsListeners = append(db.dsListeners, &listener)
 }

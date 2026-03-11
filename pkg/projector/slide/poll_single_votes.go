@@ -16,6 +16,7 @@ import (
 type pollSingleVotesSlideVoteEntry struct {
 	Value     string
 	Present   bool
+	Delegated bool
 	FirstName string
 	LastName  string
 }
@@ -96,8 +97,10 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	var maxColumns int
 	var nameOrderString string
+	var sortByResult bool
 	req.Fetch.Meeting_MotionPollProjectionMaxColumns(poll.MeetingID).Lazy(&maxColumns)
 	req.Fetch.Meeting_MotionPollProjectionNameOrderFirst(poll.MeetingID).Lazy(&nameOrderString)
+	req.Fetch.Meeting_AssignmentPollSortPollResultByVotes(poll.MeetingID).Lazy(&sortByResult)
 	if err := req.Fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("could not load meeting settings: %w", err)
 	}
@@ -134,40 +137,51 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			return nil, fmt.Errorf("calculating poll result: %w", err)
 		}
 
-		maxVotes := decimal.Decimal{}
-		for _, pollOption := range poll.OptionList {
-			if maxVotes.LessThan(pollOption.Yes) {
-				maxVotes = pollOption.Yes
-			}
-		}
-
-		winner := -1
-		for oIdx, option := range slideData.Options {
-			if option.TotalYes.Equal(maxVotes) {
-				if winner != -1 {
-					slideData.Options[winner].Majority = false
-					break
+		if len(poll.OptionList) > 1 {
+			maxVotes := decimal.Decimal{}
+			for _, pollOption := range poll.OptionList {
+				if maxVotes.LessThan(pollOption.Yes) {
+					maxVotes = pollOption.Yes
 				}
+			}
 
-				winner = oIdx
-				option.Majority = true
-				idx := strconv.Itoa(option.ID)
-				for key, val := range voteMap {
-					if val == idx {
-						voteMap[key] = "Y"
+			winner := -1
+			for oIdx, option := range slideData.Options {
+				if option.TotalYes.Equal(maxVotes) {
+					// If >1 winners found reset and stop
+					if winner != -1 {
+						slideData.Options[winner].Majority = false
+						idx := strconv.Itoa(slideData.Options[winner].ID)
+						for key, val := range voteMap {
+							if val == "Y" {
+								voteMap[key] = idx
+							}
+						}
+						break
+					}
+
+					winner = oIdx
+					option.Majority = true
+					idx := strconv.Itoa(option.ID)
+					for key, val := range voteMap {
+						if val == idx {
+							voteMap[key] = "Y"
+						}
 					}
 				}
 			}
-		}
 
-		slices.SortFunc(slideData.Options, func(a *pollSingleVotesSlideOption, b *pollSingleVotesSlideOption) int {
-			if a.Majority && !b.Majority {
-				return -1
-			} else if b.Majority && !a.Majority {
-				return 1
+			if sortByResult {
+				slices.SortFunc(slideData.Options, func(a, b *pollSingleVotesSlideOption) int {
+					if a.Majority && !b.Majority {
+						return -1
+					} else if b.Majority && !a.Majority {
+						return 1
+					}
+					return a.Weight - b.Weight
+				})
 			}
-			return a.Weight - b.Weight
-		})
+		}
 	}
 
 	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
@@ -220,23 +234,36 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	slideData.GroupedVotes = voteEntryGroups
 
+	showValidVotesPercent := poll.OnehundredPercentBase != "disabled" &&
+		poll.OnehundredPercentBase != "YN" &&
+		(slideData.GlobalOption == nil || poll.OnehundredPercentBase[0] != 'Y')
+
+	displayPercAbstain := strings.Contains(poll.OnehundredPercentBase, "A") ||
+		poll.OnehundredPercentBase == "cast" ||
+		poll.OnehundredPercentBase == "entitled" ||
+		poll.OnehundredPercentBase == "entitled_present" ||
+		poll.OnehundredPercentBase == "valid"
+
 	return map[string]any{
-		"_template":        "poll_single_vote",
-		"_fullHeight":      true,
-		"Data":             slideData,
-		"GlobalOption":     slideData.GlobalOption,
-		"Title":            poll.Title,
-		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
-		"HasResults":       isPublished,
-		"HasMultiOptions":  len(poll.OptionList) > 1,
-		"Poll":             poll,
-		"PollMethod":       pollMethod,
-		"GlobalPollMethod": slideData.GlobalOptionMethods,
-		"SingleOption":     len(poll.OptionList) == 1,
-		"NumVotes":         len(voteMap),
-		"NumNotVoted":      len(entitledUsers) - len(voteMap),
-		"NumEntitledUsers": len(entitledUsers),
-		"MaxColumns":       maxColumns,
+		"_template":             "poll_single_vote",
+		"_fullHeight":           true,
+		"Data":                  slideData,
+		"GlobalOption":          slideData.GlobalOption,
+		"DisplayPercAbstain":    displayPercAbstain,
+		"GlobalOptionInBase":    poll.OnehundredPercentBase[0] != 'Y' && poll.OnehundredPercentBase != "disabled",
+		"ShowValidVotesPercent": showValidVotesPercent,
+		"Title":                 poll.Title,
+		"LiveVoting":            poll.State == "started" && poll.LiveVotingEnabled,
+		"HasResults":            isPublished,
+		"HasMultiOptions":       len(poll.OptionList) > 1,
+		"Poll":                  poll,
+		"PollMethod":            pollMethod,
+		"GlobalPollMethod":      slideData.GlobalOptionMethods,
+		"SingleOption":          len(poll.OptionList) == 1,
+		"NumVotes":              len(voteMap),
+		"NumNotVoted":           len(entitledUsers) - len(voteMap),
+		"NumEntitledUsers":      len(entitledUsers),
+		"MaxColumns":            maxColumns,
 	}, nil
 }
 
@@ -260,6 +287,7 @@ func pollSingleVotesVoteEntry(
 		FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 		LastName:  user.LastName,
 		Present:   isPresent || hasDelegate,
+		Delegated: hasDelegate,
 	}
 
 	if voteVal, ok := voteMap[user.ID]; ok {
@@ -289,7 +317,7 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 		for _, pollOption := range poll.OptionList {
 			for _, entry := range pollOption.VoteList {
 				if val, ok := entry.UserID.Value(); ok {
-					if hasGlobalOption || len(poll.OptionList) > 1 {
+					if len(poll.OptionList) > 1 {
 						voteMap[val] = strconv.Itoa(pollOption.ID)
 					} else {
 						voteMap[val] = entry.Value
@@ -328,7 +356,11 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 					}
 				} else {
 					if val, ok := voteValue[strconv.Itoa(pollOption.ID)]; ok {
-						voteMap[uid], _ = val.(string)
+						if strVote, ok := val.(string); ok {
+							voteMap[uid] = strVote
+						} else if intVote, ok := val.(float64); ok && intVote > 0 {
+							voteMap[uid] = "Y"
+						}
 					}
 				}
 			} else if voteValue, ok := liveVoteEntry.Value.(string); ok && voteValue != "" {
@@ -388,7 +420,8 @@ func pollSingleVotesResult(
 			TotalNo:      pollOption.No,
 			TotalAbstain: pollOption.Abstain,
 		}
-		if !onehundredPercentBase.IsZero() {
+
+		if !onehundredPercentBase.IsZero() && poll.OnehundredPercentBase[0] != 'Y' {
 			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))

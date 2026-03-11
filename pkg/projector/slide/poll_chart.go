@@ -13,6 +13,7 @@ import (
 )
 
 type pollSlideProjectionOptionData struct {
+	Type        rune
 	Color       template.CSS
 	Icon        string
 	Name        string
@@ -54,6 +55,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 		if strings.Contains(poll.Pollmethod, "Y") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type:       'Y',
 				Color:      "--theme-yes",
 				Icon:       "check_circle",
 				Name:       req.Locale.Get("Yes"),
@@ -66,6 +68,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 		if strings.Contains(poll.Pollmethod, "N") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type:       'N',
 				Color:      "--theme-no",
 				Icon:       "cancel",
 				Name:       req.Locale.Get("No"),
@@ -78,6 +81,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 		if strings.Contains(poll.Pollmethod, "A") {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
+				Type:       'A',
 				Color:      "--theme-abstain",
 				Icon:       "circle",
 				Name:       req.Locale.Get("Abstain"),
@@ -109,6 +113,10 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 	chartData := []chartDataEntry{}
 	for i, option := range data.Options {
+		if poll.OnehundredPercentBase == "YN" && option.Type == 'A' {
+			continue
+		}
+
 		chartData = append(chartData, chartDataEntry{
 			Color: string(option.Color),
 			Val:   option.TotalVotes.InexactFloat64(),

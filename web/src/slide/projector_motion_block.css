@@ -12,7 +12,7 @@
       white-space: nowrap;
       margin-right: 12px;
       font-weight: 500;
-      line-height: 1.8;
+      line-height: 1.5;
     }
     .motion-details {
       overflow: hidden;
@@ -26,7 +26,7 @@
         font-weight: 500;
         border-radius: 5px;
         padding: 0px 8px;
-        line-height: 1.8;
+        line-height: 1.5;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
