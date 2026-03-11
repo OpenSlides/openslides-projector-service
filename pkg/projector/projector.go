@@ -298,10 +298,14 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 
 		if val, set := logo.Value(); set {
 			p.pSettings.MeetingLogo = val
+		} else {
+			p.pSettings.MeetingLogo = 0
 		}
 
 		if val, set := header.Value(); set {
 			p.pSettings.HeaderImage = val
+		} else {
+			p.pSettings.HeaderImage = 0
 		}
 
 		p.pSettings.Theme, err = f.Theme(themeId).First(ctx)
