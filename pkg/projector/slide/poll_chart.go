@@ -115,21 +115,18 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		globalOption, _ := poll.GlobalOption.Value()
 		if poll.GlobalYes && poll.Pollmethod != "N" {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Type: 'Y', Color: "--theme-yes", Icon: "check_circle",
 				Name:       req.Locale.Get("General approval"),
 				TotalVotes: globalOption.Yes,
 			})
 		}
 		if poll.GlobalNo {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Type: 'N', Color: "--theme-no", Icon: "cancel",
 				Name:       req.Locale.Get("General rejection"),
 				TotalVotes: globalOption.No,
 			})
 		}
 		if poll.GlobalAbstain {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Type: 'A', Color: "--theme-abstain", Icon: "circle",
 				Name:       req.Locale.Get("General abstain"),
 				TotalVotes: globalOption.Abstain,
 			})
