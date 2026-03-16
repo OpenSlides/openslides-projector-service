@@ -10,8 +10,8 @@
   tr {
     height: 45px;
     &.user {
-      border-top: 1px solid #ccc;
-      border-bottom: 1px solid #ccc;
+      border-top: 1px solid #d3d3d3;
+      border-bottom: 1px solid #d3d3d3;
     }
   }
 }
