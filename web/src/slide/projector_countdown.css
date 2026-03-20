@@ -111,7 +111,7 @@
         white-space: nowrap;
         font-weight: 800;
         text-align: center;
-        font-family: 'OSFont Monospace';
+        font-family: 'OSFont Monospace', monospace;
       }
     }
   }
