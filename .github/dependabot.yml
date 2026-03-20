@@ -12,6 +12,12 @@ updates:
     assignees:
       - "bastianjoel"
 
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "bastianjoel"
 
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/" # Location of package manifests
