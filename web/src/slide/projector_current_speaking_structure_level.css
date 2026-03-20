@@ -19,7 +19,7 @@
   }
 
   .countdown-time-wrapper {
-    font-family: 'OSFont Monospace';
+    font-family: 'OSFont Monospace', monospace;
     &.negative-time {
       color: #c00;
       .time-indicator-wrapper #timeIndicator {
