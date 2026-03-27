@@ -12,7 +12,7 @@ export function createProjectorClock(shadowDom) {
     }
 
     const nextUpdateAt = new Date(Math.floor(time / 60000) * 60000 + 60000);
-    setTimeout(updateTime, nextUpdateAt - time);
+    updateTimeout = setTimeout(updateTime, nextUpdateAt - time);
   }
 
   return {
