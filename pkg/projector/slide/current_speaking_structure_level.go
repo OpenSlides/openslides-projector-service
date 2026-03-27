@@ -42,37 +42,41 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 	}
 
 	type speakerInfo struct {
-		ID            int
-		Name          string
-		Color         string
-		CountdownTime float64
-		Running       bool
-		Intervention  bool
-		Answer        bool
+		ID                 int
+		Name               string
+		Color              string
+		CountdownTime      float64
+		Running            bool
+		Intervention       bool
+		Answer             bool
+		InterposedQuestion bool
 	}
 
 	var currentSpeakerInfo speakerInfo
 	currentSpeakerInfo.Running = currentSpeaker.PauseTime == 0
+	currentSpeakerInfo.Intervention = currentSpeaker.SpeechState == "intervention"
+	currentSpeakerInfo.InterposedQuestion = currentSpeaker.SpeechState == "interposed_question"
+	currentSpeakerInfo.Answer = currentSpeaker.Answer
 
 	sllos, hasSLLOS := currentSpeaker.StructureLevelListOfSpeakers.Value()
 
-	if currentSpeaker.SpeechState != "intervention" && (!hasSLLOS || sllos.StructureLevelID == 0) {
+	if currentSpeaker.SpeechState != "intervention" &&
+		currentSpeaker.SpeechState != "interposed_question" &&
+		(!hasSLLOS || sllos.StructureLevelID == 0) {
 		return nil, nil
 	}
 
-	if currentSpeaker.SpeechState == "intervention" {
-		currentSpeakerInfo.Intervention = true
-
-		if currentSpeaker.Answer {
-			currentSpeakerInfo.Answer = true
-			currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateElapsedTime(currentSpeaker)
-		} else {
-			defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("could not load intervention time: %w", err)
-			}
-			currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentSpeaker, defaultInterventionTime)
+	if currentSpeaker.SpeechState == "interposed_question" || currentSpeaker.Answer {
+		currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateElapsedTime(currentSpeaker)
+		if hasSLLOS {
+			currentSpeakerInfo.ID = sllos.StructureLevelID
+			currentSpeakerInfo.Color = sllos.StructureLevel.Color
+	} else if currentSpeaker.SpeechState == "intervention" {
+		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("could not load intervention time: %w", err)
 		}
+		currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentSpeaker, defaultInterventionTime)
 		if hasSLLOS {
 			currentSpeakerInfo.ID = sllos.StructureLevelID
 			currentSpeakerInfo.Color = sllos.StructureLevel.Color
