@@ -2,7 +2,6 @@ package viewmodels
 
 import (
 	"context"
-	"time"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 )
@@ -37,9 +36,7 @@ func Speaker_CalculateInterventionCountdownTime(speaker *dsmodels.Speaker, inter
 	if speaker.PauseTime == 0 {
 		return float64(speaker.BeginTime) + float64(interventionTime) + float64(speaker.TotalPause)
 	} else {
-		now := int(time.Now().Unix())
-		elapsed := now - speaker.BeginTime - speaker.TotalPause
-		return float64(interventionTime) - float64(elapsed)
+		return float64(speaker.BeginTime) + float64(interventionTime) + float64(speaker.TotalPause) - float64(speaker.PauseTime)
 	}
 }
 
