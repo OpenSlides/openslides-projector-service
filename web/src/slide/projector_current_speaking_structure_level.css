@@ -3,7 +3,7 @@
 
   .current-speaking-structure-level-countdown {
     position: absolute;
-    top: calc(max(402px, 50%) - 250px);
+    top: calc(max(402px, 50%) - 285px);
     right: 0;
     z-index: 10;
     text-align: right;
@@ -36,12 +36,17 @@
 
   .structure-level-name {
     text-align: right;
-    font-size: 70px;
-    line-height: 70px;
+    font-size: 60px;
+    line-height: 60px;
 
     .intervention {
       white-space: normal;
       word-wrap: break-word;
+    }
+    .intervention .material-icons {
+        font-size: 1em;
+        vertical-align: middle;
+        justify-content: end;
     }
   }
 

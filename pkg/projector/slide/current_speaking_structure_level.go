@@ -71,6 +71,7 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 		if hasSLLOS {
 			currentSpeakerInfo.ID = sllos.StructureLevelID
 			currentSpeakerInfo.Color = sllos.StructureLevel.Color
+			currentSpeakerInfo.Name = sllos.StructureLevel.Name
 		}
 	} else if currentSpeaker.SpeechState == "intervention" {
 		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)

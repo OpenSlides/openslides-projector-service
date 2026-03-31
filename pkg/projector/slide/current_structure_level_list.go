@@ -37,15 +37,14 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 	}
 
 	type structureLevelEntry struct {
-		ID                 int     `json:"id"`
-		Name               string  `json:"name"`
-		Color              string  `json:"color"`
-		SpeechState        string  `json:"speech_state"`
-		CountdownTime      float64 `json:"remaining_time"`
-		Running            bool    `json:"current_start_time"`
-		Intervention       bool
-		Answer             bool
-		InterposedQuestion bool
+		ID            int     `json:"id"`
+		Name          string  `json:"name"`
+		Color         string  `json:"color"`
+		SpeechState   string  `json:"speech_state"`
+		CountdownTime float64 `json:"remaining_time"`
+		Running       bool    `json:"current_start_time"`
+		Intervention  bool
+		Answer        bool
 	}
 	structureLevels := []structureLevelEntry{}
 	for _, sllos := range los.StructureLevelListOfSpeakersList {
@@ -82,24 +81,13 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 
 	var interventionSpeakers []dsmodels.Speaker
 	var answerSpeakers []dsmodels.Speaker
-	var interposedQuestionSpeakers []dsmodels.Speaker
 
 	for _, speaker := range los.SpeakerList {
-		if speaker.EndTime != 0 {
-			continue
-		}
-		switch speaker.SpeechState {
-		case "intervention":
+		if speaker.SpeechState == "intervention" && speaker.EndTime == 0 {
 			if speaker.Answer {
 				answerSpeakers = append(answerSpeakers, speaker)
 			} else {
 				interventionSpeakers = append(interventionSpeakers, speaker)
-			}
-		case "interposed_question":
-			if speaker.Answer {
-				answerSpeakers = append(answerSpeakers, speaker)
-			} else {
-				interposedQuestionSpeakers = append(interposedQuestionSpeakers, speaker)
 			}
 		}
 	}
@@ -138,29 +126,29 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 		structureLevels = append(structureLevels, interventionEntry)
 	}
 
-	for _, speaker := range append(answerSpeakers, interposedQuestionSpeakers...) {
-		isCurrent := viewmodels.Speaker_IsCurrent(&speaker)
-		running := speaker.PauseTime == 0 && isCurrent
+	for _, answerSpeaker := range answerSpeakers {
+		isCurrent := viewmodels.Speaker_IsCurrent(&answerSpeaker)
+		running := answerSpeaker.PauseTime == 0 && isCurrent
 
 		elapsedTime := float64(0)
 		if isCurrent {
-			elapsedTime = viewmodels.Speaker_CalculateElapsedTime(&speaker)
+			elapsedTime = viewmodels.Speaker_CalculateElapsedTime(&answerSpeaker)
 		}
 
-		entry := structureLevelEntry{
-			CountdownTime:      elapsedTime,
-			Running:            running,
-			Intervention:       speaker.SpeechState == "intervention",
-			InterposedQuestion: speaker.SpeechState == "interposed_question",
-			Answer:             speaker.Answer,
+		answerEntry := structureLevelEntry{
+			CountdownTime: elapsedTime,
+			Running:       running,
+			Intervention:  true,
+			Answer:        true,
 		}
 
-		if sllos, ok := speaker.StructureLevelListOfSpeakers.Value(); ok {
-			entry.ID = sllos.StructureLevelID
-			entry.Color = sllos.StructureLevel.Color
+		if answerSpeaker.StructureLevelListOfSpeakers != nil {
+			sllos, ok := answerSpeaker.StructureLevelListOfSpeakers.Value()
+			if ok {
+				answerEntry.ID = sllos.StructureLevelID
+				answerEntry.Color = sllos.StructureLevel.Color
+			}
 		}
-
-		structureLevels = append(structureLevels, entry)
 	}
 
 	titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, req.Fetch, los.ContentObjectID)
