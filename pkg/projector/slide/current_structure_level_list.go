@@ -149,6 +149,8 @@ func CurrentStructureLevelListSlideHandler(ctx context.Context, req *projectionR
 				answerEntry.Color = sllos.StructureLevel.Color
 			}
 		}
+
+		structureLevels = append(structureLevels, answerEntry)
 	}
 
 	titleInfo, err := viewmodels.GetTitleInformationByContentObject(ctx, req.Fetch, los.ContentObjectID)
