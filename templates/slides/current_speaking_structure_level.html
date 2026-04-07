@@ -3,7 +3,6 @@
   type="text/css"
   href="/system/projector/static/slide/projector_current_speaking_structure_level.css"
 />
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
 <div class="content current-speaking-structure-level overlay">
   {{ with .SpeakerInfo }}
@@ -31,22 +30,22 @@
         {{ end }}
         {{ if and .Answer .Intervention }}
           <div class="intervention">
-            <i class="material-icons">feedback</i>
+            <span class="material-icons">feedback</span>
             {{- Loc.Get "Answer to intervention" -}}
           </div>
         {{ else if and .Answer .InterposedQuestion }}
           <div class="intervention">
-            <i class="material-icons">contact_support</i>
+            <span class="material-icons">contact_support</span>
             {{- Loc.Get "Answer to interposed question" -}}
           </div>
         {{ else if .Intervention }}
           <div class="intervention">
-            <i class="material-icons">feedback</i>
+            <span class="material-icons">feedback</span>
             {{- Loc.Get "Intervention" -}}
           </div>
         {{ else if .InterposedQuestion }}
           <div class="intervention">
-            <i class="material-icons">contact_support</i>
+            <span class="material-icons">contact_support</span>
             {{- Loc.Get "Interposed question" -}}
           </div>
         {{ end }}
