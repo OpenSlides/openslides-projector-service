@@ -34,9 +34,9 @@ func Speaker_CalculateInterventionCountdownTime(speaker *dsmodels.Speaker, inter
 	}
 
 	if speaker.PauseTime == 0 {
-		return float64(speaker.BeginTime) + float64(interventionTime) + float64(speaker.TotalPause)
+		return float64(interventionTime) + Speaker_CalculateElapsedTime(&speaker)
 	} else {
-		return float64(speaker.BeginTime) + float64(interventionTime) + float64(speaker.TotalPause) - float64(speaker.PauseTime)
+		return float64(interventionTime) - Speaker_CalculateElapsedTime(&speaker)
 	}
 }
 
