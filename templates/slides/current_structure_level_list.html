@@ -45,16 +45,14 @@
               {{ .Name }}
             </div>
           {{ end }}
-          {{ if .Intervention }}
-            {{ if .Answer }}
-              <div class="intervention">
-                {{ Loc.Get "Answer to intervention" }}
-              </div>
-            {{ else }}
-              <div class="intervention">
-                {{ Loc.Get "Intervention" }}
-              </div>
-            {{ end }}
+          {{ if and .Answer .Intervention }}
+            <div class="intervention">
+              {{ Loc.Get "Answer to intervention" }}
+            </div>
+          {{ else if .Intervention }}
+            <div class="intervention">
+              {{ Loc.Get "Intervention" }}
+            </div>
           {{ end }}
         </div>
       </div>
