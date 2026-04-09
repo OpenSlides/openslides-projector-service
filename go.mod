@@ -3,10 +3,10 @@ module github.com/OpenSlides/openslides-projector-service
 go 1.25.0
 
 require (
-	github.com/OpenSlides/openslides-go v0.0.0-20260401101525-56c7054e4dcf
+	github.com/OpenSlides/openslides-go v0.0.0-20260409103043-b4719efc4523
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/leonelquinteros/gotext v1.7.2
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.0
 	github.com/shopspring/decimal v1.4.0
 	golang.org/x/text v0.35.0
 )
@@ -14,7 +14,7 @@ require (
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/gomodule/redigo v1.9.3 // indirect
-	github.com/ostcar/topic v0.6.0 // indirect
+	github.com/ostcar/topic v0.7.0 // indirect
 )
 
 require (
