@@ -113,6 +113,8 @@ func GetTitleInformationByContentObject(ctx context.Context, fetch *dsmodels.Fet
 		}
 
 		result.Title = strings.Trim(fullName, " ")
+	case "poll_candidate_list":
+		result.Title = ""
 	default:
 		title, err := GetContentObjectField[string](ctx, fetch, "title", fqid)
 		if err != nil {
