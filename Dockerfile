@@ -24,6 +24,14 @@ COPY locale locale
 COPY Makefile Makefile
 RUN mkdir static
 
+#base for use with local openslides-go
+FROM base AS base-gowork
+COPY ./lib ../lib
+COPY ./autoupdate.work ../go.work
+
+#builder with local openslides-go
+FROM base-gowork AS builder-gowork
+RUN go build -o openslides-projector-service cmd/projectord/main.go
 
 # Build service in seperate stage.
 FROM base AS builder
@@ -70,8 +78,8 @@ CMD ["make", "build-live-all"]
 
 HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health || exit 1
 
-# Productive build
-FROM alpine:3 AS prod
+#prepare production image
+FROM alpine:3 AS pre-prod
 
 ## Setup
 ARG CONTEXT
@@ -82,11 +90,23 @@ LABEL org.opencontainers.image.description="The Projector Service is a http endp
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
-COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
-COPY --from=builder /root/openslides-projector-service/templates /templates
-COPY --from=builder /root/openslides-projector-service/locale /locale
-COPY --from=builder-web /static /static
 EXPOSE 9051
 CMD ["/openslides-projector-service"]
 
 HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health || exit 1
+
+#finalize prod build with local openslides-go
+FROM pre-prod AS prod-gowork
+
+COPY --from=builder-gowork /root/openslides-projector-service/openslides-projector-service /
+COPY --from=builder-gowork /root/openslides-projector-service/templates /templates
+COPY --from=builder-gowork /root/openslides-projector-service/locale /locale
+COPY --from=builder-web /static /static
+
+#finalize prod build
+FROM pre-prod AS prod
+
+COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
+COPY --from=builder /root/openslides-projector-service/templates /templates
+COPY --from=builder /root/openslides-projector-service/locale /locale
+COPY --from=builder-web /static /static
