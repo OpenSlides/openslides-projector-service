@@ -26,8 +26,8 @@ RUN mkdir static
 
 #base for use with local openslides-go
 FROM base AS base-gowork
-COPY ./lib ../lib
-COPY ./projector.work ../go.work
+COPY ./lib ./cmd/lib
+COPY ./projector.work ./cmd/go.work
 
 #builder with local openslides-go
 FROM base-gowork AS builder-gowork
@@ -90,6 +90,10 @@ LABEL org.opencontainers.image.description="The Projector Service is a http endp
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/OpenSlides/openslides-projector-service"
 
+COPY --from=base /root/openslides-projector-service/templates /templates
+COPY --from=base /root/openslides-projector-service/locale /locale
+COPY --from=builder-web /static /static
+
 EXPOSE 9051
 CMD ["/openslides-projector-service"]
 
@@ -99,14 +103,8 @@ HEALTHCHECK CMD wget --spider -q http://localhost:9051/system/projector/health |
 FROM pre-prod AS prod-gowork
 
 COPY --from=builder-gowork /root/openslides-projector-service/openslides-projector-service /
-COPY --from=builder-gowork /root/openslides-projector-service/templates /templates
-COPY --from=builder-gowork /root/openslides-projector-service/locale /locale
-COPY --from=builder-web /static /static
 
 #finalize prod build
 FROM pre-prod AS prod
 
 COPY --from=builder /root/openslides-projector-service/openslides-projector-service /
-COPY --from=builder /root/openslides-projector-service/templates /templates
-COPY --from=builder /root/openslides-projector-service/locale /locale
-COPY --from=builder-web /static /static
