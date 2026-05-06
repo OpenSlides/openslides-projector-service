@@ -26,8 +26,8 @@ RUN mkdir static
 
 #base for use with local openslides-go
 FROM base AS base-gowork
-COPY ./lib ./cmd/lib
-COPY ./projector.work ./cmd/go.work
+COPY ./lib ../lib
+COPY ./projector.work ../go.work
 
 #builder with local openslides-go
 FROM base-gowork AS builder-gowork
