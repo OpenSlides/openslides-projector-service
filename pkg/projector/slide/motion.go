@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
-	"github.com/leonelquinteros/gotext"
 	"github.com/rs/zerolog/log"
 )
 
@@ -30,7 +30,7 @@ type motionSlideOptions struct {
 }
 
 type motionSlideCommonData struct {
-	Locale                *gotext.Locale
+	Locale                *i18n.ProjectorLocale
 	ProjectionReq         *projectionRequest
 	Mode                  string
 	Motion                *dsmodels.Motion

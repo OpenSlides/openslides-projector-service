@@ -19,6 +19,7 @@
           countdown-time="{{ printf "%.0f" .CountdownTime }}"
           running="{{ .Running }}"
           {{ if and .Answer .Running }}default-time="0"{{ end }}
+          {{ if and .InterposedQuestion .Running }}default-time="0"{{ end }}
         ></projector-countdown>
       </div>
       <div class="structure-level-name">
@@ -27,16 +28,26 @@
             {{ .Name }}
           </div>
         {{ end }}
-        {{ if .Intervention }}
-          {{ if .Answer }}
-            <div class="intervention">
-              {{ Loc.Get "Answer to intervention" }}
-            </div>
-          {{ else }}
-            <div class="intervention">
-              {{ Loc.Get "Intervention" }}
-            </div>
-          {{ end }}
+        {{ if and .Answer .Intervention }}
+          <div class="intervention">
+            <span class="material-icons">feedback</span>
+            {{- Loc.Get "Answer to intervention" -}}
+          </div>
+        {{ else if and .Answer .InterposedQuestion }}
+          <div class="intervention">
+            <span class="material-icons">contact_support</span>
+            {{- Loc.Get "Answer to interposed question" -}}
+          </div>
+        {{ else if .Intervention }}
+          <div class="intervention">
+            <span class="material-icons">feedback</span>
+            {{- Loc.Get "Intervention" -}}
+          </div>
+        {{ else if .InterposedQuestion }}
+          <div class="intervention">
+            <span class="material-icons">contact_support</span>
+            {{- Loc.Get "Interposed question" -}}
+          </div>
         {{ end }}
       </div>
     </div>
