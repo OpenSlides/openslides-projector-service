@@ -13,13 +13,14 @@ import (
 )
 
 type pollSlideProjectionOptionData struct {
-	Type        rune
-	Color       template.CSS
-	Icon        string
-	Name        string
-	TotalVotes  decimal.Decimal
-	PercVotes   string
-	DisplayPerc bool
+	Type         rune
+	Color        template.CSS
+	Icon         string
+	Name         string
+	TotalVotes   decimal.Decimal
+	PercVotes    string
+	DisplayPerc  bool
+	GlobalOption bool
 }
 
 type pollSlideChartProjectionData struct {
@@ -115,20 +116,23 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		globalOption, _ := poll.GlobalOption.Value()
 		if poll.GlobalYes && poll.Pollmethod != "N" {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Name:       req.Locale.Get("General approval"),
-				TotalVotes: globalOption.Yes,
+				Name:         req.Locale.Get("General approval"),
+				TotalVotes:   globalOption.Yes,
+				GlobalOption: true,
 			})
 		}
 		if poll.GlobalNo {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Name:       req.Locale.Get("General rejection"),
-				TotalVotes: globalOption.No,
+				Name:         req.Locale.Get("General rejection"),
+				TotalVotes:   globalOption.No,
+				GlobalOption: true,
 			})
 		}
 		if poll.GlobalAbstain {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Name:       req.Locale.Get("General abstain"),
-				TotalVotes: globalOption.Abstain,
+				Name:         req.Locale.Get("General abstain"),
+				TotalVotes:   globalOption.Abstain,
+				GlobalOption: true,
 			})
 		}
 	}
