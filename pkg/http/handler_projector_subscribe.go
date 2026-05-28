@@ -60,7 +60,12 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 				log.Err(err).Msg("error sending event")
 			}
 		}
-		w.(http.Flusher).Flush()
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		} else {
+			log.Warn().Msg("connection lost during initialization")
+			return
+		}
 
 		for {
 			select {
@@ -68,7 +73,13 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 				if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Event, event.Data); err != nil {
 					log.Err(err).Msg("error sending event")
 				}
-				w.(http.Flusher).Flush()
+
+				f, ok := w.(http.Flusher)
+				if !ok {
+					log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
+					return
+				}
+				f.Flush()
 			case <-r.Context().Done():
 				return
 			}
