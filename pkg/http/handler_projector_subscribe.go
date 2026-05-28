@@ -69,6 +69,8 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 
 		for {
 			select {
+			case <-r.Context().Done():
+				return
 			case event := <-content:
 				if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Event, event.Data); err != nil {
 					log.Err(err).Msg("error sending event")
@@ -80,8 +82,6 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 					return
 				}
 				f.Flush()
-			case <-r.Context().Done():
-				return
 			}
 		}
 	}
