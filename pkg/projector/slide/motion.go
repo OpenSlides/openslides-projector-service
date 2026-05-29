@@ -124,7 +124,7 @@ func MotionSlideHandler(ctx context.Context, req *projectionRequest) (map[string
 		ProjectionReq: req,
 		Mode:          string(options.Mode),
 		Motion:        &motion,
-		Submitters:    strings.Join(motionSubmitterList(&motion), ", "),
+		Submitters:    strings.Join(motionSubmitterList(req.Locale, &motion), ", "),
 	}
 
 	req.Fetch.Meeting_MotionsDefaultLineNumbering(motion.MeetingID).Lazy(&data.LineNumbering)
@@ -241,14 +241,14 @@ func (m *motionSlideCommonData) motionTextModifiedFinalSlide(ctx context.Context
 	}), nil
 }
 
-func motionSubmitterList(motion *dsmodels.Motion) []string {
+func motionSubmitterList(locale *i18n.ProjectorLocale, motion *dsmodels.Motion) []string {
 	submitters := []string{}
 	slices.SortFunc(motion.SubmitterList, func(a dsmodels.MotionSubmitter, b dsmodels.MotionSubmitter) int {
 		return a.Weight - b.Weight
 	})
 	for _, submitter := range motion.SubmitterList {
 		if meetingUser, ok := submitter.MeetingUser.Value(); ok {
-			submitters = append(submitters, viewmodels.MeetingUser_FullName(&meetingUser))
+			submitters = append(submitters, viewmodels.MeetingUser_FullName(locale, &meetingUser))
 		}
 	}
 	if motion.AdditionalSubmitter != "" {

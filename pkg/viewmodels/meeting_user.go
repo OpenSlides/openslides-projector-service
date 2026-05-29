@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 )
 
-func MeetingUser_FullName(mu *dsmodels.MeetingUser) string {
+func MeetingUser_FullName(locale *i18n.ProjectorLocale, mu *dsmodels.MeetingUser) string {
 	name := User_ShortName(mu.User)
 	additional := []string{}
 	if mu.User.Pronoun != "" {
@@ -19,8 +20,8 @@ func MeetingUser_FullName(mu *dsmodels.MeetingUser) string {
 	}
 
 	if mu.Number != "" {
-		// TODO: Translation
-		additional = append(additional, fmt.Sprintf("No. %s", mu.Number))
+		no := locale.Get("No.")
+		additional = append(additional, fmt.Sprintf("%s %s", no, mu.Number))
 	}
 
 	if len(additional) == 0 {
