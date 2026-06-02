@@ -16,6 +16,7 @@ import (
 	"github.com/OpenSlides/openslides-go/datastore"
 	"github.com/OpenSlides/openslides-go/datastore/flow"
 	"github.com/OpenSlides/openslides-go/environment"
+	"github.com/OpenSlides/openslides-go/oslog"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	projectorHttp "github.com/OpenSlides/openslides-projector-service/pkg/http"
 )
@@ -36,9 +37,11 @@ type config struct {
 }
 
 func main() {
+	lookup := &environment.ForProduction{}
+	oslog.InitLog(lookup)
+
 	var cfg config
 	err := env.Parse(&cfg)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	if err != nil {
 		log.Err(err).Msg("parsing config")
 	}
@@ -47,23 +50,22 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	if err := run(cfg); err != nil {
+	if err := run(cfg, lookup); err != nil {
 		log.Fatal().Err(err).Msg("Error during startup")
 	}
 
 	log.Info().Msg("Stopped")
 }
 
-func run(cfg config) error {
+func run(cfg config, lookup environment.Environmenter) error {
 	ctx := context.Background()
 
-	env := &environment.ForProduction{}
-	dsFlow, err := datastore.NewFlowPostgres(env)
+	dsFlow, err := datastore.NewFlowPostgres(lookup)
 	if err != nil {
 		return fmt.Errorf("connecting to datastore: %w", err)
 	}
 
-	vote := datastore.NewFlowVoteCount(env)
+	vote := datastore.NewFlowVoteCount(lookup)
 
 	var dataFlow flow.Flow = dsFlow
 	if !cfg.PublicAccessOnly {
