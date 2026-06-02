@@ -16,7 +16,13 @@ func Motion_RecommendationParsed(ctx context.Context, fetch *dsmodels.Fetch, mot
 			return "", fmt.Errorf("could not fetch recommendation motion: %w", err)
 		}
 
-		ext = strings.ReplaceAll(ext, fmt.Sprintf("[%s]", refMotion), title.Number)
+		name := title.Number
+		if name == "" {
+			name = title.Title
+		}
+
+		ext = strings.ReplaceAll(ext, fmt.Sprintf("[%s]", refMotion), name)
 	}
+
 	return ext, nil
 }

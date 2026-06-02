@@ -98,9 +98,13 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	var maxColumns int
 	var nameOrderString string
 	var sortByResult bool
+	var usersEnableVoteDelegations bool
+	var usersForbidDelegatorToVote bool
 	req.Fetch.Meeting_MotionPollProjectionMaxColumns(poll.MeetingID).Lazy(&maxColumns)
 	req.Fetch.Meeting_MotionPollProjectionNameOrderFirst(poll.MeetingID).Lazy(&nameOrderString)
 	req.Fetch.Meeting_AssignmentPollSortPollResultByVotes(poll.MeetingID).Lazy(&sortByResult)
+	req.Fetch.Meeting_UsersEnableVoteDelegations(poll.MeetingID).Lazy(&usersEnableVoteDelegations)
+	req.Fetch.Meeting_UsersForbidDelegatorToVote(poll.MeetingID).Lazy(&usersForbidDelegatorToVote)
 	if err := req.Fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("could not load meeting settings: %w", err)
 	}
@@ -207,7 +211,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			}
 		}
 
-		vote := pollSingleVotesVoteEntry(&poll, &mu, voteMap, optionIndexMap)
+		vote := pollSingleVotesVoteEntry(&poll, &mu, voteMap, optionIndexMap, usersEnableVoteDelegations, usersForbidDelegatorToVote)
 		voteEntryGroupsMap[structureLevel.ID].Votes = append(
 			voteEntryGroupsMap[structureLevel.ID].Votes,
 			&vote,
@@ -272,14 +276,30 @@ func pollSingleVotesVoteEntry(
 	mu *dsmodels.MeetingUser,
 	voteMap map[int]string,
 	optionIndexMap map[string]int,
+	usersEnableVoteDelegations bool,
+	usersForbidDelegatorToVote bool,
 ) pollSingleVotesSlideVoteEntry {
 	user := mu.User
 	isPresent := slices.Contains(user.IsPresentInMeetingIDs, poll.MeetingID)
-	hasDelegate := false
 
-	if !isPresent && mu.VoteDelegatedTo != nil {
+	hasDelegate := false
+	delegatePresent := false
+
+	if mu.VoteDelegatedTo != nil {
 		if delegateMU, ok := mu.VoteDelegatedTo.Value(); ok {
-			hasDelegate = slices.Contains(delegateMU.User.IsPresentInMeetingIDs, poll.MeetingID)
+			delegatePresent = slices.Contains(delegateMU.User.IsPresentInMeetingIDs, poll.MeetingID)
+			if delegatePresent {
+				hasDelegate = true
+			}
+		}
+	}
+
+	showDelegationIcon := false
+	if usersEnableVoteDelegations && hasDelegate {
+		if usersForbidDelegatorToVote {
+			showDelegationIcon = true
+		} else {
+			showDelegationIcon = !isPresent
 		}
 	}
 
@@ -287,7 +307,7 @@ func pollSingleVotesVoteEntry(
 		FirstName: strings.Trim(user.Title+" "+user.FirstName, " "),
 		LastName:  user.LastName,
 		Present:   isPresent || hasDelegate,
-		Delegated: hasDelegate,
+		Delegated: showDelegationIcon,
 	}
 
 	if voteVal, ok := voteMap[user.ID]; ok {

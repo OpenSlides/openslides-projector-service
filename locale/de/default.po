@@ -5644,7 +5644,7 @@ msgstr ""
 "Sie HTTPS, um fortzufahren."
 
 msgid "Valid votes"
-msgstr "Abgegebene Stimmen"
+msgstr "Gültige Stimmen"
 
 msgid "View"
 msgstr "Ansicht"

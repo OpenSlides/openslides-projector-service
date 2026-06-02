@@ -126,7 +126,7 @@ body {
 }
 
 h1 {
-  font-family: 'OSFont projectorH1';
+  font-family: 'OSFont projectorH1', sans-serif;
   color: var(--projector-header-h1-color);
   font-size: 1.8em;
   font-weight: 500;
@@ -136,7 +136,7 @@ h1 {
 }
 
 h2 {
-  font-family: 'OSFont projectorH2';
+  font-family: 'OSFont projectorH2', sans-serif;
   line-height: 40px;
   font-weight: normal;
 }

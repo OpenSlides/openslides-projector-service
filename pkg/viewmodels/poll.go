@@ -3,6 +3,7 @@ package viewmodels
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -91,7 +92,7 @@ func Poll_EntitledUsers(poll dsmodels.Poll) (EntitledUsersAtStop, error) {
 }
 
 func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []int {
-	var entitledUserIDs []int
+	entitledUserIDsMap := map[int]struct{}{}
 	meetingUserMap := make(map[int]dsmodels.MeetingUser)
 
 	if poll.EntitledUsersAtStop != nil {
@@ -99,14 +100,11 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 			UserID int `json:"user_id"`
 		}
 		if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
-			for _, entry := range entitledUsersAtStop {
-				entitledUserIDs = append(entitledUserIDs, entry.UserID)
-			}
-			return entitledUserIDs
+			return []int{}
 		}
 
 		for _, entry := range entitledUsersAtStop {
-			entitledUserIDs = append(entitledUserIDs, entry.UserID)
+			entitledUserIDsMap[entry.UserID] = struct{}{}
 		}
 
 		for _, group := range poll.EntitledGroupList {
@@ -117,7 +115,7 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 	} else {
 		for _, group := range poll.EntitledGroupList {
 			for _, mu := range group.MeetingUserList {
-				entitledUserIDs = append(entitledUserIDs, mu.UserID)
+				entitledUserIDsMap[mu.UserID] = struct{}{}
 				meetingUserMap[mu.UserID] = mu
 			}
 		}
@@ -127,6 +125,7 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 		nameOrderSetting = "last_name"
 	}
 
+	entitledUserIDs := slices.Collect(maps.Keys(entitledUserIDsMap))
 	slices.SortFunc(entitledUserIDs, func(aID, bID int) int {
 		muA, aExists := meetingUserMap[aID]
 		muB, bExists := meetingUserMap[bID]

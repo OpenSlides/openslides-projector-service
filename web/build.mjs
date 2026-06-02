@@ -14,7 +14,7 @@ let ctx = await context({
   minify: true,
   sourcemap: true,
   format: 'esm',
-  target: ['chrome58', 'firefox57', 'safari11', 'edge18'],
+  target: ['chrome58', 'firefox57', 'safari15', 'edge18'],
   outdir: '../static/',
   loader: {
     '.svg': 'file',

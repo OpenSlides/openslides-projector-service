@@ -12,21 +12,21 @@
   "license": "MIT",
   "description": "",
   "devDependencies": {
-    "@eslint/css": "^0.10.0",
-    "@eslint/js": "^9.31.0",
-    "esbuild": "0.25.0",
+    "@eslint/css": "^1.2.0",
+    "@eslint/js": "^10.0.1",
+    "esbuild": "0.28.0",
     "esbuild-plugin-copy": "^2.1.1",
-    "eslint": "^9.31.0",
-    "globals": "^16.3.0",
-    "prettier": "^3.6.2",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
+    "prettier": "^3.8.3",
     "prettier-plugin-go-template": "^0.0.15"
   },
   "dependencies": {
-    "@openslides/motion-diff": "^0.1.0",
+    "@openslides/motion-diff": "^0.1.2",
     "chart.js": "^4.5.1",
-    "eventsource": "^3.0.5",
+    "eventsource": "^4.1.0",
     "material-icons": "^1.13.14",
-    "pdfjs-dist": "5.3.31",
+    "pdfjs-dist": "^5.3.93",
     "qrcode": "^1.5.4"
   }
 }
