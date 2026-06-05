@@ -2,14 +2,7 @@ package slide
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"slices"
-	"strconv"
-	"strings"
 
-	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
 
@@ -82,6 +75,7 @@ type pollSingleVotesSlideOption struct {
 }
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
+	/*
 	pQ := req.Fetch.Poll()
 	poll, err := req.Fetch.Poll(*req.ContentObjectID).
 		Preload(pQ.OptionList().VoteList()).
@@ -456,4 +450,6 @@ func pollSingleVotesResult(
 	}
 
 	return nil
+	*/
+	return nil, nil
 }
