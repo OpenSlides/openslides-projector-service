@@ -65,23 +65,7 @@ func run(cfg config, lookup environment.Environmenter) error {
 		return fmt.Errorf("connecting to datastore: %w", err)
 	}
 
-	vote := datastore.NewFlowVoteCount(lookup)
-
 	var dataFlow flow.Flow = dsFlow
-	if !cfg.PublicAccessOnly {
-		dataFlow = flow.Combine(
-			dsFlow,
-			map[string]flow.Flow{"poll/live_votes": vote},
-		)
-
-		eventer := func() (<-chan time.Time, func() bool) {
-			timer := time.NewTimer(time.Second)
-			return timer.C, timer.Stop
-		}
-
-		go vote.Connect(ctx, eventer, func(err error) {})
-	}
-
 	ds, err := getDatabase(cfg, dataFlow)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)

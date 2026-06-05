@@ -1,15 +1,6 @@
 package viewmodels
 
-import (
-	"context"
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
-)
-
+/*
 func Option_OptionLabel(ctx context.Context, fetch *dsmodels.Fetch, locale *i18n.ProjectorLocale, option *dsmodels.Option, userMap map[int]int) (string, error) {
 	if option.Text != "" {
 		return option.Text, nil
@@ -52,3 +43,4 @@ func Option_OptionLabel(ctx context.Context, fetch *dsmodels.Fetch, locale *i18n
 
 	return "", nil
 }
+*/

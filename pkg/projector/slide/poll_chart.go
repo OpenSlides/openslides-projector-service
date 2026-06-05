@@ -2,13 +2,8 @@ package slide
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"html/template"
-	"slices"
-	"strings"
 
-	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
 
@@ -33,6 +28,7 @@ type pollSlideChartProjectionData struct {
 }
 
 func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
+	/*
 	pollID := *req.ContentObjectID
 	pQ := req.Fetch.Poll(pollID)
 	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).Preload(pQ.GlobalOption()).First(ctx)
@@ -163,11 +159,12 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	if !onehundredPercentBase.IsZero() && poll.OnehundredPercentBase != "YN" && poll.OnehundredPercentBase != "YNA" {
 		data.PercValidvotes = poll.Votesvalid.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 	}
+	*/
 
 	return map[string]any{
 		"_template":   "poll_chart",
 		"_fullHeight": true,
-		"Poll":        poll,
-		"Data":        data,
+		// "Poll":        poll,
+		// "Data":        data,
 	}, nil
 }

@@ -1,16 +1,6 @@
 package viewmodels
 
-import (
-	"encoding/json"
-	"fmt"
-	"maps"
-	"slices"
-	"strings"
-
-	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
-	"github.com/shopspring/decimal"
-)
-
+/*
 func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) decimal.Decimal {
 	if len(poll.OptionIDs) == 1 && option == nil {
 		option = &poll.OptionList[0]
@@ -174,3 +164,4 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 
 	return entitledUserIDs
 }
+*/
