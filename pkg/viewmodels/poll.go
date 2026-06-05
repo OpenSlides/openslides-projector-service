@@ -1,5 +1,11 @@
 package viewmodels
 
+import "github.com/OpenSlides/openslides-go/datastore/dsmodels"
+
+func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
+	return false
+}
+
 /*
 func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) decimal.Decimal {
 	if len(poll.OptionIDs) == 1 && option == nil {
