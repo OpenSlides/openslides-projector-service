@@ -34,29 +34,26 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return nil, fmt.Errorf("could not load poll base info %w", err)
 	}
 
+	templateData := map[string]any{
+		"Title": pollTitle,
+	}
+
 	showResults := pollPublished || ((pollState == "created" || pollState == "started") && pollLiveVotingEnabled)
 	if !showResults {
-		state := req.Locale.Get("No results yet")
 		if pollState == "finished" {
-			state = req.Locale.Get("Counting of votes is in progress ...")
-		}
-
-		if pollState == "started" && !pollLiveVotingEnabled {
-			state = req.Locale.Get("Voting in progress")
+			templateData["State"] = req.Locale.Get("Counting of votes is in progress ...")
+		} else if pollState == "started" && !pollLiveVotingEnabled {
+			templateData["State"] = req.Locale.Get("Voting in progress")
+		} else {
+			templateData["State"] = req.Locale.Get("No results yet")
 		}
 
 		if options.SingleVotes {
-			return map[string]any{
-				"_template": "poll_single_vote",
-				"Title":     pollTitle,
-				"State":     state,
-			}, nil
+			templateData["_template"] = "poll_single_vote"
+			return templateData, nil
 		}
 
-		return map[string]any{
-			"Title": pollTitle,
-			"State": state,
-		}, nil
+		return templateData, nil
 	}
 
 	if options.SingleVotes {
@@ -80,5 +77,5 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		return pollChartSlideHandler(ctx, req)
 	}
 
-	return pollTableSlideHandler(ctx, req)
+	return pollTableSlideHandler(ctx, req, templateData)
 }

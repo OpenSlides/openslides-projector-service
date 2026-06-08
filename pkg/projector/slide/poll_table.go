@@ -2,6 +2,7 @@ package slide
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/shopspring/decimal"
 )
@@ -28,14 +29,15 @@ type pollSlideTable struct {
 	Sums               []pollSlideTableSum
 }
 
-func pollTableSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
-	/*
-		pQ := req.Fetch.Poll()
-		poll, err = req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load poll %w", err)
-		}
+func pollTableSlideHandler(ctx context.Context, req *projectionRequest, templateData map[string]any) (map[string]any, error) {
+	pollID := *req.ContentObjectID
+	pQ := req.Fetch.Poll(pollID)
+	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not load poll %w", err)
+	}
 
+	/*
 		userMap, err := viewmodels.User_MeetingUserMap(ctx, req.Fetch, poll.MeetingID)
 		if err != nil {
 			return nil, fmt.Errorf("could not load user map %w", err)
@@ -157,9 +159,7 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		}
 	*/
 
-	return map[string]any{
-		"_fullHeight": true,
-		// "Poll":        poll,
-		// "Data":        data,
-	}, nil
+	templateData["_fullHeight"] = true
+	templateData["Poll"] = poll
+	return templateData, nil
 }

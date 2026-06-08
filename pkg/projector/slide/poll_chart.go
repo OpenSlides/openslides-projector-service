@@ -2,6 +2,7 @@ package slide
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 
 	"github.com/shopspring/decimal"
@@ -28,14 +29,14 @@ type pollSlideChartProjectionData struct {
 }
 
 func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
-	/*
-		pollID := *req.ContentObjectID
-		pQ := req.Fetch.Poll(pollID)
-		poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).Preload(pQ.GlobalOption()).First(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("could not load poll %w", err)
-		}
+	pollID := *req.ContentObjectID
+	pQ := req.Fetch.Poll(pollID)
+	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not load poll %w", err)
+	}
 
+	/*
 		data := pollSlideChartProjectionData{
 			Options: []pollSlideProjectionOptionData{},
 		}
@@ -164,7 +165,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 	return map[string]any{
 		"_template":   "poll_chart",
 		"_fullHeight": true,
-		// "Poll":        poll,
+		"Poll":        poll,
 		// "Data":        data,
 	}, nil
 }
