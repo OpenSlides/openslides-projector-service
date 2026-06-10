@@ -68,7 +68,8 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		}
 	}
 
-	poll, err := req.Fetch.Poll(pollID).First(ctx)
+	pQ := req.Fetch.Poll(pollID)
+	poll, err := pQ.Preload(pQ.Config()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
