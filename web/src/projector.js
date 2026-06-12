@@ -103,10 +103,12 @@ export function Projector(host, id, auth = () => ``, config = {}) {
         projectorContainer.style.setProperty(prop, cssProperties[prop]);
       }
     }
+
+    console.debug(`[projector]`, `settings updated`, [e.data]);
   });
 
   eventSource.addEventListener(`deleted`, () => {
-    console.debug(`deleted`);
+    console.debug(`[projector]`, `deleted ${id}`);
   });
 
   eventSource.addEventListener(`connected`, e => {
@@ -116,10 +118,12 @@ export function Projector(host, id, auth = () => ``, config = {}) {
     };
     clock.update();
 
-    console.debug(`connected`);
+    console.debug(`[projector]`, `connected ${id}`);
   });
 
   eventSource.addEventListener(`projector-replace`, e => {
+    console.debug(`[projector]`, `projector-replace`, [e.data]);
+
     const html = JSON.parse(e.data);
     container.innerHTML = html;
 
@@ -129,6 +133,8 @@ export function Projector(host, id, auth = () => ``, config = {}) {
   });
 
   eventSource.addEventListener(`projection-updated`, e => {
+    console.debug(`[projector]`, `projection-updated`, [e.data]);
+
     const data = JSON.parse(e.data);
 
     for (let id of Object.keys(data)) {
@@ -149,7 +155,7 @@ export function Projector(host, id, auth = () => ``, config = {}) {
   });
 
   eventSource.addEventListener(`projection-deleted`, e => {
-    console.debug(`projection-deleted`, e.data);
+    console.debug(`[projector]`, `projection-deleted`, e.data);
 
     container.querySelector(`#slides > [data-id="${e.data}"]`)?.remove();
     container.querySelector(`.overlay-container > [data-id="${e.data}"]`)?.remove();
