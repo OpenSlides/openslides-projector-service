@@ -39,7 +39,7 @@ FROM base AS builder
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
 
-FROM node:24.14-alpine AS builder-web
+FROM node:24.16-alpine AS builder-web
 
 RUN apk add --no-cache \
     make
