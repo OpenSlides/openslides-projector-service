@@ -22,7 +22,7 @@
     "prettier-plugin-go-template": "^0.0.15"
   },
   "dependencies": {
-    "@openslides/motion-diff": "^0.1.2",
+    "@openslides/motion-diff": "^1.0.0",
     "chart.js": "^4.5.1",
     "eventsource": "^4.1.0",
     "material-icons": "^1.13.14",
