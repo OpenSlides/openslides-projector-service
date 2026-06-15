@@ -93,6 +93,7 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 					log.Err(err).Msg("error sending event")
 				}
 
+				// Debounce sending events
 				if flushTimer == nil {
 					flushTimer = time.NewTimer(50 * time.Millisecond)
 					flushC = flushTimer.C
