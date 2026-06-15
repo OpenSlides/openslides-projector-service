@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -67,6 +68,22 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 			return
 		}
 
+		var flushTimer *time.Timer
+		var flushC <-chan time.Time
+
+		defer func() {
+			if flushTimer != nil {
+				flushTimer.Stop()
+			}
+
+			f, ok := w.(http.Flusher)
+			if !ok {
+				log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
+				return
+			}
+			f.Flush()
+		}()
+
 		for {
 			select {
 			case <-r.Context().Done():
@@ -76,12 +93,21 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 					log.Err(err).Msg("error sending event")
 				}
 
+				// Debounce sending events
+				if flushTimer == nil {
+					flushTimer = time.NewTimer(50 * time.Millisecond)
+					flushC = flushTimer.C
+				}
+			case <-flushC:
 				f, ok := w.(http.Flusher)
 				if !ok {
 					log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
 					return
 				}
 				f.Flush()
+
+				flushTimer = nil
+				flushC = nil
 			}
 		}
 	}
