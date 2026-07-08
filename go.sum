@@ -1,7 +1,7 @@
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/OpenSlides/openslides-go v0.0.0-20260707132954-f80737ed130d h1:rKanpM0xMJ0fmRA36ch3T/9EXiCuLv9BEvntKJLs3Gs=
-github.com/OpenSlides/openslides-go v0.0.0-20260707132954-f80737ed130d/go.mod h1:PMtEslgx4Z0bg32gjTyjJN3Mlq2z0bHfwJW4bmBZ+e8=
+github.com/OpenSlides/openslides-go v0.0.0-20260706150709-670d0d5864f1 h1:kwGBmsdn/abtvduia0xUSYKI8nTUy3wnvkgRXVvVLoM=
+github.com/OpenSlides/openslides-go v0.0.0-20260706150709-670d0d5864f1/go.mod h1:PMtEslgx4Z0bg32gjTyjJN3Mlq2z0bHfwJW4bmBZ+e8=
 github.com/caarlos0/env/v6 v6.10.1 h1:t1mPSxNpei6M5yAeu1qtRdPAK29Nbcf/n3G7x+b3/II=
 github.com/caarlos0/env/v6 v6.10.1/go.mod h1:hvp/ryKXKipEkcuYjs9mI4bBCg+UI0Yhgm5Zu0ddvwc=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=

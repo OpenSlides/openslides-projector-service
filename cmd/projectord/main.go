@@ -60,13 +60,14 @@ func main() {
 func run(cfg config, lookup environment.Environmenter) error {
 	ctx := context.Background()
 
-	dsFlow, initPostgres, err := datastore.NewFlowPostgres(lookup)
+	err := datastore.WaitPostgresAvailable(lookup)
 	if err != nil {
-		return fmt.Errorf("connecting to datastore: %w", err)
+		return fmt.Errorf("waiting for database to become ready: %w", err)
 	}
 
-	if err := initPostgres(ctx); err != nil {
-		return fmt.Errorf("init postgres flow: %w", err)
+	dsFlow, err := datastore.NewFlowPostgres(lookup)
+	if err != nil {
+		return fmt.Errorf("connecting to datastore: %w", err)
 	}
 
 	vote := datastore.NewFlowVoteCount(lookup)
