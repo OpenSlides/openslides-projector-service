@@ -170,6 +170,11 @@
   }
 }
 
+.motion-text p::after {
+  content: '';
+  display: inline-block;
+}
+
 #sidebox {
   margin-top: 81px;
   width: 260px;

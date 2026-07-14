@@ -61,7 +61,7 @@
       </h2>
     </div>
   {{ end }}
-  <div class="scroll-inner">
+  <div class="{{ if not .Overlay }}scroll-inner{{ end }}">
     <div class="detail-view-text">
       {{ if .Speakers.CurrentSpeaker }}
         <div class="speaker current">
