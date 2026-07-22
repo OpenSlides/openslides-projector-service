@@ -2,81 +2,108 @@ package viewmodels
 
 import (
 	"encoding/json"
-	"fmt"
-	"maps"
-	"slices"
-	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 )
 
-func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) decimal.Decimal {
-	if len(poll.OptionIDs) == 1 && option == nil {
-		option = &poll.OptionList[0]
+func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
+	switch config := poll.Config.(type) {
+	case *dsmodels.PollConfigApproval:
+		return true
+	case *dsmodels.PollConfigSelection:
+		return config.DisplayChart == "pie"
 	}
 
-	if len(poll.OptionIDs) == 0 {
-		return decimal.Decimal{}
-	}
+	return false
+}
 
-	// YN and YNA need an selected option
-	if option == nil && (poll.OnehundredPercentBase == "YN" || poll.OnehundredPercentBase == "YNA") {
-		return decimal.Decimal{}
-	}
-
-	switch poll.OnehundredPercentBase {
-	case "Y":
-		total := poll.Votesvalid
-		if poll.GlobalOption != nil {
-			if globalOption, isSet := poll.GlobalOption.Value(); isSet {
-				abstain := globalOption.Abstain
-				no := globalOption.No
-				total = total.Sub(no).Sub(abstain)
-			}
-		}
-		return total
-	case "YN":
-		yes := option.Yes
-		no := option.No
-		return yes.Add(no)
-	case "YNA":
-		yes := option.Yes
-		no := option.No
-		abstain := option.Abstain
-
-		return yes.Add(no).Add(abstain)
-	case "valid":
-		valid := poll.Votesvalid
-		return valid
-	case "entitled":
-		entitled, err := Poll_EntitledUsers(poll)
-		if err != nil {
-			return decimal.Decimal{}
-		}
-
-		return decimal.NewFromInt(int64(len(entitled)))
-	case "entitled_present":
-		entitled, err := Poll_EntitledUsers(poll)
-		if err != nil {
-			return decimal.Decimal{}
-		}
-
-		present := int64(0)
-		for _, u := range entitled {
-			if u.Present {
-				present++
-			}
-		}
-		return decimal.NewFromInt(present)
-	case "cast":
-		cast := poll.Votescast
-		return cast
+func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.PollOption) decimal.Decimal {
+	switch config := poll.Config.(type) {
+	case *dsmodels.PollConfigApproval:
+		return Poll_OneHundredPercentBaseApproval(poll, config)
+	case *dsmodels.PollConfigRatingApproval:
+		return Poll_OneHundredPercentBaseRatingApproval(poll, config, option)
+	case *dsmodels.PollConfigRatingScore:
+		return Poll_OneHundredPercentBaseRatingScore(poll, config)
+	case *dsmodels.PollConfigSelection:
+		return Poll_OneHundredPercentBaseSelection(poll, config)
 	}
 
 	return decimal.Decimal{}
 }
 
+func Poll_OneHundredPercentBaseApproval(poll dsmodels.Poll, config *dsmodels.PollConfigApproval) decimal.Decimal {
+	var result PollResultApproval
+
+	err := json.Unmarshal([]byte(poll.Result), &result)
+	if err != nil {
+		log.Err(err).Msg("could not parse a poll result")
+		return decimal.Decimal{}
+	}
+
+	switch config.OnehundredPercentBase {
+	case "yes_no":
+		return result.Yes.Add(result.No)
+	case "valid":
+		return result.Yes.Add(result.No).Add(result.Abstain)
+	case "cast":
+		return decimal.NewFromInt(int64(result.TotalBallots))
+	}
+
+	return decimal.Decimal{}
+}
+
+func Poll_OneHundredPercentBaseSelection(poll dsmodels.Poll, config *dsmodels.PollConfigSelection) decimal.Decimal {
+	return decimal.Decimal{}
+}
+
+func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
+	return decimal.Decimal{}
+}
+
+func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
+	return decimal.Decimal{}
+}
+
+type PollResultApproval struct {
+	Yes          decimal.Decimal `json:"yes"`
+	No           decimal.Decimal `json:"no"`
+	Abstain      decimal.Decimal `json:"abstain"`
+	Invalid      int             `json:"invalid"`
+	TotalBallots int             `json:"total_ballots"`
+}
+
+type PollResultSelection struct {
+	Options      map[string]decimal.Decimal `json:",inline"`
+	Nota         decimal.Decimal            `json:"nota"`
+	Abstain      decimal.Decimal            `json:"abstain"`
+	Invalid      int                        `json:"invalid"`
+	TotalBallots int                        `json:"total_ballots"`
+}
+
+type PollResultRatingScore struct {
+	Options      map[string]decimal.Decimal `json:",inline"`
+	Abstain      decimal.Decimal            `json:"abstain"`
+	Invalid      int                        `json:"invalid"`
+	TotalBallots int                        `json:"total_ballots"`
+}
+
+type PollResultRatingApprovalOption struct {
+	Yes     decimal.Decimal `json:"yes"`
+	No      decimal.Decimal `json:"no"`
+	Abstain decimal.Decimal `json:"abstain"`
+}
+
+type PollResultRatingApproval struct {
+	Options      map[string]PollResultRatingApprovalOption `json:",inline"`
+	Abstain      decimal.Decimal                           `json:"abstain"`
+	Invalid      int                                       `json:"invalid"`
+	TotalBallots int                                       `json:"total_ballots"`
+}
+
+/*
 type EntitledUsersAtStop []struct {
 	UserID  int  `json:"user_id"`
 	Present bool `json:"present"`
@@ -174,3 +201,4 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []i
 
 	return entitledUserIDs
 }
+*/
