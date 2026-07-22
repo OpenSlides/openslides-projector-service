@@ -13,7 +13,7 @@ func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
 	case *dsmodels.PollConfigApproval:
 		return true
 	case *dsmodels.PollConfigSelection:
-		return config.DisplayChart != ""
+		return config.DisplayChart == "pie"
 	}
 
 	return false
@@ -35,12 +35,7 @@ func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.PollOption)
 }
 
 func Poll_OneHundredPercentBaseApproval(poll dsmodels.Poll, config *dsmodels.PollConfigApproval) decimal.Decimal {
-	var result struct {
-		Yes          string  `json:"yes"`
-		No           string  `json:"no"`
-		Abstain      *string `json:"abstain,omitempty"`
-		TotalBallots int     `json:"total_ballots"`
-	}
+	var result PollResultApproval
 
 	err := json.Unmarshal([]byte(poll.Result), &result)
 	if err != nil {
@@ -50,17 +45,9 @@ func Poll_OneHundredPercentBaseApproval(poll dsmodels.Poll, config *dsmodels.Pol
 
 	switch config.OnehundredPercentBase {
 	case "yes_no":
-		yes, _ := decimal.NewFromString(result.Yes)
-		no, _ := decimal.NewFromString(result.No)
-		return yes.Add(no)
+		return result.Yes.Add(result.No)
 	case "valid":
-		yes, _ := decimal.NewFromString(result.Yes)
-		no, _ := decimal.NewFromString(result.No)
-		abstain := decimal.Zero
-		if result.Abstain != nil {
-			abstain, _ = decimal.NewFromString(*result.Abstain)
-		}
-		return abstain.Add(yes).Add(no)
+		return result.Yes.Add(result.No).Add(result.Abstain)
 	case "cast":
 		return decimal.NewFromInt(int64(result.TotalBallots))
 	}
@@ -78,6 +65,42 @@ func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmode
 
 func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
 	return decimal.Decimal{}
+}
+
+type PollResultApproval struct {
+	Yes          decimal.Decimal `json:"yes"`
+	No           decimal.Decimal `json:"no"`
+	Abstain      decimal.Decimal `json:"abstain"`
+	Invalid      int             `json:"invalid"`
+	TotalBallots int             `json:"total_ballots"`
+}
+
+type PollResultSelection struct {
+	Options      map[string]decimal.Decimal `json:",inline"`
+	Nota         decimal.Decimal            `json:"nota"`
+	Abstain      decimal.Decimal            `json:"abstain"`
+	Invalid      int                        `json:"invalid"`
+	TotalBallots int                        `json:"total_ballots"`
+}
+
+type PollResultRatingScore struct {
+	Options      map[string]decimal.Decimal `json:",inline"`
+	Abstain      decimal.Decimal            `json:"abstain"`
+	Invalid      int                        `json:"invalid"`
+	TotalBallots int                        `json:"total_ballots"`
+}
+
+type PollResultRatingApprovalOption struct {
+	Yes     decimal.Decimal `json:"yes"`
+	No      decimal.Decimal `json:"no"`
+	Abstain decimal.Decimal `json:"abstain"`
+}
+
+type PollResultRatingApproval struct {
+	Options      map[string]PollResultRatingApprovalOption `json:",inline"`
+	Abstain      decimal.Decimal                           `json:"abstain"`
+	Invalid      int                                       `json:"invalid"`
+	TotalBallots int                                       `json:"total_ballots"`
 }
 
 /*
