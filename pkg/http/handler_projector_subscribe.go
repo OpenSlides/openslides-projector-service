@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
-	"github.com/OpenSlides/openslides-go/throttle"
 	"github.com/rs/zerolog/log"
 )
 
@@ -63,18 +61,21 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 				log.Err(err).Msg("error sending event")
 			}
 		}
-
-		throttler := throttle.New(r.Context(), 50*time.Millisecond)
 		if f, ok := w.(http.Flusher); ok {
-			throttler.Run(func() {
-				f.Flush()
-			})
+			f.Flush()
 		} else {
 			log.Warn().Msg("connection lost during initialization")
 			return
 		}
 
+		var flushTimer *time.Timer
+		var flushC <-chan time.Time
+
 		defer func() {
+			if flushTimer != nil {
+				flushTimer.Stop()
+			}
+
 			f, ok := w.(http.Flusher)
 			if !ok {
 				log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
@@ -83,28 +84,30 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 			f.Flush()
 		}()
 
-		flushMu := sync.Mutex{}
 		for {
 			select {
 			case <-r.Context().Done():
 				return
 			case event := <-content:
-				flushMu.Lock()
 				if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Event, event.Data); err != nil {
 					log.Err(err).Msg("error sending event")
 				}
-				flushMu.Unlock()
 
+				// Debounce sending events
+				if flushTimer == nil {
+					flushTimer = time.NewTimer(50 * time.Millisecond)
+					flushC = flushTimer.C
+				}
+			case <-flushC:
 				f, ok := w.(http.Flusher)
 				if !ok {
 					log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
 					return
 				}
-				throttler.Run(func() {
-					flushMu.Lock()
-					defer flushMu.Unlock()
-					f.Flush()
-				})
+				f.Flush()
+
+				flushTimer = nil
+				flushC = nil
 			}
 		}
 	}
