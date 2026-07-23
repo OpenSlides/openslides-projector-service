@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/OpenSlides/openslides-go/throttle"
@@ -82,14 +83,17 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 			f.Flush()
 		}()
 
+		flushMu := sync.Mutex{}
 		for {
 			select {
 			case <-r.Context().Done():
 				return
 			case event := <-content:
+				flushMu.Lock()
 				if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event.Event, event.Data); err != nil {
 					log.Err(err).Msg("error sending event")
 				}
+				flushMu.Unlock()
 
 				f, ok := w.(http.Flusher)
 				if !ok {
@@ -97,6 +101,8 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 					return
 				}
 				throttler.Run(func() {
+					flushMu.Lock()
+					defer flushMu.Unlock()
 					f.Flush()
 				})
 			}
