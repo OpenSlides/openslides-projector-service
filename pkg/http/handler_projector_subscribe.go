@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/OpenSlides/openslides-go/throttle"
 	"github.com/rs/zerolog/log"
 )
 
@@ -62,18 +61,21 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 				log.Err(err).Msg("error sending event")
 			}
 		}
-
-		throttler := throttle.New(r.Context(), 50*time.Millisecond)
 		if f, ok := w.(http.Flusher); ok {
-			throttler.Run(func() {
-				f.Flush()
-			})
+			f.Flush()
 		} else {
 			log.Warn().Msg("connection lost during initialization")
 			return
 		}
 
+		var flushTimer *time.Timer
+		var flushC <-chan time.Time
+
 		defer func() {
+			if flushTimer != nil {
+				flushTimer.Stop()
+			}
+
 			f, ok := w.(http.Flusher)
 			if !ok {
 				log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
@@ -91,14 +93,21 @@ func (s *projectorHttp) ProjectorSubscribeHandler() http.HandlerFunc {
 					log.Err(err).Msg("error sending event")
 				}
 
+				// Debounce sending events
+				if flushTimer == nil {
+					flushTimer = time.NewTimer(50 * time.Millisecond)
+					flushC = flushTimer.C
+				}
+			case <-flushC:
 				f, ok := w.(http.Flusher)
 				if !ok {
 					log.Warn().Msg("connection lost or flusher unavailable, stopping stream")
 					return
 				}
-				throttler.Run(func() {
-					f.Flush()
-				})
+				f.Flush()
+
+				flushTimer = nil
+				flushC = nil
 			}
 		}
 	}
