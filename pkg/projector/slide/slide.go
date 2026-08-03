@@ -82,8 +82,10 @@ func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjectio
 					go r.subscribeProjection(ctx, id, updateChannel)
 				}
 			case id := <-removeProjection:
-				contextCancel[id]()
-				delete(contextCancel, id)
+				if cancel, ok := contextCancel[id]; ok {
+					cancel()
+					delete(contextCancel, id)
+				}
 			}
 		}
 	}()
