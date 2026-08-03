@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
 
@@ -32,80 +34,101 @@ type pollSlideTable struct {
 func pollTableSlideHandler(ctx context.Context, req *projectionRequest, templateData map[string]any) (map[string]any, error) {
 	pollID := *req.ContentObjectID
 	pQ := req.Fetch.Poll(pollID)
-	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).First(ctx)
+	poll, err := req.Fetch.Poll(pollID).Preload(pQ.OptionList()).Preload(pQ.Config()).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
 
-	/*
-		userMap, err := viewmodels.User_MeetingUserMap(ctx, req.Fetch, poll.MeetingID)
+	data := pollSlideTable{
+		Options: []pollSlideTableOption{},
+		Sums:    []pollSlideTableSum{},
+	}
+
+	for _, option := range poll.OptionList {
+		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, &option)
+		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 		if err != nil {
-			return nil, fmt.Errorf("could not load user map %w", err)
-		}
-		data := pollSlideTable{
-			Options: []pollSlideTableOption{},
-			Sums:    []pollSlideTableSum{},
+			return nil, err
 		}
 
-		for _, option := range poll.OptionList {
-			onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, &option)
-			name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option, userMap)
-			if err != nil {
-				return nil, err
-			}
-
-			// TODO: Set values from result
-			optData := pollSlideTableOption{
-				Name:         name,
-				TotalYes:     decimal.Decimal{},
-				TotalNo:      decimal.Decimal{},
-				TotalAbstain: decimal.Decimal{},
-			}
-
-			// TODO: Handling of Strikout vote
-			if !onehundredPercentBase.IsZero() {
-				optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-				optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-				optData.PercAbstain = optData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			}
-
-			data.Options = append(data.Options, optData)
+		optData := pollSlideTableOption{
+			Name:         name,
+			TotalYes:     decimal.Decimal{},
+			TotalNo:      decimal.Decimal{},
+			TotalAbstain: decimal.Decimal{},
 		}
 
-		data.DisplayPercAbstain = strings.Contains(poll.OnehundredPercentBase, "A") ||
-			poll.OnehundredPercentBase == "cast" ||
-			poll.OnehundredPercentBase == "valid"
-
-		pollMethod := map[string]bool{
-			"Yes":     strings.Contains(poll.Pollmethod, "Y"),
-			"No":      strings.Contains(poll.Pollmethod, "N"),
-			"Abstain": strings.Contains(poll.Pollmethod, "A"),
+		if !onehundredPercentBase.IsZero() {
+			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			optData.PercAbstain = optData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
-		if poll.GlobalOption != nil && !poll.GlobalOption.Null() {
-			globalOption, _ := poll.GlobalOption.Value()
-			if poll.GlobalYes && poll.Pollmethod != "N" {
-				data.Sums = append(data.Sums, pollSlideTableSum{
-					Name:  req.Locale.Get("General approval"),
-					Total: globalOption.Yes,
-				})
-			}
+		data.Options = append(data.Options, optData)
+	}
 
-			if poll.GlobalNo {
-				data.Sums = append(data.Sums, pollSlideTableSum{
-					Name:  req.Locale.Get("General rejection"),
-					Total: globalOption.No,
-				})
-			}
-
-			if poll.GlobalAbstain {
-				data.Sums = append(data.Sums, pollSlideTableSum{
-					Name:  req.Locale.Get("General abstain"),
-					Total: globalOption.Abstain,
-				})
-			}
+	hasGlobalAbstain := false
+	hasGlobalYes := false
+	hasGlobalNo := false
+	pollMethod := map[string]struct{}{}
+	switch poll.Config.(type) {
+	case *dsmodels.PollConfigRatingApproval:
+		config := poll.Config.(*dsmodels.PollConfigRatingApproval)
+		data.DisplayPercAbstain = config.OnehundredPercentBase == "yes_no_abstain" ||
+			config.OnehundredPercentBase == "cast" ||
+			config.OnehundredPercentBase == "valid"
+		hasGlobalAbstain = config.AllowAbstain
+		pollMethod["Yes"] = struct{}{}
+		pollMethod["No"] = struct{}{}
+		if config.AllowAbstain {
+			pollMethod["Abstain"] = struct{}{}
 		}
 
+	case *dsmodels.PollConfigRatingScore:
+		config := poll.Config.(*dsmodels.PollConfigRatingScore)
+		data.DisplayPercAbstain = config.OnehundredPercentBase == "cast" ||
+			config.OnehundredPercentBase == "valid"
+		pollMethod["Yes"] = struct{}{}
+		hasGlobalAbstain = config.MinOptionsAmount == 0
+
+	case *dsmodels.PollConfigSelection:
+		config := poll.Config.(*dsmodels.PollConfigSelection)
+		data.DisplayPercAbstain = config.OnehundredPercentBase == "cast" ||
+			config.OnehundredPercentBase == "valid"
+		hasGlobalAbstain = config.MinOptionsAmount == 0
+		if config.StrikeOut {
+			pollMethod["No"] = struct{}{}
+			if config.AllowNota {
+				hasGlobalYes = true
+			}
+		} else {
+			pollMethod["Yes"] = struct{}{}
+			if config.AllowNota {
+				hasGlobalNo = true
+			}
+		}
+	}
+
+	if hasGlobalYes {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("General approval"),
+			Total: decimal.Decimal{}, // TODO: Fill
+		})
+	} else if hasGlobalNo {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("General rejection"),
+			Total: decimal.Decimal{}, // TODO: Fill
+		})
+	}
+
+	if hasGlobalAbstain {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("General abstain"),
+			Total: decimal.Decimal{}, // TODO: Fill
+		})
+	}
+
+	/*
 		data.Sums = append(data.Sums, pollSlideTableSum{
 			Name:  req.Locale.Get("Valid votes"),
 			Total: poll.Votesvalid,
@@ -161,5 +184,7 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 
 	templateData["_fullHeight"] = true
 	templateData["Poll"] = poll
+	templateData["Data"] = data
+	templateData["Methods"] = pollMethod
 	return templateData, nil
 }
