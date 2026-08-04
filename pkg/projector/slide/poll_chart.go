@@ -92,7 +92,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			})
 		}
 
-		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
+		onehundredPercentBase := result.OneHundredPercentBase(config)
 
 		data.TotalValidvotes = decimal.NewFromInt(int64(result.TotalBallots - result.Invalid))
 		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != "yes_no" && config.OnehundredPercentBase != "yes_no_abstain" {
