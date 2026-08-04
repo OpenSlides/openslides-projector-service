@@ -2,10 +2,9 @@ package slide
 
 import (
 	"context"
-
-	"github.com/shopspring/decimal"
 )
 
+/*
 type pollSingleVotesSlideVoteEntry struct {
 	Value     string
 	Present   bool
@@ -73,6 +72,7 @@ type pollSingleVotesSlideOption struct {
 	PercNo       decimal.Decimal
 	PercAbstain  decimal.Decimal
 }
+*/
 
 func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	/*
