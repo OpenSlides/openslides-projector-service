@@ -2,7 +2,9 @@ package slide
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
@@ -10,6 +12,7 @@ import (
 )
 
 type pollSlideTableOption struct {
+	ID           int
 	Name         string
 	TotalYes     decimal.Decimal
 	TotalNo      decimal.Decimal
@@ -39,44 +42,17 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 		return nil, fmt.Errorf("could not load poll %w", err)
 	}
 
-	data := pollSlideTable{
-		Options: []pollSlideTableOption{},
-		Sums:    []pollSlideTableSum{},
-	}
-
-	for _, option := range poll.OptionList {
-		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, &option)
-		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
-		if err != nil {
-			return nil, err
-		}
-
-		optData := pollSlideTableOption{
-			Name:         name,
-			TotalYes:     decimal.Decimal{},
-			TotalNo:      decimal.Decimal{},
-			TotalAbstain: decimal.Decimal{},
-		}
-
-		if !onehundredPercentBase.IsZero() {
-			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			optData.PercAbstain = optData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-		}
-
-		data.Options = append(data.Options, optData)
-	}
-
+	var data pollSlideTable
 	hasGlobalAbstain := false
-	hasGlobalYes := false
-	hasGlobalNo := false
 	pollMethod := map[string]struct{}{}
 	switch poll.Config.(type) {
 	case *dsmodels.PollConfigRatingApproval:
 		config := poll.Config.(*dsmodels.PollConfigRatingApproval)
-		data.DisplayPercAbstain = config.OnehundredPercentBase == "yes_no_abstain" ||
-			config.OnehundredPercentBase == "cast" ||
-			config.OnehundredPercentBase == "valid"
+		data, err = pollRatingApprovalTable(ctx, req, poll, *config)
+		if err != nil {
+			return nil, fmt.Errorf("could parse rating approval table: %w", err)
+		}
+
 		hasGlobalAbstain = config.AllowAbstain
 		pollMethod["Yes"] = struct{}{}
 		pollMethod["No"] = struct{}{}
@@ -93,32 +69,17 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 
 	case *dsmodels.PollConfigSelection:
 		config := poll.Config.(*dsmodels.PollConfigSelection)
-		data.DisplayPercAbstain = config.OnehundredPercentBase == "cast" ||
-			config.OnehundredPercentBase == "valid"
+		data, err = pollSelectionTable(ctx, req, poll, *config)
+		if err != nil {
+			return nil, fmt.Errorf("could parse rating approval table: %w", err)
+		}
+
 		hasGlobalAbstain = config.MinOptionsAmount == 0
 		if config.StrikeOut {
 			pollMethod["No"] = struct{}{}
-			if config.AllowNota {
-				hasGlobalYes = true
-			}
 		} else {
 			pollMethod["Yes"] = struct{}{}
-			if config.AllowNota {
-				hasGlobalNo = true
-			}
 		}
-	}
-
-	if hasGlobalYes {
-		data.Sums = append(data.Sums, pollSlideTableSum{
-			Name:  req.Locale.Get("General approval"),
-			Total: decimal.Decimal{}, // TODO: Fill
-		})
-	} else if hasGlobalNo {
-		data.Sums = append(data.Sums, pollSlideTableSum{
-			Name:  req.Locale.Get("General rejection"),
-			Total: decimal.Decimal{}, // TODO: Fill
-		})
 	}
 
 	if hasGlobalAbstain {
@@ -187,4 +148,151 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 	templateData["Data"] = data
 	templateData["Methods"] = pollMethod
 	return templateData, nil
+}
+
+func pollRatingApprovalTable(
+	ctx context.Context,
+	req *projectionRequest,
+	poll dsmodels.Poll,
+	config dsmodels.PollConfigRatingApproval,
+) (pollSlideTable, error) {
+	data := pollSlideTable{
+		Options: []pollSlideTableOption{},
+		Sums:    []pollSlideTableSum{},
+		DisplayPercAbstain: config.OnehundredPercentBase == "yes_no_abstain" ||
+			config.OnehundredPercentBase == "cast" ||
+			config.OnehundredPercentBase == "valid",
+	}
+
+	// TODO: We need a specialized method to parse for
+	var result viewmodels.PollResultRatingApproval
+	if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
+		return data, fmt.Errorf("parse approval poll result %w", err)
+	}
+
+	for _, option := range poll.OptionList {
+		onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, &option)
+		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
+		if err != nil {
+			return data, err
+		}
+
+		optData := pollSlideTableOption{
+			ID:           option.ID,
+			Name:         name,
+			TotalYes:     decimal.Decimal{},
+			TotalNo:      decimal.Decimal{},
+			TotalAbstain: decimal.Decimal{},
+		}
+
+		if !onehundredPercentBase.IsZero() {
+			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			optData.PercAbstain = optData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		}
+
+		data.Options = append(data.Options, optData)
+	}
+
+	return data, nil
+}
+
+func pollRatingScoreTable(
+	ctx context.Context,
+	req *projectionRequest,
+	poll dsmodels.Poll,
+	config dsmodels.PollConfigRatingScore,
+) (pollSlideTable, error) {
+	data := pollSlideTable{
+		Options: []pollSlideTableOption{},
+		Sums:    []pollSlideTableSum{},
+	}
+
+	var result viewmodels.PollResultRatingScore
+	if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
+		return data, fmt.Errorf("parse approval poll result %w", err)
+	}
+
+	return data, nil
+}
+
+func pollSelectionTable(
+	ctx context.Context,
+	req *projectionRequest,
+	poll dsmodels.Poll,
+	config dsmodels.PollConfigSelection,
+) (pollSlideTable, error) {
+	data := pollSlideTable{
+		Options:            []pollSlideTableOption{},
+		Sums:               []pollSlideTableSum{},
+		DisplayPercAbstain: config.OnehundredPercentBase == "cast" || config.OnehundredPercentBase == "valid",
+	}
+
+	// TODO: We need a specialized method to parse for
+	var result viewmodels.PollResultSelection
+	if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
+		return data, fmt.Errorf("parse approval poll result %w", err)
+	}
+
+	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(poll, nil)
+	for _, option := range poll.OptionList {
+		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
+		if err != nil {
+			return data, err
+		}
+
+		optData := pollSlideTableOption{
+			ID:   option.ID,
+			Name: name,
+		}
+
+		if config.StrikeOut {
+			optData.TotalNo = result.Options[strconv.Itoa(option.ID)]
+			if !onehundredPercentBase.IsZero() {
+				optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			}
+		} else {
+			optData.TotalYes = result.Options[strconv.Itoa(option.ID)]
+			if !onehundredPercentBase.IsZero() {
+				optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			}
+		}
+
+		data.Options = append(data.Options, optData)
+	}
+
+	if config.AllowNota {
+		if config.StrikeOut {
+			data.Sums = append(data.Sums, pollSlideTableSum{
+				Name:  req.Locale.Get("General approval"),
+				Total: result.Nota,
+			})
+		} else {
+			data.Sums = append(data.Sums, pollSlideTableSum{
+				Name:  req.Locale.Get("General rejection"),
+				Total: result.Nota,
+			})
+		}
+	}
+
+	data.Sums = append(data.Sums, pollSlideTableSum{
+		Name:  req.Locale.Get("Valid votes"),
+		Total: decimal.NewFromInt(int64(result.TotalBallots - result.Invalid)),
+	})
+
+	if result.Invalid > 0 {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Invalid votes"),
+			Total: decimal.NewFromInt(int64(result.Invalid)),
+		})
+	}
+
+	if result.TotalBallots > 0 && poll.Visibility == "manually" {
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Total votes cast"),
+			Total: decimal.NewFromInt(int64(result.TotalBallots)),
+		})
+	}
+
+	return data, nil
 }

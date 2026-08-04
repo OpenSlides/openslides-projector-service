@@ -2,6 +2,7 @@ package viewmodels
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/rs/zerolog/log"
@@ -76,11 +77,42 @@ type PollResultApproval struct {
 }
 
 type PollResultSelection struct {
-	Options      map[string]decimal.Decimal `json:",inline"`
+	Options      map[string]decimal.Decimal `json:"-"`
 	Nota         decimal.Decimal            `json:"nota"`
 	Abstain      decimal.Decimal            `json:"abstain"`
 	Invalid      int                        `json:"invalid"`
 	TotalBallots int                        `json:"total_ballots"`
+}
+
+func (p *PollResultSelection) UnmarshalJSON(data []byte) error {
+	type PollResultSelection_ PollResultSelection
+
+	var aux PollResultSelection_
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return fmt.Errorf("decode PollResultSelection: %w", err)
+	}
+	*p = PollResultSelection(aux)
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("decode PollResultSelection raw map: %w", err)
+	}
+
+	delete(raw, "nota")
+	delete(raw, "abstain")
+	delete(raw, "invalid")
+	delete(raw, "total_ballots")
+
+	p.Options = make(map[string]decimal.Decimal, len(raw))
+	for key, value := range raw {
+		var d decimal.Decimal
+		if err := json.Unmarshal(value, &d); err != nil {
+			return fmt.Errorf("decode PollResultSelection option %q: %w", key, err)
+		}
+		p.Options[key] = d
+	}
+
+	return nil
 }
 
 type PollResultRatingScore struct {
@@ -88,6 +120,36 @@ type PollResultRatingScore struct {
 	Abstain      decimal.Decimal            `json:"abstain"`
 	Invalid      int                        `json:"invalid"`
 	TotalBallots int                        `json:"total_ballots"`
+}
+
+func (p *PollResultRatingScore) UnmarshalJSON(data []byte) error {
+	type PollResultRatingScore_ PollResultRatingScore
+
+	var aux PollResultRatingScore_
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return fmt.Errorf("decode PollResultRatingScore: %w", err)
+	}
+	*p = PollResultRatingScore(aux)
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("decode PollResultRatingScore raw map: %w", err)
+	}
+
+	delete(raw, "abstain")
+	delete(raw, "invalid")
+	delete(raw, "total_ballots")
+
+	p.Options = make(map[string]decimal.Decimal, len(raw))
+	for key, value := range raw {
+		var d decimal.Decimal
+		if err := json.Unmarshal(value, &d); err != nil {
+			return fmt.Errorf("decode PollResultRatingScore option %q: %w", key, err)
+		}
+		p.Options[key] = d
+	}
+
+	return nil
 }
 
 type PollResultRatingApprovalOption struct {
@@ -101,6 +163,36 @@ type PollResultRatingApproval struct {
 	Abstain      decimal.Decimal                           `json:"abstain"`
 	Invalid      int                                       `json:"invalid"`
 	TotalBallots int                                       `json:"total_ballots"`
+}
+
+func (p *PollResultRatingApproval) UnmarshalJSON(data []byte) error {
+	type PollResultRatingApproval_ PollResultRatingApproval
+
+	var aux PollResultRatingApproval_
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return fmt.Errorf("decode PollResultRatingApproval: %w", err)
+	}
+	*p = PollResultRatingApproval(aux)
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("decode PollResultRatingApproval raw map: %w", err)
+	}
+
+	delete(raw, "abstain")
+	delete(raw, "invalid")
+	delete(raw, "total_ballots")
+
+	p.Options = make(map[string]PollResultRatingApprovalOption, len(raw))
+	for key, value := range raw {
+		var opt PollResultRatingApprovalOption
+		if err := json.Unmarshal(value, &opt); err != nil {
+			return fmt.Errorf("decode PollResultRatingApproval option %q: %w", key, err)
+		}
+		p.Options[key] = opt
+	}
+
+	return nil
 }
 
 /*
