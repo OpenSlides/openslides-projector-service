@@ -3,6 +3,7 @@ package viewmodels
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/shopspring/decimal"
@@ -78,11 +79,9 @@ func (r *PollResultApproval) OneHundredPercentBase(config *dsmodels.PollConfigAp
 		return r.Yes.Add(r.No)
 	case "valid":
 		return r.Yes.Add(r.No).Add(r.Abstain)
-	case "cast":
-		return decimal.NewFromInt(r.VotesCast())
 	}
 
-	return decimal.Decimal{}
+	return genericOnehundredPercentBase(r, config.OnehundredPercentBase)
 }
 
 type PollResultSelection struct {
@@ -139,11 +138,11 @@ func (r *PollResultSelection) VotesCast() int64 {
 func (r *PollResultSelection) OneHundredPercentBase(config *dsmodels.PollConfigSelection) decimal.Decimal {
 	// TODO: Add missing bases
 	switch config.OnehundredPercentBase {
-	case "cast":
-		return decimal.NewFromInt(r.VotesCast())
+	case "no_general":
+	case "valid":
 	}
 
-	return decimal.Decimal{}
+	return genericOnehundredPercentBase(r, config.OnehundredPercentBase)
 }
 
 type PollResultRatingScore struct {
@@ -198,11 +197,9 @@ func (r *PollResultRatingScore) VotesCast() int64 {
 func (r *PollResultRatingScore) OneHundredPercentBase(config *dsmodels.PollConfigRatingScore) decimal.Decimal {
 	// TODO: Add missing bases
 	switch config.OnehundredPercentBase {
-	case "cast":
-		return decimal.NewFromInt(r.VotesCast())
 	}
 
-	return decimal.Decimal{}
+	return genericOnehundredPercentBase(r, config.OnehundredPercentBase)
 }
 
 type PollResultRatingApprovalOption struct {
@@ -261,10 +258,28 @@ func (r *PollResultRatingApproval) VotesCast() int64 {
 }
 
 func (r *PollResultRatingApproval) OneHundredPercentBase(config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
+	if option == nil {
+		return decimal.Decimal{}
+	}
+
 	// TODO: Add missing bases
+	opt := r.Options[strconv.Itoa(option.ID)]
 	switch config.OnehundredPercentBase {
+	case "yes_no":
+		return opt.Yes.Add(opt.No)
+	case "valid":
+		return opt.Yes.Add(opt.No).Add(opt.Abstain)
+	}
+
+	return genericOnehundredPercentBase(r, config.OnehundredPercentBase)
+}
+
+func genericOnehundredPercentBase(r PollResult, base string) decimal.Decimal {
+	switch base {
 	case "cast":
 		return decimal.NewFromInt(r.VotesCast())
+	case "valid":
+		return decimal.NewFromInt(r.VotesValid())
 	}
 
 	return decimal.Decimal{}

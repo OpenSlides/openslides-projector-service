@@ -224,6 +224,7 @@ func pollSelectionTable(
 	}
 
 	onehundredPercentBase := result.OneHundredPercentBase(&config)
+	total := decimal.NewFromInt(result.VotesValid()).Sub(result.Abstain)
 	for _, option := range poll.OptionList {
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 		if err != nil {
@@ -236,15 +237,13 @@ func pollSelectionTable(
 		}
 
 		if config.StrikeOut {
-			optData.TotalNo = result.Options[strconv.Itoa(option.ID)]
-			if !onehundredPercentBase.IsZero() {
-				optData.PercNo = optData.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			}
+			optData.TotalYes = total.Sub(result.Options[strconv.Itoa(option.ID)])
 		} else {
 			optData.TotalYes = result.Options[strconv.Itoa(option.ID)]
-			if !onehundredPercentBase.IsZero() {
-				optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			}
+		}
+
+		if !onehundredPercentBase.IsZero() {
+			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
 		data.Options = append(data.Options, optData)
