@@ -6,7 +6,6 @@
 }
 
 .chyron .inner {
-  font-family: customChyronNameFont, OSFont, sans-serif;
   display: table-cell;
   vertical-align: middle;
   padding-left: 18px;
@@ -19,6 +18,10 @@
 .chyron-speaker .inner {
   background-color: var(--projector-chyron-background-color);
   color: var(--projector-chyron-font-color);
+}
+
+.chyron-speaker .inner .name {
+  font-family: customChyronNameFont, OSFont, sans-serif;
 }
 
 .chyron-speaker .inner .level {
