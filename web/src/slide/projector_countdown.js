@@ -75,15 +75,16 @@ export class ProjectorCountdown extends HTMLElement {
     this.updateComponent();
 
     if (this.running) {
-      const update = () => {
-        const time = window.serverTime();
-        const nextUpdateAt = new Date(Math.floor(time / 1000) * 1000 + 1000);
-        this.updateCallback = setTimeout(() => {
-          this.updateComponent();
-          update();
-        }, nextUpdateAt - time);
-      }
-      update();
+      const scheduleNextUpdate = () => {
+        this.updateComponent();
+
+        const now = window.serverTime();
+        const nextSecond = Math.ceil(now) - now;
+        const delay = Math.max(50, nextSecond * 1000 - 50);
+
+        this.updateCallback = setTimeout(scheduleNextUpdate, delay);
+      };
+      scheduleNextUpdate();
     }
   }
 

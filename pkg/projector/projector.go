@@ -198,7 +198,7 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 			p.listeners = append(p.listeners, listener)
 			listener <- &ProjectorUpdateEvent{
 				Event: "connected",
-				Data:  strconv.Itoa(int(time.Now().Unix())),
+				Data:  strconv.Itoa(int(time.Now().UnixMilli())),
 			}
 		case listener := <-p.RemoveListener:
 			i := slices.IndexFunc(p.listeners, func(el chan *ProjectorUpdateEvent) bool { return el == listener })
