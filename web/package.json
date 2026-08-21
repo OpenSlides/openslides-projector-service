@@ -24,7 +24,7 @@
   "dependencies": {
     "@openslides/motion-diff": "^1.0.0",
     "chart.js": "^4.5.1",
-    "eventsource": "^4.1.0",
+    "eventsource": "^5.1.0",
     "material-icons": "^1.13.14",
     "pdfjs-dist": "^5.3.93",
     "qrcode": "^1.5.4"
