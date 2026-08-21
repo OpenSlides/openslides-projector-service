@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
@@ -96,7 +97,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	var maxColumns int
-	var nameOrderString string
+	var nameOrderString dstypes.Meeting_MotionPollProjectionNameOrderFirst
 	var sortByResult bool
 	var usersEnableVoteDelegations bool
 	var usersForbidDelegatorToVote bool
@@ -231,9 +232,9 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	pollMethod := map[string]bool{
-		"Yes":     strings.Contains(poll.Pollmethod, "Y"),
-		"No":      strings.Contains(poll.Pollmethod, "N"),
-		"Abstain": strings.Contains(poll.Pollmethod, "A"),
+		"Yes":     strings.Contains(string(poll.Pollmethod), "Y"),
+		"No":      strings.Contains(string(poll.Pollmethod), "N"),
+		"Abstain": strings.Contains(string(poll.Pollmethod), "A"),
 	}
 
 	slideData.GroupedVotes = voteEntryGroups
@@ -242,7 +243,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		poll.OnehundredPercentBase != "YN" &&
 		(slideData.GlobalOption == nil || poll.OnehundredPercentBase[0] != 'Y')
 
-	displayPercAbstain := strings.Contains(poll.OnehundredPercentBase, "A") ||
+	displayPercAbstain := strings.Contains(string(poll.OnehundredPercentBase), "A") ||
 		poll.OnehundredPercentBase == "cast" ||
 		poll.OnehundredPercentBase == "entitled" ||
 		poll.OnehundredPercentBase == "entitled_present" ||

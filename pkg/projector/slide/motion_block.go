@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
@@ -33,12 +34,12 @@ func MotionBlockSlideHandler(ctx context.Context, req *projectionRequest) (map[s
 		Title                   string
 		Recommendation          string
 		RecommendationExtension string
-		RecommendationColor     string
+		RecommendationColor     dstypes.MotionState_CssClass
 	}
 	motionList := []motionListEntry{}
 	for _, motion := range block.MotionList {
 		recoName := ""
-		recoColor := ""
+		var recoColor dstypes.MotionState_CssClass
 		if reco, hasReco := motion.Recommendation.Value(); hasReco {
 			recoName = reco.RecommendationLabel
 			recoColor = reco.CssClass
