@@ -32,7 +32,7 @@ func New(addr string, redisAddr string, dsFlow flow.Flow) (*Datastore, error) {
 
 			for key := range m {
 				if _, ok := listener.keys[key]; ok {
-					listener.handler()
+					listener.Next()
 					break
 				}
 			}

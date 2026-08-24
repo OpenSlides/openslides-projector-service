@@ -75,9 +75,16 @@ export class ProjectorCountdown extends HTMLElement {
     this.updateComponent();
 
     if (this.running) {
-      this.updateCallback = setInterval(() => {
+      const scheduleNextUpdate = () => {
         this.updateComponent();
-      }, 500);
+
+        const now = window.serverTime();
+        const nextSecond = Math.ceil(now) - now;
+        const delay = Math.max(50, nextSecond * 1000 - 50);
+
+        this.updateCallback = setTimeout(scheduleNextUpdate, delay);
+      };
+      scheduleNextUpdate();
     }
   }
 
@@ -100,7 +107,7 @@ export class ProjectorCountdown extends HTMLElement {
 
   disconnectedCallback() {
     if (this.updateCallback) {
-      clearInterval(this.updateCallback);
+      clearTimeout(this.updateCallback);
     }
   }
 }

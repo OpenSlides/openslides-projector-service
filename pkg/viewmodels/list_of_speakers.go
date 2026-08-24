@@ -16,8 +16,10 @@ func ListOfSpeakers_CurrentSpeaker(ctx context.Context, los *dsmodels.ListOfSpea
 			speechState := speaker.SpeechState
 
 			if speechState == "interposed_question" {
-				currentSpeaker = &speaker
-				break
+				if speaker.PauseTime == 0 {
+					currentSpeaker = &speaker
+					break
+				}
 			} else {
 				currentSpeaker = &speaker
 			}
