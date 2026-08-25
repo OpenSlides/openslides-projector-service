@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/rs/zerolog/log"
@@ -44,7 +45,7 @@ type motionSlideCommonData struct {
 	Recommendation        string
 	ReferencedRecoMotions string
 	Submitters            string
-	LineNumbering         string
+	LineNumbering         dstypes.Meeting_MotionsDefaultLineNumbering
 	LineLength            int
 	Preamble              string
 }
@@ -260,7 +261,7 @@ func motionSubmitterList(locale *i18n.ProjectorLocale, motion *dsmodels.Motion) 
 
 type motionChangeReco struct {
 	ID       int
-	Type     string
+	Type     dstypes.MotionChangeRecommendation_Type
 	LineFrom int
 	LineTo   int
 	Rejected bool

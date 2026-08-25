@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 )
 
 func WifiAccessDataSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -14,7 +16,7 @@ func WifiAccessDataSlideHandler(ctx context.Context, req *projectionRequest) (ma
 	var wlanData struct {
 		SSID       string
 		Password   string
-		Encryption string
+		Encryption dstypes.Meeting_UsersPdfWlanEncryption
 		QrString   string
 	}
 	req.Fetch.Meeting_UsersPdfWlanSsid(*req.ContentObjectID).Lazy(&wlanData.SSID)
@@ -24,9 +26,9 @@ func WifiAccessDataSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		return nil, fmt.Errorf("could not fetch wlan data")
 	}
 
-	if wlanData.SSID != "" && (wlanData.Encryption == "" || wlanData.Encryption == "nopass" || wlanData.Password != "") {
+	if wlanData.SSID != "" && (wlanData.Encryption == "" || wlanData.Encryption == dstypes.Meeting_UsersPdfWlanEncryptionNopass || wlanData.Password != "") {
 		wlanData.QrString = `WIFI:S:` + escapeSpecialCharactersForWiFiConfig(wlanData.SSID) + `;`
-		wlanData.QrString += `T:` + wlanData.Encryption + `;`
+		wlanData.QrString += `T:` + string(wlanData.Encryption) + `;`
 		if wlanData.Password != "" {
 			wlanData.QrString += `P:` + escapeSpecialCharactersForWiFiConfig(wlanData.Password) + `;`
 		}

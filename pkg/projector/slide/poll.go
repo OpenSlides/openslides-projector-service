@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
@@ -47,7 +48,7 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		}
 	}
 
-	var pollState string
+	var pollState dstypes.Poll_State
 	var pollTitle string
 	var pollLiveVotingEnabled bool
 	req.Fetch.Poll_State(pollID).Lazy(&pollState)
@@ -153,14 +154,14 @@ func PollSlideHandler(ctx context.Context, req *projectionRequest) (map[string]a
 		data.Options = append(data.Options, optData)
 	}
 
-	data.DisplayPercAbstain = strings.Contains(poll.OnehundredPercentBase, "A") ||
-		poll.OnehundredPercentBase == "cast" ||
-		poll.OnehundredPercentBase == "valid"
+	data.DisplayPercAbstain = strings.Contains(string(poll.OnehundredPercentBase), "A") ||
+		poll.OnehundredPercentBase == dstypes.OnehundredPercentBasesCast ||
+		poll.OnehundredPercentBase == dstypes.OnehundredPercentBasesValid
 
 	pollMethod := map[string]bool{
-		"Yes":     strings.Contains(poll.Pollmethod, "Y"),
-		"No":      strings.Contains(poll.Pollmethod, "N"),
-		"Abstain": strings.Contains(poll.Pollmethod, "A"),
+		"Yes":     strings.Contains(string(poll.Pollmethod), "Y"),
+		"No":      strings.Contains(string(poll.Pollmethod), "N"),
+		"Abstain": strings.Contains(string(poll.Pollmethod), "A"),
 	}
 
 	if poll.GlobalOption != nil && !poll.GlobalOption.Null() {

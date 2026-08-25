@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/shopspring/decimal"
 )
 
@@ -91,7 +92,7 @@ func Poll_EntitledUsers(poll dsmodels.Poll) (EntitledUsersAtStop, error) {
 	return users, nil
 }
 
-func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting string) []int {
+func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Meeting_MotionPollProjectionNameOrderFirst) []int {
 	entitledUserIDsMap := map[int]struct{}{}
 	meetingUserMap := make(map[int]dsmodels.MeetingUser)
 
