@@ -2,7 +2,7 @@ export class ProjectorCountdown extends HTMLElement {
   get secondsRemaining() {
     const factor = this.defaultTime === 0 ? -1 : 1;
     if (this.running) {
-      return Math.floor(this.countdownTime - window.serverTime() / 1000) * factor;
+      return (this.countdownTime - Math.floor(window.serverTime() / 1000)) * factor;
     }
 
     return this.countdownTime * factor;
@@ -78,9 +78,9 @@ export class ProjectorCountdown extends HTMLElement {
       const scheduleNextUpdate = () => {
         this.updateComponent();
 
-        const now = window.serverTime();
+        const now = window.serverTime() / 1000;
         const nextSecond = Math.ceil(now) - now;
-        const delay = Math.max(50, nextSecond * 1000 - 50);
+        const delay = Math.max(50, nextSecond * 1000 + 20);
 
         this.updateCallback = setTimeout(scheduleNextUpdate, delay);
       };
