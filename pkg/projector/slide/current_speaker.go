@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
@@ -32,12 +33,12 @@ func CurrentSpeakerSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		return nil, fmt.Errorf("could not load list of speakers %w", err)
 	}
 
-	currentSpeaker, err := viewmodels.ListOfSpeakers_CurrentSpeaker(ctx, &los)
+	speaker, err := viewmodels.ListOfSpeakers_CurrentSpeaker(ctx, &los)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch current speaker %w", err)
 	}
 
-	if currentSpeaker == nil {
+	if speaker == nil {
 		return nil, nil
 	}
 
@@ -46,52 +47,54 @@ func CurrentSpeakerSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		Name               string
 		Color              string
 		CountdownTime      float64
+		RemainingTime      *float64
 		Running            bool
 		Intervention       bool
 		Answer             bool
 		InterposedQuestion bool
+		Forspeech          bool
+		Counterspeech      bool
+		Contribution       bool
+		PointOfOrder       bool
 	}
 
-	var currentSpeakerInfo speakerInfo
-	currentSpeakerInfo.Running = currentSpeaker.PauseTime == 0
-	currentSpeakerInfo.Intervention = currentSpeaker.SpeechState == "intervention"
-	currentSpeakerInfo.InterposedQuestion = currentSpeaker.SpeechState == "interposed_question"
-	currentSpeakerInfo.Answer = currentSpeaker.Answer
+	var slideSpeaker speakerInfo
+	slideSpeaker.Running = speaker.PauseTime == 0
+	slideSpeaker.Intervention = speaker.SpeechState == dstypes.Speaker_SpeechStateIntervention
+	slideSpeaker.InterposedQuestion = speaker.SpeechState == dstypes.Speaker_SpeechStateInterposedQuestion
+	slideSpeaker.Counterspeech = speaker.SpeechState == dstypes.Speaker_SpeechStateContra
+	slideSpeaker.Forspeech = speaker.SpeechState == dstypes.Speaker_SpeechStatePro
+	slideSpeaker.Contribution = speaker.SpeechState == dstypes.Speaker_SpeechStateContribution
+	slideSpeaker.PointOfOrder = speaker.PointOfOrder
+	slideSpeaker.Answer = speaker.Answer
 
-	sllos, hasSLLOS := currentSpeaker.StructureLevelListOfSpeakers.Value()
-
-	if currentSpeaker.SpeechState != "intervention" &&
-		currentSpeaker.SpeechState != "interposed_question" &&
-		(!hasSLLOS || sllos.StructureLevelID == 0) {
-		return nil, nil
+	sllos, hasSLLOS := speaker.StructureLevelListOfSpeakers.Value()
+	if hasSLLOS {
+		slideSpeaker.ID = sllos.StructureLevelID
+		slideSpeaker.Color = sllos.StructureLevel.Color
 	}
 
-	if currentSpeaker.SpeechState == "interposed_question" || currentSpeaker.Answer {
-		currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateElapsedTime(currentSpeaker)
+	if speaker.SpeechState == "interposed_question" || speaker.Answer {
+		slideSpeaker.CountdownTime = viewmodels.Speaker_CalculateElapsedTime(speaker)
 		if hasSLLOS {
-			currentSpeakerInfo.ID = sllos.StructureLevelID
-			currentSpeakerInfo.Color = sllos.StructureLevel.Color
-			currentSpeakerInfo.Name = sllos.StructureLevel.Name
+			slideSpeaker.Name = sllos.StructureLevel.Name
 		}
-	} else if currentSpeaker.SpeechState == "intervention" {
+	} else if speaker.SpeechState == "intervention" {
 		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load intervention time: %w", err)
 		}
-		currentSpeakerInfo.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(currentSpeaker, defaultInterventionTime)
-		if hasSLLOS {
-			currentSpeakerInfo.ID = sllos.StructureLevelID
-			currentSpeakerInfo.Color = sllos.StructureLevel.Color
-		}
+		slideSpeaker.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(speaker, defaultInterventionTime)
 	} else if hasSLLOS {
-		currentSpeakerInfo.ID = sllos.StructureLevelID
-		currentSpeakerInfo.Name = sllos.StructureLevel.Name
-		currentSpeakerInfo.Color = sllos.StructureLevel.Color
-		currentSpeakerInfo.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
+		slideSpeaker.Name = sllos.StructureLevel.Name
+		slideSpeaker.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
+		slideSpeaker.RemainingTime = &sllos.RemainingTime
+	} else {
+		slideSpeaker.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(speaker, 0)
 	}
 
 	return map[string]any{
 		"_template":   "current_speaker",
-		"SpeakerInfo": currentSpeakerInfo,
+		"SpeakerInfo": slideSpeaker,
 	}, nil
 }
