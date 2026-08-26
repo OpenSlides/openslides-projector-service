@@ -7,7 +7,7 @@ import (
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 )
 
-func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
+func CurrentSpeakerSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
 	if req.ContentObjectID == nil {
 		return nil, fmt.Errorf("no meeting id provided for slide")
 	}
@@ -91,6 +91,7 @@ func CurrentSpeakingStructureLevelSlideHandler(ctx context.Context, req *project
 	}
 
 	return map[string]any{
+		"_template":   "current_speaker",
 		"SpeakerInfo": currentSpeakerInfo,
 	}, nil
 }
