@@ -57,9 +57,6 @@ func New(ctx context.Context, db *database.Datastore, locale *i18n.ProjectorLoca
 	routes["topic"] = TopicSlideHandler
 	routes["wifi_access_data"] = WifiAccessDataSlideHandler
 
-	// alias for `current_speaker` - deprecated
-	routes["current_speaking_structure_level"] = CurrentSpeakerSlideHandler
-
 	return &SlideRouter{
 		ctx:    ctx,
 		db:     db,
