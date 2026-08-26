@@ -12,7 +12,9 @@
       <div class="chyron-speaker">
         <div class="inner">
           {{ if eq .Options.ChyronType "new" }}
-            {{ .SpeakerName }}
+            <div class="name">
+              {{ .SpeakerName }}
+            </div>
           {{ else if eq .Options.ChyronType "old" }}
             <div class="name">
               {{ .SpeakerName }}
