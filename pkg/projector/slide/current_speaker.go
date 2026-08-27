@@ -74,12 +74,12 @@ func CurrentSpeakerSlideHandler(ctx context.Context, req *projectionRequest) (ma
 		slideSpeaker.Color = sllos.StructureLevel.Color
 	}
 
-	if speaker.SpeechState == "interposed_question" || speaker.Answer {
+	if slideSpeaker.InterposedQuestion || speaker.Answer {
 		slideSpeaker.CountdownTime = viewmodels.Speaker_CalculateElapsedTime(speaker)
 		if hasSLLOS {
 			slideSpeaker.Name = sllos.StructureLevel.Name
 		}
-	} else if speaker.SpeechState == "intervention" {
+	} else if slideSpeaker.Intervention {
 		defaultInterventionTime, err := req.Fetch.Meeting_ListOfSpeakersInterventionTime(los.MeetingID).Value(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not load intervention time: %w", err)
