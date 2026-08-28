@@ -85,6 +85,7 @@ func CurrentSpeakerSlideHandler(ctx context.Context, req *projectionRequest) (ma
 			return nil, fmt.Errorf("could not load intervention time: %w", err)
 		}
 		slideSpeaker.CountdownTime = viewmodels.Speaker_CalculateInterventionCountdownTime(speaker, defaultInterventionTime)
+		slideSpeaker.RemainingTime = new(float64(defaultInterventionTime))
 	} else if hasSLLOS {
 		slideSpeaker.Name = sllos.StructureLevel.Name
 		slideSpeaker.CountdownTime = sllos.RemainingTime + float64(sllos.CurrentStartTime)
