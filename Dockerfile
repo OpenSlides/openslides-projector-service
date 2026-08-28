@@ -1,6 +1,6 @@
 ARG CONTEXT=prod
 
-FROM golang:1.26.5-alpine AS base
+FROM golang:1.26.6-alpine AS base
 
 ## Setup
 ARG CONTEXT
@@ -39,7 +39,7 @@ FROM base AS builder
 RUN go build -o openslides-projector-service cmd/projectord/main.go
 
 
-FROM node:24.18-alpine AS builder-web
+FROM node:24.19-alpine AS builder-web
 
 RUN apk add --no-cache \
     make

@@ -4,7 +4,7 @@
 {{ end }}
 
 
-<div class="content font-scale">
+<div class="content scroll-inner font-scale">
   <div class="slidetitle">
     <h1>
       {{ .Title }}
@@ -14,7 +14,7 @@
   {{ if .State }}
     <div><i>{{ .State }}</i></div>
   {{ else if .Data }}
-    <div class="scroll-inner">
+    <div>
       <table class="poll-result-table">
         <thead>
           <tr>

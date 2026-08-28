@@ -1,7 +1,7 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_common.css" />
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_chart.css" />
 
-<div class="content">
+<div class="content scroll-inner">
   <div class="slidetitle">
     <h1>
       {{ .Poll.Title }}
@@ -14,7 +14,7 @@
   {{ if eq .Poll.State "published" }}
     <div class="transform-scale">
       <div class="result-wrapper extra-grid-slide">
-        <div class="scroll-inner">
+        <div>
           <table class="result-table">
             <tbody>
               {{ range $i, $o := .Data.Options }}
