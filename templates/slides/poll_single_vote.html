@@ -66,9 +66,9 @@
             <div>
               {{ Loc.Get "Entitled users" }}:
               {{ .NumEntitledUsers }}
-              {{ if eq .Poll.OnehundredPercentBase "entitled" }}
-                <!--{ .Poll.entitled_users_at_stop.length | pollPercentBase: polldata }-->
-              {{ end }}
+              <!-- if eq .Poll.OnehundredPercentBase "entitled"
+                { .Poll.entitled_users_at_stop.length | pollPercentBase: polldata }
+              end -->
             </div>
           </div>
           {{ if .LiveVoting }}
@@ -224,13 +224,13 @@
             {{ if $.SingleOption }}
               {{ $iconName := "radio_button_unchecked" }}
               {{ $iconClass := "no-content" }}
-              {{ if eq .Value "Y" }}
+              {{ if eq .Value "yes" }}
                 {{ $iconName = "check_circle" }}
                 {{ $iconClass = "yes" }}
-              {{ else if eq .Value "N" }}
+              {{ else if eq .Value "no" }}
                 {{ $iconName = "cancel" }}
                 {{ $iconClass = "no" }}
-              {{ else if eq .Value "A" }}
+              {{ else if eq .Value "abstain" }}
                 {{ $iconName = "circle" }}
                 {{ $iconClass = "abstain" }}
               {{ end }}
@@ -245,11 +245,11 @@
               </projector-icon-container>
             {{ else }}
               <div class="vote-wrapper">
-                {{ if eq .Value "Y" }}
+                {{ if eq .Value "yes" }}
                   <span class="vote-value material-icons yes">check_circle</span>
-                {{ else if eq .Value "N" }}
+                {{ else if eq .Value "no" }}
                   <span class="vote-value material-icons no">cancel</span>
-                {{ else if eq .Value "A" }}
+                {{ else if eq .Value "abstain" }}
                   <span class="vote-value material-icons abstain">circle</span>
                 {{ else }}
                   <span class="vote-value">{{ .Value }}</span>
