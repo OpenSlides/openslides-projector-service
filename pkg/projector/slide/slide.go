@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 
@@ -68,18 +69,31 @@ func New(ctx context.Context, db *database.Datastore, locale *i18n.ProjectorLoca
 func (r *SlideRouter) SubscribeContent(addProjection <-chan int, removeProjection <-chan int) <-chan *projectionUpdate {
 	updateChannel := make(chan *projectionUpdate)
 	contextCancel := make(map[int]context.CancelFunc)
+	var wg sync.WaitGroup
 
 	go func() {
+		defer func() {
+			for _, cancel := range contextCancel {
+				cancel()
+			}
+
+			wg.Wait()
+			close(updateChannel)
+		}()
+
 		for {
 			select {
 			case <-r.ctx.Done():
-				close(updateChannel)
 				return
 			case id := <-addProjection:
 				if _, ok := contextCancel[id]; !ok {
 					ctx, cancel := context.WithCancel(r.ctx)
 					contextCancel[id] = cancel
-					go r.subscribeProjection(ctx, id, updateChannel)
+					wg.Add(1)
+					go func(id int, ctx context.Context) {
+						defer wg.Done()
+						r.subscribeProjection(ctx, id, updateChannel)
+					}(id, ctx)
 				}
 			case id := <-removeProjection:
 				if cancel, ok := contextCancel[id]; ok {
@@ -141,7 +155,9 @@ func (r *SlideRouter) subscribeProjection(ctx context.Context, id int, updateCha
 			})
 
 			if err != nil {
-				onError(err, fmt.Sprintf("failed executing projection handler %s for %d", projectionType, id))
+				if !errors.Is(err, context.Canceled) {
+					onError(err, fmt.Sprintf("failed executing projection handler %s for %d", projectionType, id))
+				}
 				return
 			}
 
