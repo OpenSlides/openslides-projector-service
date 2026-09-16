@@ -39,11 +39,11 @@
     font-size: 60px;
     line-height: 60px;
 
-    .intervention {
+    .speech-type {
       white-space: normal;
       word-wrap: break-word;
     }
-    .intervention .material-icons {
+    .speech-type .material-icons {
       font-size: 1em;
       vertical-align: middle;
       justify-content: end;

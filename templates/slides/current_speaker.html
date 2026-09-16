@@ -1,8 +1,4 @@
-<link
-  rel="stylesheet"
-  type="text/css"
-  href="/system/projector/static/slide/projector_current_speaking_structure_level.css"
-/>
+<link rel="stylesheet" type="text/css" href="/system/projector/static/slide/projector_current_speaker.css" />
 
 <div class="content current-speaking-structure-level overlay">
   {{ with .SpeakerInfo }}
@@ -18,8 +14,7 @@
           id="structure-level-{{ .ID }}"
           countdown-time="{{ printf "%.0f" .CountdownTime }}"
           running="{{ .Running }}"
-          {{ if and .Answer .Running }}default-time="0"{{ end }}
-          {{ if and .InterposedQuestion .Running }}default-time="0"{{ end }}
+          {{ if not .RemainingTime }}default-time="0"{{ end }}
         ></projector-countdown>
       </div>
       <div class="structure-level-name">
@@ -29,24 +24,44 @@
           </div>
         {{ end }}
         {{ if and .Answer .Intervention }}
-          <div class="intervention">
+          <div class="speech-type">
             <span class="material-icons">feedback</span>
             {{- Loc.Get "Answer to intervention" -}}
           </div>
         {{ else if and .Answer .InterposedQuestion }}
-          <div class="intervention">
+          <div class="speech-type">
             <span class="material-icons">contact_support</span>
             {{- Loc.Get "Answer to interposed question" -}}
           </div>
         {{ else if .Intervention }}
-          <div class="intervention">
+          <div class="speech-type">
             <span class="material-icons">feedback</span>
             {{- Loc.Get "Intervention" -}}
           </div>
         {{ else if .InterposedQuestion }}
-          <div class="intervention">
+          <div class="speech-type">
             <span class="material-icons">contact_support</span>
             {{- Loc.Get "Interposed question" -}}
+          </div>
+        {{ else if .PointOfOrder }}
+          <div class="speech-type">
+            <span class="material-icons">warning</span>
+            {{- Loc.Get "Point of order" -}}
+          </div>
+        {{ else if .Contribution }}
+          <div class="speech-type">
+            <span class="material-icons">star</span>
+            {{- Loc.Get "Contribution" -}}
+          </div>
+        {{ else if .Forspeech }}
+          <div class="speech-type">
+            <span class="material-icons">add_circle</span>
+            {{- Loc.Get "Forspeech" -}}
+          </div>
+        {{ else if .Counterspeech }}
+          <div class="speech-type">
+            <span class="material-icons">remove_circle</span>
+            {{- Loc.Get "Counter speech" -}}
           </div>
         {{ end }}
       </div>
