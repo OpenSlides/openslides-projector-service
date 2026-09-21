@@ -262,8 +262,14 @@ func (r *PollResultRatingApproval) OneHundredPercentBase(config *dsmodels.PollCo
 		return decimal.Decimal{}
 	}
 
-	// TODO: Add missing bases
-	opt := r.Options[strconv.Itoa(option.ID)]
+	opt, ok := r.Options[strconv.Itoa(option.ID)]
+	if !ok {
+		if val, ok := option.ContentObjectID.Value(); ok {
+			opt = r.Options[val]
+		} else if option.Text != "" {
+			opt = r.Options["text-"+strconv.Itoa(int(djb2(option.Text)))]
+		}
+	}
 	switch config.OnehundredPercentBase {
 	case "yes_no":
 		return opt.Yes.Add(opt.No)
@@ -283,6 +289,48 @@ func genericOnehundredPercentBase(r PollResult, base string) decimal.Decimal {
 	}
 
 	return decimal.Decimal{}
+}
+
+func RemapPollResultOptions[V any](resultMap map[string]V, options []dsmodels.PollOption) map[int]V {
+	result := map[int]V{}
+	for key, val := range resultMap {
+		iKey, err := strconv.Atoi(key)
+		if err == nil {
+			result[iKey] = val
+			continue
+		}
+
+		if key[:5] == "text-" {
+			hash, err := strconv.Atoi(key[5:])
+			if err != nil {
+				continue
+			}
+
+			for _, option := range options {
+				if djb2(option.Text) == uint64(hash) {
+					result[option.ID] = val
+					break
+				}
+			}
+		} else {
+			for _, option := range options {
+				if objID, ok := option.ContentObjectID.Value(); ok && objID == key {
+					result[option.ID] = val
+					break
+				}
+			}
+		}
+	}
+
+	return result
+}
+
+func djb2(str string) uint64 {
+	var hash uint64 = 5381
+	for i := 0; i < len(str); i++ {
+		hash = ((hash << 5) + hash) + uint64(str[i])
+	}
+	return hash
 }
 
 /*
