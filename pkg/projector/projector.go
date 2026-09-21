@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	sync "github.com/zolstein/sync-map"
 	"html/template"
 	"runtime/debug"
 	"slices"
@@ -332,7 +333,7 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 	})
 }
 
-func (p *projector) processProjectionUpdate(updated []int, projections map[int]string) {
+func (p *projector) processProjectionUpdate(updated []int, projections *sync.Map[int, string]) {
 	if updated == nil {
 		return
 	}
@@ -340,7 +341,7 @@ func (p *projector) processProjectionUpdate(updated []int, projections map[int]s
 	updatedProjections := map[int]string{}
 	deletionOccured := false
 	for _, projectionId := range updated {
-		if projection, ok := projections[projectionId]; ok {
+		if projection, ok := projections.Load(projectionId); ok {
 			newHash := djb2(projection)
 			oldHash, exists := p.ProjectionsHash[projectionId]
 
@@ -404,11 +405,12 @@ func (p *projector) updateFullContent() error {
 	return nil
 }
 
-func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int, map[int]string, error) {
+func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int, *sync.Map[int, string], error) {
 	updateChannel := make(chan []int)
-	projections := make(map[int]string)
 	addProjection := make(chan int)
 	removeProjection := make(chan int)
+
+	var projections sync.Map[int, string]
 
 	projectionChannel := p.slideRouter.SubscribeContent(addProjection, removeProjection)
 	go func() {
@@ -424,16 +426,18 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 			}
 
 			updated := []int{}
-			for id := range projections {
+			projections.Range(func(id int, value string) bool {
 				if !slices.Contains(projectionIDs, id) {
 					updated = append(updated, id)
 					removeProjection <- id
-					delete(projections, id)
+					projections.Delete(id)
 				}
-			}
+
+				return true
+			})
 
 			for _, id := range projectionIDs {
-				if _, ok := projections[id]; !ok {
+				if _, ok := projections.Load(id); !ok {
 					addProjection <- id
 				}
 			}
@@ -449,14 +453,14 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 				return
 			case update := <-projectionChannel:
 				if update != nil {
-					projections[update.ID] = update.Content
+					projections.Store(update.ID, update.Content)
 					updateChannel <- []int{update.ID}
 				}
 			}
 		}
 	}()
 
-	return updateChannel, projections, nil
+	return updateChannel, &projections, nil
 }
 
 func djb2(str string) uint64 {
