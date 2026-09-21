@@ -2,7 +2,6 @@ package slide
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -88,8 +87,6 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		Preload(pQ.BallotList().PollBallotUser()).
 		Preload(pQ.OptionList()).
 		Preload(pQ.Config()).
-		Preload(pQ.EntitledGroupList().MeetingUserList().User()).
-		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedToList().User()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedToList().User().IsPresentInMeetingList()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().User().IsPresentInMeetingList()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().StructureLevelList()).First(ctx)
@@ -338,7 +335,7 @@ func pollSingleVotesVoteEntry(
 		Delegated: showDelegationIcon,
 	}
 
-	if voteVal, ok := voteMap[user.ID]; ok {
+	if voteVal, ok := voteMap[mu.ID]; ok {
 		vote.Value = voteVal
 		if len(poll.OptionList) > 1 {
 			if idx, ok := optionIndexMap[voteVal]; ok {
@@ -355,13 +352,9 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 	for _, ballot := range poll.BallotList {
 		if user, ok := ballot.PollBallotUser.Value(); ok {
 			if muID, ok := user.RepresentedMeetingUserID.Value(); ok {
-				var val string
-				err := json.Unmarshal([]byte(ballot.Value), &val)
-				if err != nil {
-					return nil, err
+				if len(ballot.Value) > 2 {
+					voteMap[muID] = ballot.Value[1 : len(ballot.Value)-1]
 				}
-
-				voteMap[muID] = val
 			}
 		}
 	}
