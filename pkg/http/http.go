@@ -1,10 +1,10 @@
 package http
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -117,10 +117,9 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 			return
 		}
 
-		// TODO: Listen for permission changes
 		body := []byte(fmt.Sprintf(`[{"collection": "projector", "ids":[%d], "fields": {"id": null}}]`, id))
 		userID := auth.FromContext(ctx)
-		restrictUrl := fmt.Sprintf("%s?user_id=%d&single=1", cfg.RestricterUrl, userID)
+		restrictUrl := fmt.Sprintf("%s?user_id=%d", cfg.RestricterUrl, userID)
 		req, err := http.NewRequest("POST", restrictUrl, bytes.NewReader(body))
 		if err != nil {
 			writeResponse(w, `{"error": true, "msg": "creating restriction request failed"}`)
@@ -145,8 +144,9 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 			return
 		}
 
-		b, err := io.ReadAll(resp.Body)
-		if err != nil || !strings.Contains(string(b), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
+		reader := bufio.NewReader(resp.Body)
+		line, err := reader.ReadBytes('\n')
+		if err != nil || !strings.Contains(string(line), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
 			w.WriteHeader(http.StatusUnauthorized)
 			writeResponse(w, `{"error": true, "msg": "permissions denied"}`)
 			return
@@ -155,7 +155,28 @@ func authMiddleware(next http.Handler, auth *auth.Auth, cfg ProjectorConfig) htt
 		if err := resp.Body.Close(); err != nil {
 			log.Err(err).Msg("error closing response body")
 		}
-
+		requestCtx := r.Context()
 		next.ServeHTTP(w, r.WithContext(ctx))
+
+		go pollPermissions(w, reader, resp, id, requestCtx)
 	})
+}
+
+func pollPermissions(w http.ResponseWriter, reader *bufio.Reader, resp *http.Response, id int, requestCtx context.Context) {
+	for {
+		select {
+		case <-requestCtx.Done():
+			writeResponse(w, `{"error": true, "msg": "permissions denied. Context done"}`)
+			return
+		default:
+			line, err := reader.ReadBytes('\n')
+			if err != nil || !strings.Contains(string(line), fmt.Sprintf(`"projector/%d/id":%d`, id, id)) {
+				// Permissions lost
+				writeResponse(w, `{"error": true, "msg": "permissions denied. Permissions lost"}`)
+				_ = resp.Body.Close()
+				requestCtx.Done()
+				return
+			}
+		}
+	}
 }
