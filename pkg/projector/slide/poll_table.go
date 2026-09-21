@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
@@ -154,6 +153,7 @@ func pollRatingApprovalTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
+	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	for _, option := range poll.OptionList {
 		onehundredPercentBase := result.OneHundredPercentBase(&config, &option)
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
@@ -161,7 +161,7 @@ func pollRatingApprovalTable(
 			return data, err
 		}
 
-		optResult := result.Options[strconv.Itoa(option.ID)]
+		optResult := resultOptions[option.ID]
 		optData := pollSlideTableOption{
 			ID:           option.ID,
 			Name:         name,
@@ -223,6 +223,7 @@ func pollSelectionTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
+	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	onehundredPercentBase := result.OneHundredPercentBase(&config)
 	total := decimal.NewFromInt(result.VotesValid()).Sub(result.Abstain)
 	for _, option := range poll.OptionList {
@@ -237,9 +238,9 @@ func pollSelectionTable(
 		}
 
 		if config.StrikeOut {
-			optData.TotalYes = total.Sub(result.Options[strconv.Itoa(option.ID)])
+			optData.TotalYes = total.Sub(resultOptions[option.ID])
 		} else {
-			optData.TotalYes = result.Options[strconv.Itoa(option.ID)]
+			optData.TotalYes = resultOptions[option.ID]
 		}
 
 		if !onehundredPercentBase.IsZero() {
