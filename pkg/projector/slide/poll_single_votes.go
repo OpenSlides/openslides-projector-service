@@ -27,39 +27,6 @@ type pollSingleVotesSlideVoteEntryGroup struct {
 	Votes []*pollSingleVotesSlideVoteEntry
 }
 
-func (e *pollSingleVotesSlideVoteEntryGroup) TotalYes() int {
-	sum := 0
-	for _, v := range e.Votes {
-		if v.Value == "Y" {
-			sum += 1
-		}
-	}
-
-	return sum
-}
-
-func (e *pollSingleVotesSlideVoteEntryGroup) TotalNo() int {
-	sum := 0
-	for _, v := range e.Votes {
-		if v.Value == "N" {
-			sum += 1
-		}
-	}
-
-	return sum
-}
-
-func (e *pollSingleVotesSlideVoteEntryGroup) TotalAbstain() int {
-	sum := 0
-	for _, v := range e.Votes {
-		if v.Value == "A" {
-			sum += 1
-		}
-	}
-
-	return sum
-}
-
 type pollSingleVotesSlideData struct {
 	TotalVotesvalid     decimal.Decimal
 	PercVotesvalid      decimal.Decimal
@@ -158,7 +125,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 						slideData.Options[winner].Majority = false
 						idx := strconv.Itoa(slideData.Options[winner].ID)
 						for key, val := range voteMap {
-							if val == "Y" {
+							if val == "yes" {
 								voteMap[key] = idx
 							}
 						}
@@ -170,7 +137,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 					idx := strconv.Itoa(option.ID)
 					for key, val := range voteMap {
 						if val == idx {
-							voteMap[key] = "Y"
+							voteMap[key] = "yes"
 						}
 					}
 				}
