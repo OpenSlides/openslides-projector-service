@@ -3,9 +3,13 @@ package viewmodels
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/shopspring/decimal"
 )
 
@@ -20,29 +24,17 @@ func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
 	return false
 }
 
-/*
-func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.PollOption) decimal.Decimal {
-	switch config := poll.Config.(type) {
-	case *dsmodels.PollConfigRatingApproval:
-		return Poll_OneHundredPercentBaseRatingApproval(poll, config, option)
-	case *dsmodels.PollConfigRatingScore:
-		return Poll_OneHundredPercentBaseRatingScore(poll, config)
-	case *dsmodels.PollConfigSelection:
-		return Poll_OneHundredPercentBaseSelection(poll, config)
-	}
-
-	return decimal.Decimal{}
-}
-*/
-
+// TODO: Remove
 func Poll_OneHundredPercentBaseSelection(poll dsmodels.Poll, config *dsmodels.PollConfigSelection) decimal.Decimal {
 	return decimal.Decimal{}
 }
 
+// TODO: Remove
 func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
 	return decimal.Decimal{}
 }
 
+// TODO: Remove
 func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
 	return decimal.Decimal{}
 }
@@ -333,35 +325,13 @@ func djb2(str string) uint64 {
 	return hash
 }
 
-/*
-type EntitledUsersAtStop []struct {
-	UserID  int  `json:"user_id"`
-	Present bool `json:"present"`
-}
-
-func Poll_EntitledUsers(poll dsmodels.Poll) (EntitledUsersAtStop, error) {
-	var users EntitledUsersAtStop
-	if err := json.Unmarshal(poll.EntitledUsersAtStop, &users); err != nil {
-		return nil, fmt.Errorf("parse los id: %w", err)
-	}
-
-	return users, nil
-}
-
-func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Meeting_MotionPollProjectionNameOrderFirst) []int {
-	entitledUserIDsMap := map[int]struct{}{}
+func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Meeting_PollProjectionNameOrderFirst) []int {
 	meetingUserMap := make(map[int]dsmodels.MeetingUser)
-
-	if poll.EntitledUsersAtStop != nil {
-		var entitledUsersAtStop []struct {
-			UserID int `json:"user_id"`
-		}
-		if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
-			return []int{}
-		}
-
-		for _, entry := range entitledUsersAtStop {
-			entitledUserIDsMap[entry.UserID] = struct{}{}
+	if poll.EntitledUserIDs != nil {
+		for _, entry := range poll.EntitledUserList {
+			if mu, isSet := entry.MeetingUser.Value(); isSet {
+				meetingUserMap[mu.ID] = mu
+			}
 		}
 
 		for _, group := range poll.EntitledGroupList {
@@ -372,7 +342,6 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Mee
 	} else {
 		for _, group := range poll.EntitledGroupList {
 			for _, mu := range group.MeetingUserList {
-				entitledUserIDsMap[mu.UserID] = struct{}{}
 				meetingUserMap[mu.UserID] = mu
 			}
 		}
@@ -382,7 +351,7 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Mee
 		nameOrderSetting = "last_name"
 	}
 
-	entitledUserIDs := slices.Collect(maps.Keys(entitledUserIDsMap))
+	entitledUserIDs := slices.Collect(maps.Keys(meetingUserMap))
 	slices.SortFunc(entitledUserIDs, func(aID, bID int) int {
 		muA, aExists := meetingUserMap[aID]
 		muB, bExists := meetingUserMap[bID]
@@ -431,4 +400,3 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Mee
 
 	return entitledUserIDs
 }
-*/
