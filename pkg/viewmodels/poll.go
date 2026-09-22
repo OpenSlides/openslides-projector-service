@@ -24,29 +24,17 @@ func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
 	return false
 }
 
-/*
-func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.PollOption) decimal.Decimal {
-	switch config := poll.Config.(type) {
-	case *dsmodels.PollConfigRatingApproval:
-		return Poll_OneHundredPercentBaseRatingApproval(poll, config, option)
-	case *dsmodels.PollConfigRatingScore:
-		return Poll_OneHundredPercentBaseRatingScore(poll, config)
-	case *dsmodels.PollConfigSelection:
-		return Poll_OneHundredPercentBaseSelection(poll, config)
-	}
-
-	return decimal.Decimal{}
-}
-*/
-
+// TODO: Remove
 func Poll_OneHundredPercentBaseSelection(poll dsmodels.Poll, config *dsmodels.PollConfigSelection) decimal.Decimal {
 	return decimal.Decimal{}
 }
 
+// TODO: Remove
 func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
 	return decimal.Decimal{}
 }
 
+// TODO: Remove
 func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
 	return decimal.Decimal{}
 }

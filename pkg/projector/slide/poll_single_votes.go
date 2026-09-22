@@ -2,6 +2,7 @@ package slide
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -85,7 +86,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	pQ := req.Fetch.Poll()
 	poll, err := req.Fetch.Poll(*req.ContentObjectID).
 		Preload(pQ.BallotList().PollBallotUser()).
-		Preload(pQ.OptionList()).
+		Preload(pQ.OptionList().ContentObject()).
 		Preload(pQ.Config()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().VoteDelegatedToList().User().IsPresentInMeetingList()).
 		Preload(pQ.EntitledGroupList().MeetingUserList().User().IsPresentInMeetingList()).
@@ -106,8 +107,8 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		return nil, fmt.Errorf("could not load meeting settings: %w", err)
 	}
 
-	// var sortByResult bool
-	// req.Fetch.MeetingPollDefault_SortResultByVotes(poll.MeetingID).Lazy(&sortByResult)
+	var sortByResult bool
+	req.Fetch.MeetingPollDefault_SortResultByVotes(poll.MeetingID).Lazy(&sortByResult)
 
 	if nameOrderString == "" {
 		nameOrderString = dstypes.Meeting_PollProjectionNameOrderFirstLastName
@@ -135,59 +136,57 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	slideData := pollSingleVotesSlideData{}
-	isPublished := poll.State == "published"
+	isPublished := poll.Published && poll.State == dstypes.Poll_StateFinished
 	if isPublished {
-		/*
-			if err := pollSingleVotesResult(ctx, req.Fetch, &poll, &slideData); err != nil {
-				return nil, fmt.Errorf("calculating poll result: %w", err)
+		if err := pollSingleVotesResult(ctx, req, &poll, &slideData); err != nil {
+			return nil, fmt.Errorf("calculating poll result: %w", err)
+		}
+
+		if len(poll.OptionList) > 1 {
+			maxVotes := decimal.Decimal{}
+			for _, pollOption := range slideData.Options {
+				if maxVotes.LessThan(pollOption.TotalYes) {
+					maxVotes = pollOption.TotalYes
+				}
 			}
 
-			if len(poll.OptionList) > 1 {
-				maxVotes := decimal.Decimal{}
-				for _, pollOption := range poll.OptionList {
-					if maxVotes.LessThan(pollOption.Yes) {
-						maxVotes = pollOption.Yes
-					}
-				}
-
-				winner := -1
-				for oIdx, option := range slideData.Options {
-					if option.TotalYes.Equal(maxVotes) {
-						// If >1 winners found reset and stop
-						if winner != -1 {
-							slideData.Options[winner].Majority = false
-							idx := strconv.Itoa(slideData.Options[winner].ID)
-							for key, val := range voteMap {
-								if val == "Y" {
-									voteMap[key] = idx
-								}
-							}
-							break
-						}
-
-						winner = oIdx
-						option.Majority = true
-						idx := strconv.Itoa(option.ID)
+			winner := -1
+			for oIdx, option := range slideData.Options {
+				if option.TotalYes.Equal(maxVotes) {
+					// If >1 winners found reset and stop
+					if winner != -1 {
+						slideData.Options[winner].Majority = false
+						idx := strconv.Itoa(slideData.Options[winner].ID)
 						for key, val := range voteMap {
-							if val == idx {
-								voteMap[key] = "Y"
+							if val == "Y" {
+								voteMap[key] = idx
 							}
+						}
+						break
+					}
+
+					winner = oIdx
+					option.Majority = true
+					idx := strconv.Itoa(option.ID)
+					for key, val := range voteMap {
+						if val == idx {
+							voteMap[key] = "Y"
 						}
 					}
 				}
-
-				if sortByResult {
-					slices.SortFunc(slideData.Options, func(a, b *pollSingleVotesSlideOption) int {
-						if a.Majority && !b.Majority {
-							return -1
-						} else if b.Majority && !a.Majority {
-							return 1
-						}
-						return a.Weight - b.Weight
-					})
-				}
 			}
-		*/
+
+			if sortByResult {
+				slices.SortFunc(slideData.Options, func(a, b *pollSingleVotesSlideOption) int {
+					if a.Majority && !b.Majority {
+						return -1
+					} else if b.Majority && !a.Majority {
+						return 1
+					}
+					return a.Weight - b.Weight
+				})
+			}
+		}
 	}
 
 	voteEntryGroupsMap := map[int]*pollSingleVotesSlideVoteEntryGroup{}
@@ -362,38 +361,33 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 	return voteMap, nil
 }
 
-/*
 func pollSingleVotesResult(
 	ctx context.Context,
-	fetch *dsmodels.Fetch,
+	req *projectionRequest,
 	poll *dsmodels.Poll,
-	slideData *pollSingleVotesSlideData,
+	data *pollSingleVotesSlideData,
 ) error {
-	slideData.Options = []*pollSingleVotesSlideOption{}
-	slideData.TotalVotesvalid = poll.Votesvalid
-	onehundredPercentBase := viewmodels.Poll_OneHundredPercentBase(*poll, nil)
-	if !onehundredPercentBase.IsZero() {
-		slideData.PercVotesvalid = poll.Votesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-	}
+	data.Options = []*pollSingleVotesSlideOption{}
 
-	for _, pollOption := range poll.OptionList {
-		option := pollSingleVotesSlideOption{
-			ID:           pollOption.ID,
-			TotalYes:     pollOption.Yes,
-			TotalNo:      pollOption.No,
-			TotalAbstain: pollOption.Abstain,
-			Title:        pollOption.Text,
-			Weight:       pollOption.Weight,
-			Majority:     false,
+	switch poll.Config.(type) {
+	case *dsmodels.PollConfigApproval:
+		var result viewmodels.PollResultApproval
+		if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
+			return fmt.Errorf("parse approval poll result %w", err)
 		}
 
-		if contentObjectID, ok := pollOption.ContentObjectID.Value(); ok {
-			title, err := viewmodels.GetTitleInformationByContentObject(ctx, fetch, contentObjectID)
-			if err != nil {
-				return fmt.Errorf("could not get poll option title: %w", err)
-			}
+		data.TotalVotesvalid = decimal.NewFromInt(result.VotesValid())
 
-			option.Title = title.Title
+		onehundredPercentBase := result.OneHundredPercentBase(poll.Config.(*dsmodels.PollConfigApproval))
+		if !onehundredPercentBase.IsZero() {
+			data.PercVotesvalid = data.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		}
+
+		option := &pollSingleVotesSlideOption{
+			TotalYes:     result.Yes,
+			TotalNo:      result.No,
+			TotalAbstain: result.Abstain,
+			Majority:     false,
 		}
 
 		if !onehundredPercentBase.IsZero() {
@@ -402,30 +396,69 @@ func pollSingleVotesResult(
 			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
-		slideData.Options = append(slideData.Options, &option)
-	}
-
-	if pollOption, ok := poll.GlobalOption.Value(); ok {
-		option := pollSingleVotesSlideOption{
-			TotalYes:     pollOption.Yes,
-			TotalNo:      pollOption.No,
-			TotalAbstain: pollOption.Abstain,
+		data.Options = append(data.Options, option)
+	case *dsmodels.PollConfigSelection:
+		config := poll.Config.(*dsmodels.PollConfigSelection)
+		var result viewmodels.PollResultSelection
+		if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
+			return fmt.Errorf("parse approval poll result %w", err)
 		}
 
-		if !onehundredPercentBase.IsZero() && poll.OnehundredPercentBase[0] != 'Y' {
-			option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
-			option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		data.TotalVotesvalid = decimal.NewFromInt(result.VotesValid())
+
+		onehundredPercentBase := result.OneHundredPercentBase(config)
+		if !onehundredPercentBase.IsZero() {
+			data.PercVotesvalid = data.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
-		slideData.GlobalOption = &option
-		slideData.GlobalOptionMethods = map[string]bool{
-			"Yes":     poll.GlobalYes,
-			"No":      poll.GlobalNo,
-			"Abstain": poll.GlobalAbstain,
+		for _, option := range poll.OptionList {
+			optionLabel, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
+			if err != nil {
+				return fmt.Errorf("parsing option label: %w", err)
+			}
+
+			option := &pollSingleVotesSlideOption{
+				ID:       option.ID,
+				Title:    optionLabel,
+				TotalYes: result.Options[strconv.Itoa(option.ID)],
+				Weight:   option.Weight,
+				Majority: false,
+			}
+
+			if !onehundredPercentBase.IsZero() {
+				option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+				option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+				option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			}
+
+			data.Options = append(data.Options, option)
+		}
+
+		if config.MinOptionsAmount == 0 || config.AllowNota {
+			option := pollSingleVotesSlideOption{
+				TotalAbstain: result.Abstain,
+			}
+
+			if config.AllowNota && config.StrikeOut {
+				option.TotalYes = result.Nota
+			} else if config.AllowNota && !config.StrikeOut {
+				option.TotalNo = result.Nota
+			}
+
+			if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase[:3] != "yes" {
+				option.PercYes = option.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+				option.PercNo = option.TotalNo.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+				option.PercAbstain = option.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+			}
+
+			data.GlobalOption = &option
+			data.GlobalOptionMethods = map[string]bool{
+				"Yes":     config.AllowNota && config.StrikeOut,
+				"No":      config.AllowNota && !config.StrikeOut,
+				"Abstain": config.MinOptionsAmount == 0,
+			}
 		}
 	}
 
 	return nil
 }
-*/

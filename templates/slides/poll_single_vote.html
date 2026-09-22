@@ -40,7 +40,7 @@
                 {{ if .TotalNo.IsPositive }}
                   <div class="bg-no" style="flex: {{ .TotalNo }} 0 auto"></div>
                 {{ end }}
-                {{ if and .TotalAbstain.IsPositive (ne $.Poll.OnehundredPercentBase "YN") }}
+                {{ if and .TotalAbstain.IsPositive (ne $.Poll.Config.OnehundredPercentBase "yes_no") }}
                   <div class="bg-abstain" style="flex: {{ .TotalAbstain }} 0 auto"></div>
                 {{ end }}
               {{ end }}
@@ -66,7 +66,7 @@
             <div>
               {{ Loc.Get "Entitled users" }}:
               {{ .NumEntitledUsers }}
-              <!-- if eq .Poll.OnehundredPercentBase "entitled"
+              <!-- if eq .Poll.Config.OnehundredPercentBase "entitled"
                 { .Poll.entitled_users_at_stop.length | pollPercentBase: polldata }
               end -->
             </div>
@@ -85,7 +85,7 @@
                         {{ .Title }}:
                         {{ .TotalYes }}
                       </span>
-                      {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                      {{ if ne $.Poll.Config.OnehundredPercentBase "disabled" }}
                         <div class="yes percent">{{ .PercYes }} %</div>
                       {{ end }}
                     </div>
@@ -96,7 +96,7 @@
                       {{ .Title }}:
                       {{ .TotalYes }}
                     </span>
-                    {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                    {{ if ne $.Poll.Config.OnehundredPercentBase "disabled" }}
                       <div class="non-majority percent">{{ .PercYes }} %</div>
                     {{ end }}
                   </div>
@@ -109,7 +109,7 @@
                         {{ Loc.Get "Yes" }}:
                         {{ .TotalYes }}
                       </span>
-                      {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                      {{ if ne $.Poll.Config.OnehundredPercentBase "disabled" }}
                         <div class="yes percent">{{ .PercYes }} %</div>
                       {{ end }}
                     </div>
@@ -122,7 +122,7 @@
                         {{ Loc.Get "No" }}:
                         {{ .TotalNo }}
                       </span>
-                      {{ if ne $.Poll.OnehundredPercentBase "disabled" }}
+                      {{ if ne $.Poll.Config.OnehundredPercentBase "disabled" }}
                         <div class="no percent">{{ .PercNo }} %</div>
                       {{ end }}
                     </div>
