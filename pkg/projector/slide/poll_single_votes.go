@@ -109,35 +109,37 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 			return nil, fmt.Errorf("calculating poll result: %w", err)
 		}
 
-		if len(poll.OptionList) > 1 {
-			maxVotes := decimal.Decimal{}
-			for _, pollOption := range slideData.Options {
-				if maxVotes.LessThan(pollOption.TotalYes) {
-					maxVotes = pollOption.TotalYes
-				}
-			}
-
-			winner := -1
-			for oIdx, option := range slideData.Options {
-				if option.TotalYes.Equal(maxVotes) {
-					// If >1 winners found reset and stop
-					if winner != -1 {
-						slideData.Options[winner].Majority = false
-						idx := strconv.Itoa(slideData.Options[winner].ID)
-						for key, val := range voteMap {
-							if val == "yes" {
-								voteMap[key] = idx
-							}
-						}
-						break
+		if config, ok := poll.Config.(*dsmodels.PollConfigSelection); ok {
+			if config.RequiredMajority == dstypes.RequiredMajoritySelectionSimpleMajority {
+				maxVotes := decimal.Decimal{}
+				for _, pollOption := range slideData.Options {
+					if maxVotes.LessThan(pollOption.TotalYes) {
+						maxVotes = pollOption.TotalYes
 					}
+				}
 
-					winner = oIdx
-					option.Majority = true
-					idx := strconv.Itoa(option.ID)
-					for key, val := range voteMap {
-						if val == idx {
-							voteMap[key] = "yes"
+				winner := -1
+				for oIdx, option := range slideData.Options {
+					if option.TotalYes.Equal(maxVotes) {
+						// If >1 winners found reset and stop
+						if winner != -1 {
+							slideData.Options[winner].Majority = false
+							idx := strconv.Itoa(slideData.Options[winner].ID)
+							for key, val := range voteMap {
+								if val == "yes" {
+									voteMap[key] = idx
+								}
+							}
+							break
+						}
+
+						winner = oIdx
+						option.Majority = true
+						idx := strconv.Itoa(option.ID)
+						for key, val := range voteMap {
+							if val == idx {
+								voteMap[key] = "yes"
+							}
 						}
 					}
 				}
