@@ -30,6 +30,10 @@ func Option_OptionLabel(ctx context.Context, fetch *dsmodels.Fetch, locale *i18n
 				return "", fmt.Errorf("could not parse poll option fqid: %w", err)
 			}
 
+			if userMap[id] == 0 {
+				return locale.Get("Deleted user"), nil
+			}
+
 			muQ := fetch.MeetingUser(userMap[id])
 			mu, err := muQ.Preload(muQ.User()).Preload(muQ.StructureLevelList()).First(ctx)
 			if err != nil {
