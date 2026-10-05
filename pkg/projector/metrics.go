@@ -42,6 +42,6 @@ func logMetricMessage(pool *ProjectorPool) {
 	}
 
 	if data, err := json.Marshal(metrics); err == nil {
-		log.Info().Msg(string(data))
+		log.Info().Str("metric", string(data)).Msg("")
 	}
 }
