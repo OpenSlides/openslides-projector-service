@@ -159,7 +159,7 @@ func (p *projector) initProjector(ctx context.Context) {
 	initListener := make(chan *ProjectorUpdateEvent, len(p.projector.CurrentProjectionIDs)+5)
 	p.AddListener <- initListener
 
-	timeout := time.NewTimer(30 * time.Second)
+	timeout := time.NewTimer(10 * time.Second)
 	defer timeout.Stop()
 
 	for {
