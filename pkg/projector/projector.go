@@ -158,23 +158,40 @@ func (p *projector) initProjector(ctx context.Context) {
 
 	initListener := make(chan *ProjectorUpdateEvent, len(p.projector.CurrentProjectionIDs)+5)
 	p.AddListener <- initListener
-	updateCnt := 0
-	for event := range initListener {
-		if event.Event == "projection-updated" {
-			updateCnt++
-			if updateCnt >= len(p.projector.CurrentProjectionIDs) {
-				break
-			}
-		} else if event.Event == "projector-replace" && len(p.projector.CurrentProjectionIDs) == 0 {
-			break
-		}
 
-		if len(p.Projections) >= len(p.projector.CurrentProjectionIDs) {
-			p.log(zerolog.InfoLevel).Msg("multi projection update on init")
-			break
+	timeout := time.NewTimer(30 * time.Second)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-timeout.C:
+			log.Error().
+				Int("projector_id", p.projector.ID).
+				Msg("timed out while initializing projector")
+			p.RemoveListener <- initListener
+			return
+
+		case event, ok := <-initListener:
+			if !ok {
+				return
+			}
+
+			if event.Event == "projection-updated" &&
+				len(p.Projections) >= len(p.projector.CurrentProjectionIDs) {
+				p.RemoveListener <- initListener
+				return
+			}
+
+			if event.Event == "projector-replace" &&
+				len(p.projector.CurrentProjectionIDs) == 0 {
+				p.RemoveListener <- initListener
+				return
+			}
 		}
 	}
-	p.RemoveListener <- initListener
 }
 
 func (p *projector) subscribeProjector(ctx context.Context) {
