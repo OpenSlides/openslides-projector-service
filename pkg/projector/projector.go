@@ -168,8 +168,7 @@ func (p *projector) initProjector(ctx context.Context) {
 			return
 
 		case <-timeout.C:
-			log.Error().
-				Int("projector_id", p.projector.ID).
+			p.log(zerolog.InfoLevel).
 				Msg("timed out while initializing projector")
 			p.RemoveListener <- initListener
 			return
