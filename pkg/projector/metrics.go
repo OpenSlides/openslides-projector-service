@@ -29,13 +29,16 @@ func MetricLoop(ctx context.Context, d time.Duration, pool *ProjectorPool) {
 func logMetricMessage(pool *ProjectorPool) {
 	renderedProjections := 0
 	listeners := 0
-	for _, projector := range pool.projectors {
-		renderedProjections += len(projector.Projections)
-		listeners += len(projector.listeners)
-	}
+	projectors := 0
+	pool.projectors.Range(func(id string, val *projector) bool {
+		renderedProjections += len(val.Projections)
+		listeners += len(val.listeners)
+		projectors++
+		return true
+	})
 
 	metrics := map[string]int{
-		"projectors":          len(pool.projectors),
+		"projectors":          projectors,
 		"renderedProjections": renderedProjections,
 		"subscribers":         listeners,
 		"dbListeners":         pool.db.NumDsListeners(),

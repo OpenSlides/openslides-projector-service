@@ -24,7 +24,8 @@ import (
 type config struct {
 	Bind                 string        `env:"BIND" envDefault:":9051"`
 	Development          bool          `env:"OPENSLIDES_DEVELOPMENT" envDefault:"false"`
-	MetricInterval       time.Duration `env:"METRIC_INTERVAL" envDefault:"5m"`
+	MetricInterval       time.Duration `env:"METRIC_INTERVAL" envDefault:"10m"`
+	PoolCleanupInterval  time.Duration `env:"POOL_CLEANUP_INTERVAL" envDefault:"5m"`
 	PostgresHost         string        `env:"DATABASE_HOST" envDefault:"localhost"`
 	PostgresPort         string        `env:"DATABASE_PORT" envDefault:"5432"`
 	PostgresDatabase     string        `env:"DATABASE_NAME" envDefault:"openslides"`
@@ -93,9 +94,10 @@ func run(cfg config, lookup environment.Environmenter) error {
 
 	serverMux := http.NewServeMux()
 	projectorHttp.New(ctx, projectorHttp.ProjectorConfig{
-		RestricterUrl:  cfg.RestricterUrl,
-		MetricInterval: cfg.MetricInterval,
-	}, serverMux, ds, dsFlow)
+		RestricterUrl:       cfg.RestricterUrl,
+		MetricInterval:      cfg.MetricInterval,
+		PoolCleanupInterval: cfg.PoolCleanupInterval,
+	}, serverMux, ds)
 	fileHandler := http.StripPrefix("/system/projector/static/", http.FileServer(http.Dir("static")))
 	serverMux.Handle("/system/projector/static/", fileHandler)
 
