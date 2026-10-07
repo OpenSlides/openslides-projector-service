@@ -75,7 +75,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	}
 
 	var sortByResult bool
-	req.Fetch.MeetingPollDefault_SortResultByVotes(poll.MeetingID).Lazy(&sortByResult)
+	req.Fetch.MeetingPollSetting_SortResultByVotes(poll.MeetingID).Lazy(&sortByResult)
 
 	if nameOrderString == "" {
 		nameOrderString = dstypes.Meeting_PollProjectionNameOrderFirstLastName
