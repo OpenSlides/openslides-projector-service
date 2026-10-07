@@ -115,7 +115,7 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 	}
 
 	if val, isSet := configID.Value(); isSet {
-		sortResult, err := req.Fetch.MeetingPollDefault_SortResultByVotes(val).Value(ctx)
+		sortResult, err := req.Fetch.MeetingPollSetting_SortResultByVotes(val).Value(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("could not fetch meeting poll sort option: %w", err)
 		}
