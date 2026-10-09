@@ -6,18 +6,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	sync "github.com/zolstein/sync-map"
 	"html/template"
 	"runtime/debug"
 	"slices"
 	"strconv"
 	"time"
 
+	sync "github.com/zolstein/sync-map"
+
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
 	"github.com/OpenSlides/openslides-projector-service/pkg/database"
 	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/projector/slide"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/language"
 )
@@ -154,20 +156,41 @@ func projectorPreview(ctx context.Context, id int, lang language.Tag, db *databa
 func (p *projector) initProjector(ctx context.Context) {
 	go p.subscribeProjector(ctx)
 
-	initListener := make(chan *ProjectorUpdateEvent)
+	initListener := make(chan *ProjectorUpdateEvent, len(p.projector.CurrentProjectionIDs)+5)
 	p.AddListener <- initListener
-	updateCnt := 0
-	for event := range initListener {
-		if event.Event == "projection-updated" {
-			updateCnt++
-			if updateCnt >= len(p.projector.CurrentProjectionIDs) {
-				break
+
+	timeout := time.NewTimer(10 * time.Second)
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-timeout.C:
+			p.log(zerolog.ErrorLevel).
+				Msg("timed out while initializing projector")
+			p.RemoveListener <- initListener
+			return
+
+		case event, ok := <-initListener:
+			if !ok {
+				return
 			}
-		} else if event.Event == "projector-replace" && len(p.projector.CurrentProjectionIDs) == 0 {
-			break
+
+			if event.Event == "projection-updated" &&
+				len(p.Projections) >= len(p.projector.CurrentProjectionIDs) {
+				p.RemoveListener <- initListener
+				return
+			}
+
+			if event.Event == "projector-replace" &&
+				len(p.projector.CurrentProjectionIDs) == 0 {
+				p.RemoveListener <- initListener
+				return
+			}
 		}
 	}
-	p.RemoveListener <- initListener
 }
 
 func (p *projector) subscribeProjector(ctx context.Context) {
@@ -180,7 +203,7 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 				err = fmt.Errorf("pkg: %v", r)
 			}
 
-			log.Err(err).Msgf("panic on projector: %d\n%s", p.projector.ID, string(debug.Stack()))
+			p.log(zerolog.ErrorLevel).Err(err).Msgf("panic on projector: %d\n%s", p.projector.ID, string(debug.Stack()))
 		}
 	}()
 
@@ -188,7 +211,7 @@ func (p *projector) subscribeProjector(ctx context.Context) {
 
 	projectionUpdate, projections, err := p.getProjectionSubscription(ctx)
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not open projection subscription")
+		p.log(zerolog.FatalLevel).Err(err).Msg("could not open projection subscription")
 	}
 
 	for {
@@ -277,20 +300,19 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 		f.Organization_ThemeID(1).Lazy(&themeId)
 
 		err := f.Execute(ctx)
-		var doesNotExist dsfetch.DoesNotExistError
-		if errors.As(err, &doesNotExist) {
+		if _, ok := errors.AsType[dsfetch.DoesNotExistError](err); ok {
 			p.sendToAll(&ProjectorUpdateEvent{"deleted", ""})
 			p.ctxCancel()
 			return
 		} else if err != nil {
-			log.Error().Err(err).Msg("failed to update projector data")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("failed to update projector data")
 			return
 		}
 
 		if len(customTranslationsRaw) > 0 {
 			var customTranslations map[string]string
 			if err := json.Unmarshal(customTranslationsRaw, &customTranslations); err != nil {
-				log.Error().Err(err).Msg("failed parsing custom translations")
+				p.log(zerolog.ErrorLevel).Err(err).Msg("failed parsing custom translations")
 			} else {
 				p.locale.SetCustomTranslations(customTranslations)
 			}
@@ -310,24 +332,24 @@ func (p *projector) subscribeSettings(ctx context.Context) {
 
 		p.pSettings.Theme, err = f.Theme(themeId).First(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to load theme")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("failed to load theme")
 			return
 		}
 
 		encodedData, err := json.Marshal(p.pSettings)
 		if err != nil {
-			log.Error().Err(err).Msg("could not encode projector data")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("could not encode projector data")
 		} else {
 			p.sendToAll(&ProjectorUpdateEvent{"settings", string(encodedData)})
 		}
 
 		if err = p.updateFullContent(); err != nil {
-			log.Error().Err(err).Msg("error generating projector content after settings update")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("error generating projector content after settings update")
 		}
 
 		currentContent, err := json.Marshal(p.Content)
 		if err != nil {
-			log.Error().Err(err).Msg("error marshalling projector replace content")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("error marshalling projector replace content")
 		}
 		p.sendToAll(&ProjectorUpdateEvent{"projector-replace", string(currentContent)})
 	})
@@ -361,7 +383,7 @@ func (p *projector) processProjectionUpdate(updated []int, projections *sync.Map
 	if len(updatedProjections) > 0 {
 		eventContent, err := json.Marshal(updatedProjections)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to encode update event")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("failed to encode update event")
 		} else {
 			p.sendToAll(&ProjectorUpdateEvent{"projection-updated", string(eventContent)})
 		}
@@ -369,7 +391,7 @@ func (p *projector) processProjectionUpdate(updated []int, projections *sync.Map
 
 	if len(updatedProjections) > 0 || deletionOccured {
 		if err := p.updateFullContent(); err != nil {
-			log.Error().Err(err).Msg("failed to generate projector content")
+			p.log(zerolog.ErrorLevel).Err(err).Msg("failed to generate projector content")
 		}
 	}
 }
@@ -380,7 +402,7 @@ func (p *projector) sendToAll(event *ProjectorUpdateEvent) {
 		case listener <- event:
 		default:
 			// TODO: Check if handling makes sense
-			log.Error().Msg("could not send a projection: listener queue is full")
+			p.log(zerolog.ErrorLevel).Msgf("could not send a projection: listener queue is full")
 		}
 	}
 }
@@ -421,7 +443,7 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 		p.db.NewContext(ctx, func(f *dsmodels.Fetch) {
 			projectionIDs, err := f.Projector_CurrentProjectionIDs(p.projector.ID).Value(ctx)
 			if err != nil {
-				log.Error().Err(err).Msg("failed to subscribe projection ids")
+				p.log(zerolog.ErrorLevel).Err(err).Msg("failed to subscribe projection ids")
 				return
 			}
 
@@ -461,6 +483,10 @@ func (p *projector) getProjectionSubscription(ctx context.Context) (<-chan []int
 	}()
 
 	return updateChannel, &projections, nil
+}
+
+func (p *projector) log(level zerolog.Level) *zerolog.Event {
+	return log.WithLevel(level).Int("projector_id", p.projector.ID).Int("projections", len(p.Projections))
 }
 
 func djb2(str string) uint64 {
