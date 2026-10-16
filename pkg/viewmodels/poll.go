@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
@@ -12,100 +13,325 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func Poll_OneHundredPercentBase(poll dsmodels.Poll, option *dsmodels.Option) decimal.Decimal {
-	if len(poll.OptionIDs) == 1 && option == nil {
-		option = &poll.OptionList[0]
+func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
+	switch config := poll.Config.(type) {
+	case *dsmodels.PollConfigApproval:
+		return true
+	case *dsmodels.PollConfigSelection:
+		return config.DisplayChart == "pie"
 	}
 
-	if len(poll.OptionIDs) == 0 {
-		return decimal.Decimal{}
-	}
+	return false
+}
 
-	// YN and YNA need an selected option
-	if option == nil && (poll.OnehundredPercentBase == "YN" || poll.OnehundredPercentBase == "YNA") {
-		return decimal.Decimal{}
-	}
+// TODO: Remove
+func Poll_OneHundredPercentBaseSelection(poll dsmodels.Poll, config *dsmodels.PollConfigSelection) decimal.Decimal {
+	return decimal.Decimal{}
+}
 
-	switch poll.OnehundredPercentBase {
-	case "Y":
-		total := poll.Votesvalid
-		if poll.GlobalOption != nil {
-			if globalOption, isSet := poll.GlobalOption.Value(); isSet {
-				abstain := globalOption.Abstain
-				no := globalOption.No
-				total = total.Sub(no).Sub(abstain)
-			}
-		}
-		return total
-	case "YN":
-		yes := option.Yes
-		no := option.No
-		return yes.Add(no)
-	case "YNA":
-		yes := option.Yes
-		no := option.No
-		abstain := option.Abstain
+// TODO: Remove
+func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
+	return decimal.Decimal{}
+}
 
-		return yes.Add(no).Add(abstain)
+// TODO: Remove
+func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
+	return decimal.Decimal{}
+}
+
+type PollResult interface {
+	VotesInvalid() int64
+	VotesValid() int64
+	VotesCast() int64
+}
+
+type PollResultApproval struct {
+	Yes          decimal.Decimal `json:"yes"`
+	No           decimal.Decimal `json:"no"`
+	Abstain      decimal.Decimal `json:"abstain"`
+	Invalid      int             `json:"invalid"`
+	TotalBallots int             `json:"total_ballots"`
+}
+
+func (r *PollResultApproval) VotesInvalid() int64 {
+	return int64(r.Invalid)
+}
+
+func (r *PollResultApproval) VotesValid() int64 {
+	return int64(r.TotalBallots - r.Invalid)
+}
+
+func (r *PollResultApproval) VotesCast() int64 {
+	return int64(r.TotalBallots)
+}
+
+func (r *PollResultApproval) OneHundredPercentBase(config *dsmodels.PollConfigApproval) decimal.Decimal {
+	switch config.OnehundredPercentBase {
+	case "yes_no":
+		return r.Yes.Add(r.No)
 	case "valid":
-		valid := poll.Votesvalid
-		return valid
-	case "entitled":
-		entitled, err := Poll_EntitledUsers(poll)
-		if err != nil {
-			return decimal.Decimal{}
-		}
+		return r.Yes.Add(r.No).Add(r.Abstain)
+	}
 
-		return decimal.NewFromInt(int64(len(entitled)))
-	case "entitled_present":
-		entitled, err := Poll_EntitledUsers(poll)
-		if err != nil {
-			return decimal.Decimal{}
-		}
+	return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
+}
 
-		present := int64(0)
-		for _, u := range entitled {
-			if u.Present {
-				present++
-			}
+type PollResultSelection struct {
+	Options      map[string]decimal.Decimal `json:"-"`
+	Nota         decimal.Decimal            `json:"nota"`
+	Abstain      decimal.Decimal            `json:"abstain"`
+	Invalid      int                        `json:"invalid"`
+	TotalBallots int                        `json:"total_ballots"`
+}
+
+func (p *PollResultSelection) UnmarshalJSON(data []byte) error {
+	type PollResultSelection_ PollResultSelection
+
+	var aux PollResultSelection_
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return fmt.Errorf("decode PollResultSelection: %w", err)
+	}
+	*p = PollResultSelection(aux)
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("decode PollResultSelection raw map: %w", err)
+	}
+
+	delete(raw, "nota")
+	delete(raw, "abstain")
+	delete(raw, "invalid")
+	delete(raw, "total_ballots")
+
+	p.Options = make(map[string]decimal.Decimal, len(raw))
+	for key, value := range raw {
+		var d decimal.Decimal
+		if err := json.Unmarshal(value, &d); err != nil {
+			return fmt.Errorf("decode PollResultSelection option %q: %w", key, err)
 		}
-		return decimal.NewFromInt(present)
+		p.Options[key] = d
+	}
+
+	return nil
+}
+
+func (r *PollResultSelection) VotesInvalid() int64 {
+	return int64(r.Invalid)
+}
+
+func (r *PollResultSelection) VotesValid() int64 {
+	return int64(r.TotalBallots - r.Invalid)
+}
+
+func (r *PollResultSelection) VotesCast() int64 {
+	return int64(r.TotalBallots)
+}
+
+func (r *PollResultSelection) OneHundredPercentBase(config *dsmodels.PollConfigSelection) decimal.Decimal {
+	// TODO: Add missing bases
+	switch config.OnehundredPercentBase {
+	case "no_general":
+	case "valid":
+	}
+
+	return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
+}
+
+type PollResultRatingScore struct {
+	Options      map[string]decimal.Decimal `json:",inline"`
+	Abstain      decimal.Decimal            `json:"abstain"`
+	Invalid      int                        `json:"invalid"`
+	TotalBallots int                        `json:"total_ballots"`
+}
+
+func (p *PollResultRatingScore) UnmarshalJSON(data []byte) error {
+	type PollResultRatingScore_ PollResultRatingScore
+
+	var aux PollResultRatingScore_
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return fmt.Errorf("decode PollResultRatingScore: %w", err)
+	}
+	*p = PollResultRatingScore(aux)
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("decode PollResultRatingScore raw map: %w", err)
+	}
+
+	delete(raw, "abstain")
+	delete(raw, "invalid")
+	delete(raw, "total_ballots")
+
+	p.Options = make(map[string]decimal.Decimal, len(raw))
+	for key, value := range raw {
+		var d decimal.Decimal
+		if err := json.Unmarshal(value, &d); err != nil {
+			return fmt.Errorf("decode PollResultRatingScore option %q: %w", key, err)
+		}
+		p.Options[key] = d
+	}
+
+	return nil
+}
+
+func (r *PollResultRatingScore) VotesInvalid() int64 {
+	return int64(r.Invalid)
+}
+
+func (r *PollResultRatingScore) VotesValid() int64 {
+	return int64(r.TotalBallots - r.Invalid)
+}
+
+func (r *PollResultRatingScore) VotesCast() int64 {
+	return int64(r.TotalBallots)
+}
+
+func (r *PollResultRatingScore) OneHundredPercentBase(config *dsmodels.PollConfigRatingScore) decimal.Decimal {
+	// TODO: Add missing bases
+	switch config.OnehundredPercentBase {
+	}
+
+	return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
+}
+
+type PollResultRatingApprovalOption struct {
+	Yes     decimal.Decimal `json:"yes"`
+	No      decimal.Decimal `json:"no"`
+	Abstain decimal.Decimal `json:"abstain"`
+}
+
+type PollResultRatingApproval struct {
+	Options      map[string]PollResultRatingApprovalOption `json:",inline"`
+	Abstain      decimal.Decimal                           `json:"abstain"`
+	Invalid      int                                       `json:"invalid"`
+	TotalBallots int                                       `json:"total_ballots"`
+}
+
+func (p *PollResultRatingApproval) UnmarshalJSON(data []byte) error {
+	type PollResultRatingApproval_ PollResultRatingApproval
+
+	var aux PollResultRatingApproval_
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return fmt.Errorf("decode PollResultRatingApproval: %w", err)
+	}
+	*p = PollResultRatingApproval(aux)
+
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("decode PollResultRatingApproval raw map: %w", err)
+	}
+
+	delete(raw, "abstain")
+	delete(raw, "invalid")
+	delete(raw, "total_ballots")
+
+	p.Options = make(map[string]PollResultRatingApprovalOption, len(raw))
+	for key, value := range raw {
+		var opt PollResultRatingApprovalOption
+		if err := json.Unmarshal(value, &opt); err != nil {
+			return fmt.Errorf("decode PollResultRatingApproval option %q: %w", key, err)
+		}
+		p.Options[key] = opt
+	}
+
+	return nil
+}
+
+func (r *PollResultRatingApproval) VotesInvalid() int64 {
+	return int64(r.Invalid)
+}
+
+func (r *PollResultRatingApproval) VotesValid() int64 {
+	return int64(r.TotalBallots - r.Invalid)
+}
+
+func (r *PollResultRatingApproval) VotesCast() int64 {
+	return int64(r.TotalBallots)
+}
+
+func (r *PollResultRatingApproval) OneHundredPercentBase(config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
+	if option == nil {
+		return decimal.Decimal{}
+	}
+
+	opt, ok := r.Options[strconv.Itoa(option.ID)]
+	if !ok {
+		if val, ok := option.ContentObjectID.Value(); ok {
+			opt = r.Options[val]
+		} else if option.Text != "" {
+			opt = r.Options["text-"+strconv.Itoa(int(djb2(option.Text)))]
+		}
+	}
+	switch config.OnehundredPercentBase {
+	case "yes_no":
+		return opt.Yes.Add(opt.No)
+	case "valid":
+		return opt.Yes.Add(opt.No).Add(opt.Abstain)
+	}
+
+	return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
+}
+
+func genericOnehundredPercentBase(r PollResult, base string) decimal.Decimal {
+	switch base {
 	case "cast":
-		cast := poll.Votescast
-		return cast
+		return decimal.NewFromInt(r.VotesCast())
+	case "valid":
+		return decimal.NewFromInt(r.VotesValid())
 	}
 
 	return decimal.Decimal{}
 }
 
-type EntitledUsersAtStop []struct {
-	UserID  int  `json:"user_id"`
-	Present bool `json:"present"`
-}
+func RemapPollResultOptions[V any](resultMap map[string]V, options []dsmodels.PollOption) map[int]V {
+	result := map[int]V{}
+	for key, val := range resultMap {
+		iKey, err := strconv.Atoi(key)
+		if err == nil {
+			result[iKey] = val
+			continue
+		}
 
-func Poll_EntitledUsers(poll dsmodels.Poll) (EntitledUsersAtStop, error) {
-	var users EntitledUsersAtStop
-	if err := json.Unmarshal(poll.EntitledUsersAtStop, &users); err != nil {
-		return nil, fmt.Errorf("parse los id: %w", err)
+		if key[:5] == "text-" {
+			hash, err := strconv.Atoi(key[5:])
+			if err != nil {
+				continue
+			}
+
+			for _, option := range options {
+				if djb2(option.Text) == uint64(hash) {
+					result[option.ID] = val
+					break
+				}
+			}
+		} else {
+			for _, option := range options {
+				if objID, ok := option.ContentObjectID.Value(); ok && objID == key {
+					result[option.ID] = val
+					break
+				}
+			}
+		}
 	}
 
-	return users, nil
+	return result
 }
 
-func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Meeting_MotionPollProjectionNameOrderFirst) []int {
-	entitledUserIDsMap := map[int]struct{}{}
+func djb2(str string) uint64 {
+	var hash uint64 = 5381
+	for i := 0; i < len(str); i++ {
+		hash = ((hash << 5) + hash) + uint64(str[i])
+	}
+	return hash
+}
+
+func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Meeting_PollProjectionNameOrderFirst) []int {
 	meetingUserMap := make(map[int]dsmodels.MeetingUser)
-
-	if poll.EntitledUsersAtStop != nil {
-		var entitledUsersAtStop []struct {
-			UserID int `json:"user_id"`
-		}
-		if err := json.Unmarshal(poll.EntitledUsersAtStop, &entitledUsersAtStop); err != nil {
-			return []int{}
-		}
-
-		for _, entry := range entitledUsersAtStop {
-			entitledUserIDsMap[entry.UserID] = struct{}{}
+	if poll.EntitledUserIDs != nil {
+		for _, entry := range poll.EntitledUserList {
+			if mu, isSet := entry.MeetingUser.Value(); isSet {
+				meetingUserMap[mu.ID] = mu
+			}
 		}
 
 		for _, group := range poll.EntitledGroupList {
@@ -116,7 +342,6 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Mee
 	} else {
 		for _, group := range poll.EntitledGroupList {
 			for _, mu := range group.MeetingUserList {
-				entitledUserIDsMap[mu.UserID] = struct{}{}
 				meetingUserMap[mu.UserID] = mu
 			}
 		}
@@ -126,7 +351,7 @@ func Poll_EntitledUserIDsSorted(poll dsmodels.Poll, nameOrderSetting dstypes.Mee
 		nameOrderSetting = "last_name"
 	}
 
-	entitledUserIDs := slices.Collect(maps.Keys(entitledUserIDsMap))
+	entitledUserIDs := slices.Collect(maps.Keys(meetingUserMap))
 	slices.SortFunc(entitledUserIDs, func(aID, bID int) int {
 		muA, aExists := meetingUserMap[aID]
 		muB, bExists := meetingUserMap[bID]
