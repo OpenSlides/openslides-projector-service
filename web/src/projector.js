@@ -131,6 +131,8 @@ export function Projector(host, id, auth = () => ``, config = {}) {
       };
       clock.update();
 
+      sizeListener.update();
+
       console.debug(`[projector]`, `connected ${id}`);
     });
 
