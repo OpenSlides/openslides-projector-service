@@ -24,21 +24,6 @@ func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
 	return false
 }
 
-// TODO: Remove
-func Poll_OneHundredPercentBaseSelection(poll dsmodels.Poll, config *dsmodels.PollConfigSelection) decimal.Decimal {
-	return decimal.Decimal{}
-}
-
-// TODO: Remove
-func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
-	return decimal.Decimal{}
-}
-
-// TODO: Remove
-func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
-	return decimal.Decimal{}
-}
-
 type PollResult interface {
 	VotesInvalid() int64
 	VotesValid() int64

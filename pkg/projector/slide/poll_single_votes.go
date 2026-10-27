@@ -13,6 +13,7 @@ import (
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
+
 type pollSingleVotesSlideVoteEntry struct {
 	Value     string
 	Present   bool
