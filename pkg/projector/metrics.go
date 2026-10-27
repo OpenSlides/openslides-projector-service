@@ -41,7 +41,7 @@ func logMetricMessage(pool *ProjectorPool) {
 		"dbListeners":         pool.db.NumDsListeners(),
 	}
 
-	if data, err := json.Marshal(metrics); err != nil {
-		log.Info().Msg(string(data))
+	if data, err := json.Marshal(metrics); err == nil {
+		log.Info().RawJSON("metric", data).Msg("")
 	}
 }
