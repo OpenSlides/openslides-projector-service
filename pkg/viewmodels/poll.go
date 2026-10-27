@@ -65,6 +65,7 @@ type PollResultSelection struct {
 	Options      map[string]decimal.Decimal `json:"-"`
 	Nota         decimal.Decimal            `json:"nota"`
 	Abstain      decimal.Decimal            `json:"abstain"`
+	Empty        decimal.Decimal            `json:"empty"`
 	Invalid      int                        `json:"invalid"`
 	TotalBallots int                        `json:"total_ballots"`
 }

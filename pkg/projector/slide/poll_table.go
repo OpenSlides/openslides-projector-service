@@ -264,10 +264,10 @@ func pollSelectionTable(
 		}
 	}
 
-	if config.MinOptionsAmount == 0 {
+	if poll.AllowEmpty {
 		data.Sums = append(data.Sums, pollSlideTableSum{
 			Name:  req.Locale.Get("General abstain"),
-			Total: result.Abstain,
+			Total: result.Empty,
 		})
 	}
 
