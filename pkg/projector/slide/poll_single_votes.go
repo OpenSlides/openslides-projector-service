@@ -13,7 +13,6 @@ import (
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
 )
-
 type pollSingleVotesSlideVoteEntry struct {
 	Value     string
 	Present   bool
@@ -320,7 +319,9 @@ func mapUsersToVote(poll *dsmodels.Poll) (map[int]string, error) {
 	for _, ballot := range poll.BallotList {
 		if user, ok := ballot.PollBallotUser.Value(); ok {
 			if muID, ok := user.RepresentedMeetingUserID.Value(); ok {
-				if len(ballot.Value) > 2 {
+				if ballot.Value == "null" {
+					voteMap[muID] = ballot.Value
+				} else if len(ballot.Value) > 2 {
 					voteMap[muID] = ballot.Value[1 : len(ballot.Value)-1]
 				}
 			}
