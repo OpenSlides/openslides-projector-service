@@ -9,6 +9,7 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
@@ -250,6 +251,8 @@ func pollSelectionTable(
 		data.Options = append(data.Options, optData)
 	}
 
+	displayGeneralPercent := config.OnehundredPercentBase != dstypes.SelectionOnehundredPercentBasesDisabled &&
+		config.OnehundredPercentBase != dstypes.SelectionOnehundredPercentBasesNoGeneral
 	if config.AllowNota {
 		if config.StrikeOut {
 			data.Sums = append(data.Sums, pollSlideTableSum{
@@ -262,6 +265,10 @@ func pollSelectionTable(
 				Total: result.Nota,
 			})
 		}
+
+		if displayGeneralPercent && !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = result.Nota.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
 	}
 
 	if poll.AllowEmpty {
@@ -269,9 +276,13 @@ func pollSelectionTable(
 			Name:  req.Locale.Get("General abstain"),
 			Total: result.Empty,
 		})
+
+		if displayGeneralPercent && !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = result.Empty.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
 	}
 
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually")...)
+	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == dstypes.PollVisibilityManually)...)
 
 	return data, nil
 }

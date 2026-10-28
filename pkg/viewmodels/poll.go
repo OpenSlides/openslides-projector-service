@@ -54,7 +54,7 @@ func (r *PollResultApproval) OneHundredPercentBase(config *dsmodels.PollConfigAp
 	switch config.OnehundredPercentBase {
 	case "yes_no":
 		return r.Yes.Add(r.No)
-	case "valid":
+	case "valid", "yes_no_abstain":
 		return r.Yes.Add(r.No).Add(r.Abstain)
 	}
 

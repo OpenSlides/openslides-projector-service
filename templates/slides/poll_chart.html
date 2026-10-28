@@ -40,13 +40,21 @@
                   </td>
                 </tr>
               {{ end }}
-              <tr class="valid-votes-row">
-                <td>{{ Loc.Get "Valid votes" }}</td>
-                <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
-                {{ if .Data.PercValidvotes }}
-                  <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
-                {{ end }}
-              </tr>
+              {{ if eq .Poll.Config.OnehundredPercentBase "cast" }}
+                <tr class="valid-votes-row">
+                  <td>{{ Loc.Get "Casted ballots" }}</td>
+                  <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+                  <td class="result-cell-definition">100 %</td>
+                </tr>
+              {{ else }}
+                <tr class="valid-votes-row">
+                  <td>{{ Loc.Get "Valid votes" }}</td>
+                  <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+                  {{ if .Data.PercValidvotes }}
+                    <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
+                  {{ end }}
+                </tr>
+              {{ end }}
             </tbody>
           </table>
         </div>
