@@ -88,6 +88,7 @@ func (p *PollResultSelection) UnmarshalJSON(data []byte) error {
 	delete(raw, "abstain")
 	delete(raw, "invalid")
 	delete(raw, "total_ballots")
+	delete(raw, "empty")
 
 	p.Options = make(map[string]decimal.Decimal, len(raw))
 	for key, value := range raw {
@@ -114,10 +115,18 @@ func (r *PollResultSelection) VotesCast() int64 {
 }
 
 func (r *PollResultSelection) OneHundredPercentBase(config *dsmodels.PollConfigSelection) decimal.Decimal {
-	// TODO: Add missing bases
+	var optionVotes decimal.Decimal
+	for _, amount := range r.Options {
+		optionVotes = optionVotes.Add(amount)
+	}
+
 	switch config.OnehundredPercentBase {
 	case "no_general":
+		return optionVotes
 	case "valid":
+		optionVotes = optionVotes.Add(r.Empty)
+		optionVotes = optionVotes.Add(r.Nota)
+		return optionVotes
 	}
 
 	return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
@@ -127,6 +136,7 @@ type PollResultRatingScore struct {
 	Options      map[string]decimal.Decimal `json:",inline"`
 	Abstain      decimal.Decimal            `json:"abstain"`
 	Invalid      int                        `json:"invalid"`
+	Empty        int                        `json:"empty"`
 	TotalBallots int                        `json:"total_ballots"`
 }
 
@@ -147,6 +157,7 @@ func (p *PollResultRatingScore) UnmarshalJSON(data []byte) error {
 	delete(raw, "abstain")
 	delete(raw, "invalid")
 	delete(raw, "total_ballots")
+	delete(raw, "empty")
 
 	p.Options = make(map[string]decimal.Decimal, len(raw))
 	for key, value := range raw {
@@ -190,6 +201,7 @@ type PollResultRatingApproval struct {
 	Options      map[string]PollResultRatingApprovalOption `json:",inline"`
 	Abstain      decimal.Decimal                           `json:"abstain"`
 	Invalid      int                                       `json:"invalid"`
+	Empty        int                                       `json:"empty"`
 	TotalBallots int                                       `json:"total_ballots"`
 }
 
@@ -210,6 +222,7 @@ func (p *PollResultRatingApproval) UnmarshalJSON(data []byte) error {
 	delete(raw, "abstain")
 	delete(raw, "invalid")
 	delete(raw, "total_ballots")
+	delete(raw, "empty")
 
 	p.Options = make(map[string]PollResultRatingApprovalOption, len(raw))
 	for key, value := range raw {
