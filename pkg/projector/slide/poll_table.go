@@ -88,23 +88,6 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 		}
 	}
 
-	/* TODO: Readd if available
-	switch poll.OnehundredPercentBase {
-	case "entitled":
-		data.Sums = append(data.Sums, pollSlideTableSum{
-			Name:  req.Locale.Get("Entitled users"),
-			Total: onehundredPercentBase,
-			Perc:  "100",
-		})
-	case "entitled_present":
-		data.Sums = append(data.Sums, pollSlideTableSum{
-			Name:  req.Locale.Get("Entitled present users"),
-			Total: onehundredPercentBase,
-			Perc:  "100",
-		})
-	}
-	*/
-
 	var configID dsfetch.Maybe[int]
 	if strings.HasPrefix(poll.ContentObjectID, "assignment") {
 		configID, err = req.Fetch.Meeting_AssignmentPollConfigID(poll.MeetingID).Value(ctx)
@@ -157,9 +140,10 @@ func pollRatingApprovalTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
+	var onehundredPercentBase decimal.Decimal
 	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	for _, option := range poll.OptionList {
-		onehundredPercentBase := result.OneHundredPercentBase(&config, &option)
+		onehundredPercentBase = result.OneHundredPercentBase(&config, &option)
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 		if err != nil {
 			return data, err
@@ -183,7 +167,28 @@ func pollRatingApprovalTable(
 		data.Options = append(data.Options, optData)
 	}
 
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually")...)
+	if config.OnehundredPercentBase == dstypes.RatingApprovalOnehundredPercentBasesEntitled ||
+		config.OnehundredPercentBase == dstypes.RatingApprovalOnehundredPercentBasesEntitledPresent {
+		onehundredPercentBase = result.OneHundredPercentBase(&config, nil)
+	} else {
+		onehundredPercentBase = decimal.Decimal{}
+	}
+	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually", onehundredPercentBase)...)
+
+	switch config.OnehundredPercentBase {
+	case dstypes.RatingApprovalOnehundredPercentBasesEntitled:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled users"),
+			Total: decimal.NewFromInt(result.VotesEntitledUsers()),
+			Perc:  "100",
+		})
+	case dstypes.RatingApprovalOnehundredPercentBasesEntitledPresent:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled present users"),
+			Total: decimal.NewFromInt(result.VotesEntitledUsersPresent()),
+			Perc:  "100",
+		})
+	}
 
 	return data, nil
 }
@@ -205,7 +210,7 @@ func pollRatingScoreTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually")...)
+	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually", decimal.Decimal{})...)
 
 	return data, nil
 }
@@ -321,10 +326,25 @@ func pollSelectionTable(
 		}
 	}
 
+	switch config.OnehundredPercentBase {
+	case dstypes.SelectionOnehundredPercentBasesEntitled:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled users"),
+			Total: onehundredPercentBase,
+			Perc:  "100",
+		})
+	case dstypes.SelectionOnehundredPercentBasesEntitledPresent:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled present users"),
+			Total: onehundredPercentBase,
+			Perc:  "100",
+		})
+	}
+
 	return data, nil
 }
 
-func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, showCast bool) []pollSlideTableSum {
+func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, showCast bool, base decimal.Decimal) []pollSlideTableSum {
 	sums := []pollSlideTableSum{}
 	sums = append(sums, pollSlideTableSum{
 		Name:  locale.Get("Valid votes"),
@@ -343,6 +363,12 @@ func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, s
 			Name:  locale.Get("Total votes cast"),
 			Total: decimal.NewFromInt(result.VotesCast()),
 		})
+	}
+
+	if !base.IsZero() {
+		for i, amount := range sums {
+			sums[i].Perc = amount.Total.DivRound(base, 5).Mul(decimal.NewFromInt(100)).String()
+		}
 	}
 
 	return sums
