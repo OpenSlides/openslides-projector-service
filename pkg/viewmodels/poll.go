@@ -24,33 +24,22 @@ func Poll_ShouldShowChart(poll dsmodels.Poll) bool {
 	return false
 }
 
-// TODO: Remove
-func Poll_OneHundredPercentBaseSelection(poll dsmodels.Poll, config *dsmodels.PollConfigSelection) decimal.Decimal {
-	return decimal.Decimal{}
-}
-
-// TODO: Remove
-func Poll_OneHundredPercentBaseRatingApproval(poll dsmodels.Poll, config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
-	return decimal.Decimal{}
-}
-
-// TODO: Remove
-func Poll_OneHundredPercentBaseRatingScore(poll dsmodels.Poll, config *dsmodels.PollConfigRatingScore) decimal.Decimal {
-	return decimal.Decimal{}
-}
-
 type PollResult interface {
 	VotesInvalid() int64
 	VotesValid() int64
 	VotesCast() int64
+	VotesEntitledUsers() int64
+	VotesEntitledUsersPresent() int64
 }
 
 type PollResultApproval struct {
-	Yes          decimal.Decimal `json:"yes"`
-	No           decimal.Decimal `json:"no"`
-	Abstain      decimal.Decimal `json:"abstain"`
-	Invalid      int             `json:"invalid"`
-	TotalBallots int             `json:"total_ballots"`
+	Yes                  decimal.Decimal `json:"yes"`
+	No                   decimal.Decimal `json:"no"`
+	Abstain              decimal.Decimal `json:"abstain"`
+	Invalid              int             `json:"invalid"`
+	TotalBallots         int             `json:"total_ballots"`
+	EntitledUsers        int             `json:"entitled_users"`
+	EntitledUsersPresent int             `json:"entitled_users_present"`
 }
 
 func (r *PollResultApproval) VotesInvalid() int64 {
@@ -65,11 +54,19 @@ func (r *PollResultApproval) VotesCast() int64 {
 	return int64(r.TotalBallots)
 }
 
+func (r *PollResultApproval) VotesEntitledUsers() int64 {
+	return int64(r.EntitledUsers)
+}
+
+func (r *PollResultApproval) VotesEntitledUsersPresent() int64 {
+	return int64(r.EntitledUsersPresent)
+}
+
 func (r *PollResultApproval) OneHundredPercentBase(config *dsmodels.PollConfigApproval) decimal.Decimal {
 	switch config.OnehundredPercentBase {
 	case "yes_no":
 		return r.Yes.Add(r.No)
-	case "valid":
+	case "valid", "yes_no_abstain":
 		return r.Yes.Add(r.No).Add(r.Abstain)
 	}
 
@@ -77,11 +74,14 @@ func (r *PollResultApproval) OneHundredPercentBase(config *dsmodels.PollConfigAp
 }
 
 type PollResultSelection struct {
-	Options      map[string]decimal.Decimal `json:"-"`
-	Nota         decimal.Decimal            `json:"nota"`
-	Abstain      decimal.Decimal            `json:"abstain"`
-	Invalid      int                        `json:"invalid"`
-	TotalBallots int                        `json:"total_ballots"`
+	Options              map[string]decimal.Decimal `json:"-"`
+	Nota                 decimal.Decimal            `json:"nota"`
+	Abstain              decimal.Decimal            `json:"abstain"`
+	Empty                decimal.Decimal            `json:"empty"`
+	Invalid              int                        `json:"invalid"`
+	TotalBallots         int                        `json:"total_ballots"`
+	EntitledUsers        int                        `json:"entitled_users"`
+	EntitledUsersPresent int                        `json:"entitled_users_present"`
 }
 
 func (p *PollResultSelection) UnmarshalJSON(data []byte) error {
@@ -102,6 +102,9 @@ func (p *PollResultSelection) UnmarshalJSON(data []byte) error {
 	delete(raw, "abstain")
 	delete(raw, "invalid")
 	delete(raw, "total_ballots")
+	delete(raw, "entitled_users")
+	delete(raw, "entitled_users_present")
+	delete(raw, "empty")
 
 	p.Options = make(map[string]decimal.Decimal, len(raw))
 	for key, value := range raw {
@@ -127,21 +130,40 @@ func (r *PollResultSelection) VotesCast() int64 {
 	return int64(r.TotalBallots)
 }
 
+func (r *PollResultSelection) VotesEntitledUsers() int64 {
+	return int64(r.EntitledUsers)
+}
+
+func (r *PollResultSelection) VotesEntitledUsersPresent() int64 {
+	return int64(r.EntitledUsersPresent)
+}
+
 func (r *PollResultSelection) OneHundredPercentBase(config *dsmodels.PollConfigSelection) decimal.Decimal {
-	// TODO: Add missing bases
+	var optionVotes decimal.Decimal
+	for _, amount := range r.Options {
+		optionVotes = optionVotes.Add(amount)
+	}
+
 	switch config.OnehundredPercentBase {
 	case "no_general":
+		return optionVotes
 	case "valid":
+		optionVotes = optionVotes.Add(r.Empty)
+		optionVotes = optionVotes.Add(r.Nota)
+		return optionVotes
 	}
 
 	return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
 }
 
 type PollResultRatingScore struct {
-	Options      map[string]decimal.Decimal `json:",inline"`
-	Abstain      decimal.Decimal            `json:"abstain"`
-	Invalid      int                        `json:"invalid"`
-	TotalBallots int                        `json:"total_ballots"`
+	Options              map[string]decimal.Decimal `json:",inline"`
+	Abstain              decimal.Decimal            `json:"abstain"`
+	Invalid              int                        `json:"invalid"`
+	Empty                int                        `json:"empty"`
+	TotalBallots         int                        `json:"total_ballots"`
+	EntitledUsers        int                        `json:"entitled_users"`
+	EntitledUsersPresent int                        `json:"entitled_users_present"`
 }
 
 func (p *PollResultRatingScore) UnmarshalJSON(data []byte) error {
@@ -161,6 +183,9 @@ func (p *PollResultRatingScore) UnmarshalJSON(data []byte) error {
 	delete(raw, "abstain")
 	delete(raw, "invalid")
 	delete(raw, "total_ballots")
+	delete(raw, "entitled_users")
+	delete(raw, "entitled_users_present")
+	delete(raw, "empty")
 
 	p.Options = make(map[string]decimal.Decimal, len(raw))
 	for key, value := range raw {
@@ -186,6 +211,14 @@ func (r *PollResultRatingScore) VotesCast() int64 {
 	return int64(r.TotalBallots)
 }
 
+func (r *PollResultRatingScore) VotesEntitledUsers() int64 {
+	return int64(r.EntitledUsers)
+}
+
+func (r *PollResultRatingScore) VotesEntitledUsersPresent() int64 {
+	return int64(r.EntitledUsersPresent)
+}
+
 func (r *PollResultRatingScore) OneHundredPercentBase(config *dsmodels.PollConfigRatingScore) decimal.Decimal {
 	// TODO: Add missing bases
 	switch config.OnehundredPercentBase {
@@ -201,10 +234,13 @@ type PollResultRatingApprovalOption struct {
 }
 
 type PollResultRatingApproval struct {
-	Options      map[string]PollResultRatingApprovalOption `json:",inline"`
-	Abstain      decimal.Decimal                           `json:"abstain"`
-	Invalid      int                                       `json:"invalid"`
-	TotalBallots int                                       `json:"total_ballots"`
+	Options              map[string]PollResultRatingApprovalOption `json:",inline"`
+	Abstain              decimal.Decimal                           `json:"abstain"`
+	Invalid              int                                       `json:"invalid"`
+	Empty                int                                       `json:"empty"`
+	TotalBallots         int                                       `json:"total_ballots"`
+	EntitledUsers        int                                       `json:"entitled_users"`
+	EntitledUsersPresent int                                       `json:"entitled_users_present"`
 }
 
 func (p *PollResultRatingApproval) UnmarshalJSON(data []byte) error {
@@ -224,6 +260,9 @@ func (p *PollResultRatingApproval) UnmarshalJSON(data []byte) error {
 	delete(raw, "abstain")
 	delete(raw, "invalid")
 	delete(raw, "total_ballots")
+	delete(raw, "entitled_users")
+	delete(raw, "entitled_users_present")
+	delete(raw, "empty")
 
 	p.Options = make(map[string]PollResultRatingApprovalOption, len(raw))
 	for key, value := range raw {
@@ -249,9 +288,17 @@ func (r *PollResultRatingApproval) VotesCast() int64 {
 	return int64(r.TotalBallots)
 }
 
+func (r *PollResultRatingApproval) VotesEntitledUsers() int64 {
+	return int64(r.EntitledUsers)
+}
+
+func (r *PollResultRatingApproval) VotesEntitledUsersPresent() int64 {
+	return int64(r.EntitledUsersPresent)
+}
+
 func (r *PollResultRatingApproval) OneHundredPercentBase(config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {
 	if option == nil {
-		return decimal.Decimal{}
+		return genericOnehundredPercentBase(r, string(config.OnehundredPercentBase))
 	}
 
 	opt, ok := r.Options[strconv.Itoa(option.ID)]
@@ -278,6 +325,10 @@ func genericOnehundredPercentBase(r PollResult, base string) decimal.Decimal {
 		return decimal.NewFromInt(r.VotesCast())
 	case "valid":
 		return decimal.NewFromInt(r.VotesValid())
+	case "entitled":
+		return decimal.NewFromInt(r.VotesEntitledUsers())
+	case "entitled_present":
+		return decimal.NewFromInt(r.VotesEntitledUsersPresent())
 	}
 
 	return decimal.Decimal{}

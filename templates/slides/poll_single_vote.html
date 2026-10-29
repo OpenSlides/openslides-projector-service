@@ -251,6 +251,10 @@
                   <span class="vote-value material-icons no">cancel</span>
                 {{ else if eq .Value "abstain" }}
                   <span class="vote-value material-icons abstain">circle</span>
+                {{ else if eq .Value "null" }}
+                  <span class="vote-value material-icons abstain">circle</span>
+                {{ else if eq .Value "nota" }}
+                  <span class="vote-value material-icons no">cancel</span>
                 {{ else }}
                   <span class="vote-value">{{ .Value }}</span>
                 {{ end }}

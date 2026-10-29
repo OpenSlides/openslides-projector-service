@@ -9,6 +9,7 @@ import (
 
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/datastore/dsmodels"
+	"github.com/OpenSlides/openslides-go/datastore/dstypes"
 	"github.com/OpenSlides/openslides-projector-service/pkg/i18n"
 	"github.com/OpenSlides/openslides-projector-service/pkg/viewmodels"
 	"github.com/shopspring/decimal"
@@ -55,6 +56,7 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 			return nil, fmt.Errorf("could parse rating approval table: %w", err)
 		}
 
+		templateData["Base"] = config.OnehundredPercentBase
 		pollMethod["Yes"] = struct{}{}
 		pollMethod["No"] = struct{}{}
 		if config.AllowAbstain {
@@ -68,6 +70,7 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 			return nil, fmt.Errorf("could parse rating approval table: %w", err)
 		}
 
+		templateData["Base"] = config.OnehundredPercentBase
 		pollMethod["Yes"] = struct{}{}
 
 	case *dsmodels.PollConfigSelection:
@@ -77,29 +80,13 @@ func pollTableSlideHandler(ctx context.Context, req *projectionRequest, template
 			return nil, fmt.Errorf("could parse rating approval table: %w", err)
 		}
 
+		templateData["Base"] = config.OnehundredPercentBase
 		if config.StrikeOut {
 			pollMethod["No"] = struct{}{}
 		} else {
 			pollMethod["Yes"] = struct{}{}
 		}
 	}
-
-	/* TODO: Readd if available
-	switch poll.OnehundredPercentBase {
-	case "entitled":
-		data.Sums = append(data.Sums, pollSlideTableSum{
-			Name:  req.Locale.Get("Entitled users"),
-			Total: onehundredPercentBase,
-			Perc:  "100",
-		})
-	case "entitled_present":
-		data.Sums = append(data.Sums, pollSlideTableSum{
-			Name:  req.Locale.Get("Entitled present users"),
-			Total: onehundredPercentBase,
-			Perc:  "100",
-		})
-	}
-	*/
 
 	var configID dsfetch.Maybe[int]
 	if strings.HasPrefix(poll.ContentObjectID, "assignment") {
@@ -153,9 +140,10 @@ func pollRatingApprovalTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
+	var onehundredPercentBase decimal.Decimal
 	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	for _, option := range poll.OptionList {
-		onehundredPercentBase := result.OneHundredPercentBase(&config, &option)
+		onehundredPercentBase = result.OneHundredPercentBase(&config, &option)
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 		if err != nil {
 			return data, err
@@ -179,7 +167,28 @@ func pollRatingApprovalTable(
 		data.Options = append(data.Options, optData)
 	}
 
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually")...)
+	if config.OnehundredPercentBase == dstypes.RatingApprovalOnehundredPercentBasesEntitled ||
+		config.OnehundredPercentBase == dstypes.RatingApprovalOnehundredPercentBasesEntitledPresent {
+		onehundredPercentBase = result.OneHundredPercentBase(&config, nil)
+	} else {
+		onehundredPercentBase = decimal.Decimal{}
+	}
+	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually", onehundredPercentBase)...)
+
+	switch config.OnehundredPercentBase {
+	case dstypes.RatingApprovalOnehundredPercentBasesEntitled:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled users"),
+			Total: decimal.NewFromInt(result.VotesEntitledUsers()),
+			Perc:  "100",
+		})
+	case dstypes.RatingApprovalOnehundredPercentBasesEntitledPresent:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled present users"),
+			Total: decimal.NewFromInt(result.VotesEntitledUsersPresent()),
+			Perc:  "100",
+		})
+	}
 
 	return data, nil
 }
@@ -201,7 +210,7 @@ func pollRatingScoreTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually")...)
+	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually", decimal.Decimal{})...)
 
 	return data, nil
 }
@@ -250,6 +259,8 @@ func pollSelectionTable(
 		data.Options = append(data.Options, optData)
 	}
 
+	displayGeneralPercent := config.OnehundredPercentBase != dstypes.SelectionOnehundredPercentBasesDisabled &&
+		config.OnehundredPercentBase != dstypes.SelectionOnehundredPercentBasesNoGeneral
 	if config.AllowNota {
 		if config.StrikeOut {
 			data.Sums = append(data.Sums, pollSlideTableSum{
@@ -262,21 +273,78 @@ func pollSelectionTable(
 				Total: result.Nota,
 			})
 		}
+
+		if displayGeneralPercent && !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = result.Nota.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
 	}
 
-	if config.MinOptionsAmount == 0 {
+	if poll.AllowEmpty {
 		data.Sums = append(data.Sums, pollSlideTableSum{
 			Name:  req.Locale.Get("General abstain"),
-			Total: result.Abstain,
+			Total: result.Empty,
 		})
+
+		if displayGeneralPercent && !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = result.Empty.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
 	}
 
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually")...)
+	if config.OnehundredPercentBase != dstypes.SelectionOnehundredPercentBasesCast {
+		valid := decimal.NewFromInt(result.VotesValid())
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Valid votes"),
+			Total: valid,
+		})
+
+		if !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = valid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
+	}
+
+	if result.VotesInvalid() > 0 {
+		invalid := decimal.NewFromInt(result.VotesInvalid())
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Invalid votes"),
+			Total: invalid,
+		})
+
+		if !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = invalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
+	}
+
+	if result.VotesCast() > 0 && config.OnehundredPercentBase == dstypes.SelectionOnehundredPercentBasesCast {
+		cast := decimal.NewFromInt(result.VotesCast())
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Total votes cast"),
+			Total: cast,
+		})
+
+		if !onehundredPercentBase.IsZero() {
+			data.Sums[len(data.Sums)-1].Perc = cast.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
+		}
+	}
+
+	switch config.OnehundredPercentBase {
+	case dstypes.SelectionOnehundredPercentBasesEntitled:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled users"),
+			Total: onehundredPercentBase,
+			Perc:  "100",
+		})
+	case dstypes.SelectionOnehundredPercentBasesEntitledPresent:
+		data.Sums = append(data.Sums, pollSlideTableSum{
+			Name:  req.Locale.Get("Entitled present users"),
+			Total: onehundredPercentBase,
+			Perc:  "100",
+		})
+	}
 
 	return data, nil
 }
 
-func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, showCast bool) []pollSlideTableSum {
+func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, showCast bool, base decimal.Decimal) []pollSlideTableSum {
 	sums := []pollSlideTableSum{}
 	sums = append(sums, pollSlideTableSum{
 		Name:  locale.Get("Valid votes"),
@@ -293,8 +361,14 @@ func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, s
 	if result.VotesCast() > 0 && showCast {
 		sums = append(sums, pollSlideTableSum{
 			Name:  locale.Get("Total votes cast"),
-			Total: decimal.NewFromInt(result.VotesInvalid()),
+			Total: decimal.NewFromInt(result.VotesCast()),
 		})
+	}
+
+	if !base.IsZero() {
+		for i, amount := range sums {
+			sums[i].Perc = amount.Total.DivRound(base, 5).Mul(decimal.NewFromInt(100)).String()
+		}
 	}
 
 	return sums

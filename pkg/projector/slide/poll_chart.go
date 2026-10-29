@@ -31,7 +31,7 @@ type pollSlideChartProjectionData struct {
 	PercValidvotes  string
 	ResultTitle     string
 	ChartData       string
-	EntitledUsers   int
+	VotesCast       int
 	Options         []pollSlideProjectionOptionData
 }
 
@@ -62,42 +62,43 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 		config := poll.Config.(*dsmodels.PollConfigApproval)
 		data.Options = append(data.Options, pollSlideProjectionOptionData{
-			Type:       'Y',
-			Color:      "--theme-yes",
-			Icon:       "check_circle",
-			Name:       req.Locale.Get("Yes"),
-			TotalVotes: result.Yes,
-			DisplayPerc: config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesYesNo ||
-				config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesValid,
+			Type:        'Y',
+			Color:       "--theme-yes",
+			Icon:        "check_circle",
+			Name:        req.Locale.Get("Yes"),
+			TotalVotes:  result.Yes,
+			DisplayPerc: config.OnehundredPercentBase != dstypes.ApprovalOnehundredPercentBasesDisabled,
 		})
 
 		data.Options = append(data.Options, pollSlideProjectionOptionData{
-			Type:       'N',
-			Color:      "--theme-no",
-			Icon:       "cancel",
-			Name:       req.Locale.Get("No"),
-			TotalVotes: result.No,
-			DisplayPerc: config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesYesNo ||
-				config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesValid,
+			Type:        'N',
+			Color:       "--theme-no",
+			Icon:        "cancel",
+			Name:        req.Locale.Get("No"),
+			TotalVotes:  result.No,
+			DisplayPerc: config.OnehundredPercentBase != dstypes.ApprovalOnehundredPercentBasesDisabled,
 		})
 
 		if config.AllowAbstain {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
-				Type:        'A',
-				Color:       "--theme-abstain",
-				Icon:        "circle",
-				Name:        req.Locale.Get("Abstain"),
-				TotalVotes:  result.Abstain,
-				DisplayPerc: config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesValid,
+				Type:       'A',
+				Color:      "--theme-abstain",
+				Icon:       "circle",
+				Name:       req.Locale.Get("Abstain"),
+				TotalVotes: result.Abstain,
+				DisplayPerc: config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesYesNoAbstain ||
+					config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesCast,
 			})
 		}
 
 		onehundredPercentBase = result.OneHundredPercentBase(config)
 
 		data.TotalValidvotes = decimal.NewFromInt(int64(result.TotalBallots - result.Invalid))
-		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != "yes_no" && config.OnehundredPercentBase != "yes_no_abstain" {
+		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != dstypes.ApprovalOnehundredPercentBasesYesNo {
 			data.PercValidvotes = data.TotalValidvotes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 		}
+
+		data.VotesCast = len(poll.BallotIDs)
 	case *dsmodels.PollConfigSelection:
 		var result viewmodels.PollResultSelection
 		if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
