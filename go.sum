@@ -6,6 +6,8 @@ github.com/OpenSlides/openslides-go v0.0.0-20260901140746-cbbbb8954786 h1:1brFUO
 github.com/OpenSlides/openslides-go v0.0.0-20260901140746-cbbbb8954786/go.mod h1:jVaCPaN4K/1LO/pZQxT3bQhn5x4GYEnFJ0/iT5tc+QI=
 github.com/OpenSlides/openslides-go v0.0.0-20261007093929-ac87a4cdc984 h1:Q1x3BGkRBKkqKdSO/spHxJH6dCqVYngONUR/y9Ag41E=
 github.com/OpenSlides/openslides-go v0.0.0-20261007093929-ac87a4cdc984/go.mod h1:BDWHO2JvXPtrF8LY9YY9WNVaxIR6oVf35hqUz/WC/+M=
+github.com/OpenSlides/openslides-go v0.0.0-20261028135533-e237900b4744 h1:3oWzY8NhmN9NDVKsW8H9X4+iuySgovTgj7g/sJpuLO4=
+github.com/OpenSlides/openslides-go v0.0.0-20261028135533-e237900b4744/go.mod h1:BDWHO2JvXPtrF8LY9YY9WNVaxIR6oVf35hqUz/WC/+M=
 github.com/caarlos0/env/v6 v6.10.1 h1:t1mPSxNpei6M5yAeu1qtRdPAK29Nbcf/n3G7x+b3/II=
 github.com/caarlos0/env/v6 v6.10.1/go.mod h1:hvp/ryKXKipEkcuYjs9mI4bBCg+UI0Yhgm5Zu0ddvwc=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=

@@ -67,7 +67,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			Icon:        "check_circle",
 			Name:        req.Locale.Get("Yes"),
 			TotalVotes:  result.Yes,
-			DisplayPerc: config.OnehundredPercentBase != dstypes.ApprovalOnehundredPercentBasesDisabled,
+			DisplayPerc: config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseDisabled,
 		})
 
 		data.Options = append(data.Options, pollSlideProjectionOptionData{
@@ -76,7 +76,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			Icon:        "cancel",
 			Name:        req.Locale.Get("No"),
 			TotalVotes:  result.No,
-			DisplayPerc: config.OnehundredPercentBase != dstypes.ApprovalOnehundredPercentBasesDisabled,
+			DisplayPerc: config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseDisabled,
 		})
 
 		if config.AllowAbstain {
@@ -86,15 +86,15 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				Icon:       "circle",
 				Name:       req.Locale.Get("Abstain"),
 				TotalVotes: result.Abstain,
-				DisplayPerc: config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesYesNoAbstain ||
-					config.OnehundredPercentBase == dstypes.ApprovalOnehundredPercentBasesCast,
+				DisplayPerc: config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNoAbstain ||
+					config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast,
 			})
 		}
 
 		onehundredPercentBase = result.OneHundredPercentBase(config)
 
 		data.TotalValidvotes = decimal.NewFromInt(int64(result.TotalBallots - result.Invalid))
-		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != dstypes.ApprovalOnehundredPercentBasesYesNo {
+		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseYesNo {
 			data.PercValidvotes = data.TotalValidvotes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 		}
 
