@@ -55,6 +55,19 @@
                   {{ end }}
                 </tr>
               {{ end }}
+              {{ if eq .Poll.Config.OnehundredPercentBase "entitled" }}
+                <tr>
+                  <td>{{ Loc.Get "Entitled users" }}</td>
+                  <td class="result-cell-definition">{{ .Data.EntitledUsers }}</td>
+                  <td class="result-cell-definition">100 %</td>
+                </tr>
+              {{ else if eq .Poll.Config.OnehundredPercentBase "entitled_present" }}
+                <tr>
+                  <td>{{ Loc.Get "Present entitled users" }}</td>
+                  <td class="result-cell-definition">{{ .Data.EntitledUsersPresent }}</td>
+                  <td class="result-cell-definition">100 %</td>
+                </tr>
+              {{ end }}
             </tbody>
           </table>
         </div>

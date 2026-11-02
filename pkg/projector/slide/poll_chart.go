@@ -27,12 +27,14 @@ type pollSlideProjectionOptionData struct {
 }
 
 type pollSlideChartProjectionData struct {
-	TotalValidvotes decimal.Decimal
-	PercValidvotes  string
-	ResultTitle     string
-	ChartData       string
-	VotesCast       int
-	Options         []pollSlideProjectionOptionData
+	EntitledUsers        int
+	EntitledUsersPresent int
+	TotalValidvotes      decimal.Decimal
+	PercValidvotes       string
+	ResultTitle          string
+	ChartData            string
+	VotesCast            int
+	Options              []pollSlideProjectionOptionData
 }
 
 func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[string]any, error) {
@@ -53,6 +55,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 	var onehundredPercentBase decimal.Decimal
 
+	includeAbstain := true
 	switch poll.Config.(type) {
 	case *dsmodels.PollConfigApproval:
 		var result viewmodels.PollResultApproval
@@ -91,6 +94,10 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			})
 		}
 
+		if config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNo {
+			includeAbstain = false
+		}
+
 		onehundredPercentBase = result.OneHundredPercentBase(config)
 
 		data.TotalValidvotes = decimal.NewFromInt(int64(result.TotalBallots - result.Invalid))
@@ -98,7 +105,8 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			data.PercValidvotes = data.TotalValidvotes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 		}
 
-		data.VotesCast = len(poll.BallotIDs)
+		data.EntitledUsers = result.EntitledUsers
+		data.EntitledUsersPresent = result.EntitledUsersPresent
 	case *dsmodels.PollConfigSelection:
 		var result viewmodels.PollResultSelection
 		if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
@@ -154,9 +162,14 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		if !onehundredPercentBase.IsZero() {
 			data.PercValidvotes = data.TotalValidvotes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 		}
+
+		data.EntitledUsers = result.EntitledUsers
+		data.EntitledUsersPresent = result.EntitledUsersPresent
 	default:
 		return nil, fmt.Errorf("chart slide not implemented for this config type: %w", err)
 	}
+
+	data.VotesCast = len(poll.BallotIDs)
 
 	type chartDataEntry struct {
 		Color string  `json:"color,omitempty"`
@@ -169,7 +182,9 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			continue
 		}
 
-		// TODO:Hide abstain from chart for `yes_no` 100%-base
+		if data.Options[i].Type == 'A' && !includeAbstain {
+			continue
+		}
 
 		chartData = append(chartData, chartDataEntry{
 			Color: string(option.Color),
