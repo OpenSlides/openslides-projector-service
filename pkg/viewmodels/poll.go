@@ -146,6 +146,9 @@ func (r *PollResultSelection) OneHundredPercentBase(config *dsmodels.PollConfigS
 
 	switch config.OnehundredPercentBase {
 	case "no_general":
+		if config.StrikeOut {
+			optionVotes = optionVotes.Add(r.Nota)
+		}
 		return optionVotes
 	case "valid":
 		optionVotes = optionVotes.Add(r.Empty)
@@ -312,7 +315,7 @@ func (r *PollResultRatingApproval) OneHundredPercentBase(config *dsmodels.PollCo
 	switch config.OnehundredPercentBase {
 	case "yes_no":
 		return opt.Yes.Add(opt.No)
-	case "valid":
+	case "valid", "yes_no_abstain":
 		return opt.Yes.Add(opt.No).Add(opt.Abstain)
 	}
 

@@ -168,12 +168,19 @@ func pollRatingApprovalTable(
 	}
 
 	if config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseEntitled ||
-		config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseEntitledPresent {
+		config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseEntitledPresent ||
+		config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseValid ||
+		config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseCast {
 		onehundredPercentBase = result.OneHundredPercentBase(&config, nil)
 	} else {
 		onehundredPercentBase = decimal.Decimal{}
 	}
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually", onehundredPercentBase)...)
+	data.Sums = append(data.Sums, pollTableSums(
+		req.Locale,
+		&result,
+		poll.Visibility == "manually" || config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseCast,
+		onehundredPercentBase)...,
+	)
 
 	switch config.OnehundredPercentBase {
 	case dstypes.PollConfigRatingApproval_OnehundredPercentBaseEntitled:
@@ -234,7 +241,7 @@ func pollSelectionTable(
 
 	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	onehundredPercentBase := result.OneHundredPercentBase(&config)
-	total := decimal.NewFromInt(result.VotesValid()).Sub(result.Abstain)
+	total := decimal.NewFromInt(result.VotesValid()).Sub(result.Abstain).Sub(result.Empty)
 	for _, option := range poll.OptionList {
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 		if err != nil {
@@ -346,10 +353,12 @@ func pollSelectionTable(
 
 func pollTableSums(locale *i18n.ProjectorLocale, result viewmodels.PollResult, showCast bool, base decimal.Decimal) []pollSlideTableSum {
 	sums := []pollSlideTableSum{}
-	sums = append(sums, pollSlideTableSum{
-		Name:  locale.Get("Valid votes"),
-		Total: decimal.NewFromInt(result.VotesValid()),
-	})
+	if result.VotesInvalid() > 0 || !showCast {
+		sums = append(sums, pollSlideTableSum{
+			Name:  locale.Get("Valid votes"),
+			Total: decimal.NewFromInt(result.VotesValid()),
+		})
+	}
 
 	if result.VotesInvalid() > 0 {
 		sums = append(sums, pollSlideTableSum{
