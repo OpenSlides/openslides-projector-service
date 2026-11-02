@@ -55,6 +55,7 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 
 	var onehundredPercentBase decimal.Decimal
 
+	includeAbstain := true
 	switch poll.Config.(type) {
 	case *dsmodels.PollConfigApproval:
 		var result viewmodels.PollResultApproval
@@ -91,6 +92,10 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				DisplayPerc: config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNoAbstain ||
 					config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast,
 			})
+		}
+
+		if config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNo {
+			includeAbstain = false
 		}
 
 		onehundredPercentBase = result.OneHundredPercentBase(config)
@@ -177,7 +182,9 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			continue
 		}
 
-		// TODO:Hide abstain from chart for `yes_no` 100%-base
+		if data.Options[i].Type == 'A' && !includeAbstain {
+			continue
+		}
 
 		chartData = append(chartData, chartDataEntry{
 			Color: string(option.Color),
