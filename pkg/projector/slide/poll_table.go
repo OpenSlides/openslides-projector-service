@@ -297,7 +297,7 @@ func pollSelectionTable(
 			Total: valid,
 		})
 
-		if !onehundredPercentBase.IsZero() {
+		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != dstypes.PollConfigSelection_OnehundredPercentBaseNoGeneral {
 			data.Sums[len(data.Sums)-1].Perc = valid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100)).String()
 		}
 	}
