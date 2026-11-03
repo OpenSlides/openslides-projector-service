@@ -119,11 +119,11 @@ func CurrentSpeakerChyronSlideHandler(ctx context.Context, req *projectionReques
 		}
 		fallthrough
 	default:
-		if strings.TrimSpace(co.Title) != "" {
-			parts = append(parts, co.Title)
-		}
 		if strings.TrimSpace(co.AgendaItemNumber) != "" {
 			parts = append(parts, co.AgendaItemNumber)
+		}
+		if strings.TrimSpace(co.Title) != "" {
+			parts = append(parts, co.Title)
 		}
 	}
 
