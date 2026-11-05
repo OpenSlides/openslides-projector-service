@@ -28,12 +28,13 @@ type pollSingleVotesSlideVoteEntryGroup struct {
 }
 
 type pollSingleVotesSlideData struct {
-	TotalVotesvalid     decimal.Decimal
-	PercVotesvalid      decimal.Decimal
-	GlobalOption        *pollSingleVotesSlideOption
-	GlobalOptionMethods map[string]bool
-	Options             []*pollSingleVotesSlideOption
-	GroupedVotes        []*pollSingleVotesSlideVoteEntryGroup
+	OnehundredPercentBase decimal.Decimal
+	TotalVotesvalid       decimal.Decimal
+	PercVotesvalid        decimal.Decimal
+	GlobalOption          *pollSingleVotesSlideOption
+	GlobalOptionMethods   map[string]bool
+	Options               []*pollSingleVotesSlideOption
+	GroupedVotes          []*pollSingleVotesSlideVoteEntryGroup
 }
 
 type pollSingleVotesSlideOption struct {
@@ -110,17 +111,29 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 
 		if config, ok := poll.Config.(*dsmodels.PollConfigSelection); ok {
-			if config.RequiredMajority == dstypes.RequiredMajoritySelectionSimpleMajority {
+			qualifiedMajority := decimal.Decimal{}
+			strictGreater := false
+			switch config.RequiredMajority {
+			case dstypes.RequiredMajoritySelectionSimpleMajority:
 				maxVotes := decimal.Decimal{}
 				for _, pollOption := range slideData.Options {
 					if maxVotes.LessThan(pollOption.TotalYes) {
 						maxVotes = pollOption.TotalYes
 					}
 				}
+				qualifiedMajority = maxVotes
+			case dstypes.RequiredMajoritySelectionAbsoluteMajority:
+				strictGreater = true
+				qualifiedMajority = slideData.OnehundredPercentBase.Div(decimal.NewFromInt(2))
+			case dstypes.RequiredMajoritySelectionTwoThirdMajority:
+				qualifiedMajority = slideData.OnehundredPercentBase.Mul(decimal.NewFromInt(2)).Div(decimal.NewFromInt(3))
+			}
 
+			if !qualifiedMajority.IsZero() {
 				winner := -1
 				for oIdx, option := range slideData.Options {
-					if option.TotalYes.Equal(maxVotes) {
+					if (strictGreater && option.TotalYes.GreaterThan(qualifiedMajority)) ||
+						(!strictGreater && option.TotalYes.GreaterThanOrEqual(qualifiedMajority)) {
 						// If >1 winners found reset and stop
 						if winner != -1 {
 							slideData.Options[winner].Majority = false
@@ -354,6 +367,8 @@ func pollSingleVotesResult(
 			data.PercVotesvalid = data.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
+		data.OnehundredPercentBase = onehundredPercentBase
+
 		option := &pollSingleVotesSlideOption{
 			TotalYes:     result.Yes,
 			TotalNo:      result.No,
@@ -381,6 +396,8 @@ func pollSingleVotesResult(
 		if !onehundredPercentBase.IsZero() {
 			data.PercVotesvalid = data.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
+
+		data.OnehundredPercentBase = onehundredPercentBase
 
 		for _, option := range poll.OptionList {
 			optionLabel, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
