@@ -150,10 +150,10 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			}
 		}
 
-		if config.MinOptionsAmount == 0 {
+		if poll.AllowEmpty {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
 				Name:         req.Locale.Get("General abstain"),
-				TotalVotes:   result.Abstain,
+				TotalVotes:   result.Empty,
 				GlobalOption: true,
 			})
 		}
