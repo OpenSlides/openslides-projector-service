@@ -89,8 +89,8 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				Icon:       "circle",
 				Name:       req.Locale.Get("Abstain"),
 				TotalVotes: result.Abstain,
-				DisplayPerc: config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNoAbstain ||
-					config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast,
+				DisplayPerc: config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseYesNo &&
+					config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseDisabled,
 			})
 		}
 
