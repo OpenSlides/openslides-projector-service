@@ -89,8 +89,8 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 				Icon:       "circle",
 				Name:       req.Locale.Get("Abstain"),
 				TotalVotes: result.Abstain,
-				DisplayPerc: config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNoAbstain ||
-					config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast,
+				DisplayPerc: config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseYesNo &&
+					config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseDisabled,
 			})
 		}
 
@@ -150,10 +150,10 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			}
 		}
 
-		if config.MinOptionsAmount == 0 {
+		if poll.AllowEmpty {
 			data.Options = append(data.Options, pollSlideProjectionOptionData{
 				Name:         req.Locale.Get("General abstain"),
-				TotalVotes:   result.Abstain,
+				TotalVotes:   result.Empty,
 				GlobalOption: true,
 			})
 		}
