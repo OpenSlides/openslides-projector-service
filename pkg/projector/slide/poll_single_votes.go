@@ -23,8 +23,11 @@ type pollSingleVotesSlideVoteEntry struct {
 }
 
 type pollSingleVotesSlideVoteEntryGroup struct {
-	Title string
-	Votes []*pollSingleVotesSlideVoteEntry
+	Title        string
+	TotalYes     decimal.Decimal
+	TotalNo      decimal.Decimal
+	TotalAbstain decimal.Decimal
+	Votes        []*pollSingleVotesSlideVoteEntry
 }
 
 type pollSingleVotesSlideData struct {
@@ -198,6 +201,18 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 
 		vote := pollSingleVotesVoteEntry(&poll, &mu, voteMap, optionIndexMap, usersEnableVoteDelegations, usersForbidDelegatorToVote)
+		weight := mu.VoteWeight
+		if weight.IsZero() {
+			weight = decimal.NewFromInt(1)
+		}
+		switch vote.Value {
+		case "yes":
+			voteEntryGroupsMap[structureLevel.ID].TotalYes = voteEntryGroupsMap[structureLevel.ID].TotalYes.Add(weight)
+		case "no":
+			voteEntryGroupsMap[structureLevel.ID].TotalNo = voteEntryGroupsMap[structureLevel.ID].TotalYes.Add(weight)
+		case "abstain":
+			voteEntryGroupsMap[structureLevel.ID].TotalAbstain = voteEntryGroupsMap[structureLevel.ID].TotalYes.Add(weight)
+		}
 		voteEntryGroupsMap[structureLevel.ID].Votes = append(
 			voteEntryGroupsMap[structureLevel.ID].Votes,
 			&vote,
@@ -219,6 +234,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	pollMethod := pollConfigYNAOptions(poll.Config)
 	slideData.GroupedVotes = voteEntryGroups
 
+	_, isApproval := poll.Config.(*dsmodels.PollConfigApproval)
 	return map[string]any{
 		"_template":             "poll_single_vote",
 		"_fullHeight":           true,
@@ -234,7 +250,7 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		"Poll":                  poll,
 		"PollMethod":            pollMethod,
 		"GlobalPollMethod":      slideData.GlobalOptionMethods,
-		"SingleOption":          len(poll.OptionList) == 1,
+		"SingleOption":          isApproval,
 		"NumVotes":              len(voteMap),
 		"NumNotVoted":           len(entitledUsers) - len(voteMap),
 		"NumEntitledUsers":      len(entitledUsers),
