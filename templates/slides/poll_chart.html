@@ -77,6 +77,11 @@
             <projector-poll-chart class="poll-chart-canvas-style">
               {{ .Data.ChartData }}
             </projector-poll-chart>
+            {{ if .Data.ChartIcon }}
+              <div class="chart-icon {{ .Data.ChartIconClass }}">
+                <span class="material-icons">{{ .Data.ChartIcon }}</span>
+              </div>
+            {{ end }}
           </div>
         {{ end }}
       </div>

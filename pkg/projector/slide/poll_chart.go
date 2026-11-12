@@ -33,6 +33,8 @@ type pollSlideChartProjectionData struct {
 	PercValidvotes       string
 	ResultTitle          string
 	ChartData            string
+	ChartIcon            string
+	ChartIconClass       string
 	VotesCast            int
 	Options              []pollSlideProjectionOptionData
 }
@@ -99,6 +101,16 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		}
 
 		onehundredPercentBase = result.OneHundredPercentBase(config)
+
+		requiredMajority, requiredMajorityStrict := result.RequiredMajority(config)
+		if !requiredMajority.IsZero() && ((requiredMajorityStrict && result.Yes.GreaterThan(requiredMajority)) ||
+			(!requiredMajorityStrict && result.Yes.GreaterThanOrEqual(requiredMajority))) {
+			data.ChartIcon = "check"
+			data.ChartIconClass = "yes"
+		} else if !requiredMajority.IsZero() {
+			data.ChartIcon = "close"
+			data.ChartIconClass = "no"
+		}
 
 		data.TotalValidvotes = decimal.NewFromInt(int64(result.TotalBallots - result.Invalid))
 		if !onehundredPercentBase.IsZero() && config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseYesNo {
