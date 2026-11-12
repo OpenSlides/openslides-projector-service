@@ -62,6 +62,20 @@ func (r *PollResultApproval) VotesEntitledUsersPresent() int64 {
 	return int64(r.EntitledUsersPresent)
 }
 
+func (r *PollResultApproval) RequiredMajority(config *dsmodels.PollConfigApproval) (decimal.Decimal, bool) {
+	qualifiedMajority := decimal.Decimal{}
+	strictGreater := false
+	switch config.RequiredMajority {
+	case dstypes.RequiredMajorityAbsoluteMajority:
+		strictGreater = true
+		qualifiedMajority = r.OneHundredPercentBase(config).Div(decimal.NewFromInt(2))
+	case dstypes.RequiredMajorityTwoThirdMajority:
+		qualifiedMajority = r.OneHundredPercentBase(config).Mul(decimal.NewFromInt(2)).Div(decimal.NewFromInt(3))
+	}
+
+	return qualifiedMajority, strictGreater
+}
+
 func (r *PollResultApproval) OneHundredPercentBase(config *dsmodels.PollConfigApproval) decimal.Decimal {
 	switch config.OnehundredPercentBase {
 	case "yes_no":
@@ -136,6 +150,28 @@ func (r *PollResultSelection) VotesEntitledUsers() int64 {
 
 func (r *PollResultSelection) VotesEntitledUsersPresent() int64 {
 	return int64(r.EntitledUsersPresent)
+}
+
+func (r *PollResultSelection) RequiredMajority(config *dsmodels.PollConfigSelection) (decimal.Decimal, bool) {
+	qualifiedMajority := decimal.Decimal{}
+	strictGreater := false
+	switch config.RequiredMajority {
+	case dstypes.RequiredMajoritySelectionSimpleMajority:
+		maxVotes := decimal.Decimal{}
+		for _, pollOption := range r.Options {
+			if maxVotes.LessThan(pollOption) {
+				maxVotes = pollOption
+			}
+		}
+		qualifiedMajority = maxVotes
+	case dstypes.RequiredMajoritySelectionAbsoluteMajority:
+		strictGreater = true
+		qualifiedMajority = r.OneHundredPercentBase(config).Div(decimal.NewFromInt(2))
+	case dstypes.RequiredMajoritySelectionTwoThirdMajority:
+		qualifiedMajority = r.OneHundredPercentBase(config).Mul(decimal.NewFromInt(2)).Div(decimal.NewFromInt(3))
+	}
+
+	return qualifiedMajority, strictGreater
 }
 
 func (r *PollResultSelection) OneHundredPercentBase(config *dsmodels.PollConfigSelection) decimal.Decimal {
@@ -222,6 +258,28 @@ func (r *PollResultRatingScore) VotesEntitledUsersPresent() int64 {
 	return int64(r.EntitledUsersPresent)
 }
 
+func (r *PollResultRatingScore) RequiredMajority(config *dsmodels.PollConfigRatingScore) (decimal.Decimal, bool) {
+	qualifiedMajority := decimal.Decimal{}
+	strictGreater := false
+	switch config.RequiredMajority {
+	case dstypes.RequiredMajoritySelectionSimpleMajority:
+		maxVotes := decimal.Decimal{}
+		for _, pollOption := range r.Options {
+			if maxVotes.LessThan(pollOption) {
+				maxVotes = pollOption
+			}
+		}
+		qualifiedMajority = maxVotes
+	case dstypes.RequiredMajoritySelectionAbsoluteMajority:
+		strictGreater = true
+		qualifiedMajority = r.OneHundredPercentBase(config).Div(decimal.NewFromInt(2))
+	case dstypes.RequiredMajoritySelectionTwoThirdMajority:
+		qualifiedMajority = r.OneHundredPercentBase(config).Mul(decimal.NewFromInt(2)).Div(decimal.NewFromInt(3))
+	}
+
+	return qualifiedMajority, strictGreater
+}
+
 func (r *PollResultRatingScore) OneHundredPercentBase(config *dsmodels.PollConfigRatingScore) decimal.Decimal {
 	// TODO: Add missing bases
 	switch config.OnehundredPercentBase {
@@ -297,6 +355,20 @@ func (r *PollResultRatingApproval) VotesEntitledUsers() int64 {
 
 func (r *PollResultRatingApproval) VotesEntitledUsersPresent() int64 {
 	return int64(r.EntitledUsersPresent)
+}
+
+func (r *PollResultRatingApproval) RequiredMajority(config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) (decimal.Decimal, bool) {
+	qualifiedMajority := decimal.Decimal{}
+	strictGreater := false
+	switch config.RequiredMajority {
+	case dstypes.RequiredMajorityAbsoluteMajority:
+		strictGreater = true
+		qualifiedMajority = r.OneHundredPercentBase(config, option).Div(decimal.NewFromInt(2))
+	case dstypes.RequiredMajorityTwoThirdMajority:
+		qualifiedMajority = r.OneHundredPercentBase(config, option).Mul(decimal.NewFromInt(2)).Div(decimal.NewFromInt(3))
+	}
+
+	return qualifiedMajority, strictGreater
 }
 
 func (r *PollResultRatingApproval) OneHundredPercentBase(config *dsmodels.PollConfigRatingApproval, option *dsmodels.PollOption) decimal.Decimal {

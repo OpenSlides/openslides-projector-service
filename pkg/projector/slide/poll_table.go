@@ -18,6 +18,7 @@ import (
 type pollSlideTableOption struct {
 	ID           int
 	Name         string
+	Majority     bool
 	TotalYes     decimal.Decimal
 	TotalNo      decimal.Decimal
 	TotalAbstain decimal.Decimal
@@ -140,10 +141,10 @@ func pollRatingApprovalTable(
 		return data, fmt.Errorf("parse approval poll result %w", err)
 	}
 
-	var onehundredPercentBase decimal.Decimal
 	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	for _, option := range poll.OptionList {
-		onehundredPercentBase = result.OneHundredPercentBase(&config, &option)
+		onehundredPercentBase := result.OneHundredPercentBase(&config, &option)
+		requiredMajority, requiredMajorityStrict := result.RequiredMajority(&config, &option)
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 		if err != nil {
 			return data, err
@@ -164,9 +165,15 @@ func pollRatingApprovalTable(
 			optData.PercAbstain = optData.TotalAbstain.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
+		if !requiredMajority.IsZero() && ((requiredMajorityStrict && optData.TotalYes.GreaterThan(requiredMajority)) ||
+			(!requiredMajorityStrict && optData.TotalYes.GreaterThanOrEqual(requiredMajority))) {
+			optData.Majority = true
+		}
+
 		data.Options = append(data.Options, optData)
 	}
 
+	var onehundredPercentBase decimal.Decimal
 	if config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseEntitled ||
 		config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseEntitledPresent ||
 		config.OnehundredPercentBase == dstypes.PollConfigRatingApproval_OnehundredPercentBaseValid ||
@@ -206,20 +213,16 @@ func pollRatingScoreTable(
 	poll dsmodels.Poll,
 	config dsmodels.PollConfigRatingScore,
 ) (pollSlideTable, error) {
-	data := pollSlideTable{
-		Options:            []pollSlideTableOption{},
-		Sums:               []pollSlideTableSum{},
-		DisplayPercAbstain: config.OnehundredPercentBase == "cast" || config.OnehundredPercentBase == "valid",
-	}
-
-	var result viewmodels.PollResultRatingScore
-	if err := json.Unmarshal([]byte(poll.Result), &result); err != nil {
-		return data, fmt.Errorf("parse approval poll result %w", err)
-	}
-
-	data.Sums = append(data.Sums, pollTableSums(req.Locale, &result, poll.Visibility == "manually", decimal.Decimal{})...)
-
-	return data, nil
+	return pollSelectionTable(ctx, req, poll, dsmodels.PollConfigSelection{
+		AllowNota:             false,
+		OnehundredPercentBase: dstypes.PollConfigSelection_OnehundredPercentBase(config.OnehundredPercentBase),
+		DisplayChart:          "table",
+		MaxOptionsAmount:      config.MaxOptionsAmount,
+		MinOptionsAmount:      config.MinOptionsAmount,
+		PollID:                config.PollID,
+		RequiredMajority:      config.RequiredMajority,
+		StrikeOut:             false,
+	})
 }
 
 func pollSelectionTable(
@@ -241,6 +244,7 @@ func pollSelectionTable(
 
 	resultOptions := viewmodels.RemapPollResultOptions(result.Options, poll.OptionList)
 	onehundredPercentBase := result.OneHundredPercentBase(&config)
+	requiredMajority, requiredMajorityStrict := result.RequiredMajority(&config)
 	total := decimal.NewFromInt(result.VotesValid()).Sub(result.Abstain).Sub(result.Empty)
 	for _, option := range poll.OptionList {
 		name, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
@@ -261,6 +265,11 @@ func pollSelectionTable(
 
 		if !onehundredPercentBase.IsZero() {
 			optData.PercYes = optData.TotalYes.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
+		}
+
+		if !requiredMajority.IsZero() && ((requiredMajorityStrict && optData.TotalYes.GreaterThan(requiredMajority)) ||
+			(!requiredMajorityStrict && optData.TotalYes.GreaterThanOrEqual(requiredMajority))) {
+			optData.Majority = true
 		}
 
 		data.Options = append(data.Options, optData)

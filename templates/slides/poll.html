@@ -16,11 +16,24 @@
   {{ else if .Data }}
     <div>
       <table class="poll-result-table">
+        <col width="1" />
+        <col />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
+        <col width="1" />
         <thead>
           <tr>
-            <th colspan="2"></th>
+            <th colspan="3"></th>
             {{ if .Methods.Yes }}
-              <th colspan="2" class="result yes">{{ Loc.Get "Yes" }}</th>
+              {{ if .Methods.No }}
+                <th colspan="2" class="result yes">{{ Loc.Get "Yes" }}</th>
+              {{ else }}
+                <th colspan="2" class="result yes">{{ Loc.Get "Votes" }}</th>
+              {{ end }}
             {{ end }}
             {{ if .Methods.No }}
               {{ if .Methods.Yes }}
@@ -37,13 +50,18 @@
         <tbody>
           {{ range $i, $o := .Data.Options }}
             <tr class="user">
-              <td>
+              <td class="num">
                 <span>{{ RenderIndex $i }}.</span>
               </td>
               <td class="voting-option">
                 <div>
                   <span class="candidate-name">{{ .Name }}</span>
                 </div>
+              </td>
+              <td class="majority yes">
+                {{ if $o.Majority }}
+                  <span class="material-icons">check</span>
+                {{ end }}
               </td>
               {{ if $.Methods.Yes }}
                 {{ if $o.TotalYes.IsNegative }}
@@ -110,6 +128,7 @@
               <td class="voting-option">
                 <span class="candidate-name">{{ .Name }}</span>
               </td>
+              <td></td>
               <td class="result">
                 {{ if .Perc }}
                   <span>({{ .Perc }} %)</span>
