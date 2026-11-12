@@ -23,17 +23,24 @@ type pollSingleVotesSlideVoteEntry struct {
 }
 
 type pollSingleVotesSlideVoteEntryGroup struct {
-	Title string
-	Votes []*pollSingleVotesSlideVoteEntry
+	Title        string
+	TotalYes     decimal.Decimal
+	TotalNo      decimal.Decimal
+	TotalAbstain decimal.Decimal
+	Votes        []*pollSingleVotesSlideVoteEntry
 }
 
 type pollSingleVotesSlideData struct {
-	TotalVotesvalid     decimal.Decimal
-	PercVotesvalid      decimal.Decimal
-	GlobalOption        *pollSingleVotesSlideOption
-	GlobalOptionMethods map[string]bool
-	Options             []*pollSingleVotesSlideOption
-	GroupedVotes        []*pollSingleVotesSlideVoteEntryGroup
+	GlobalOptionInBase    bool
+	DisplayPercAbstain    bool
+	ShowValidVotesPercent bool
+	OnehundredPercentBase decimal.Decimal
+	TotalVotesvalid       decimal.Decimal
+	PercVotesvalid        decimal.Decimal
+	GlobalOption          *pollSingleVotesSlideOption
+	GlobalOptionMethods   map[string]bool
+	Options               []*pollSingleVotesSlideOption
+	GroupedVotes          []*pollSingleVotesSlideVoteEntryGroup
 }
 
 type pollSingleVotesSlideOption struct {
@@ -110,17 +117,29 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 
 		if config, ok := poll.Config.(*dsmodels.PollConfigSelection); ok {
-			if config.RequiredMajority == dstypes.RequiredMajoritySelectionSimpleMajority {
+			qualifiedMajority := decimal.Decimal{}
+			strictGreater := false
+			switch config.RequiredMajority {
+			case dstypes.RequiredMajoritySelectionSimpleMajority:
 				maxVotes := decimal.Decimal{}
 				for _, pollOption := range slideData.Options {
 					if maxVotes.LessThan(pollOption.TotalYes) {
 						maxVotes = pollOption.TotalYes
 					}
 				}
+				qualifiedMajority = maxVotes
+			case dstypes.RequiredMajoritySelectionAbsoluteMajority:
+				strictGreater = true
+				qualifiedMajority = slideData.OnehundredPercentBase.Div(decimal.NewFromInt(2))
+			case dstypes.RequiredMajoritySelectionTwoThirdMajority:
+				qualifiedMajority = slideData.OnehundredPercentBase.Mul(decimal.NewFromInt(2)).Div(decimal.NewFromInt(3))
+			}
 
+			if !qualifiedMajority.IsZero() {
 				winner := -1
 				for oIdx, option := range slideData.Options {
-					if option.TotalYes.Equal(maxVotes) {
+					if (strictGreater && option.TotalYes.GreaterThan(qualifiedMajority)) ||
+						(!strictGreater && option.TotalYes.GreaterThanOrEqual(qualifiedMajority)) {
 						// If >1 winners found reset and stop
 						if winner != -1 {
 							slideData.Options[winner].Majority = false
@@ -182,6 +201,18 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 		}
 
 		vote := pollSingleVotesVoteEntry(&poll, &mu, voteMap, optionIndexMap, usersEnableVoteDelegations, usersForbidDelegatorToVote)
+		weight := mu.VoteWeight
+		if weight.IsZero() {
+			weight = decimal.NewFromInt(1)
+		}
+		switch vote.Value {
+		case "yes":
+			voteEntryGroupsMap[structureLevel.ID].TotalYes = voteEntryGroupsMap[structureLevel.ID].TotalYes.Add(weight)
+		case "no":
+			voteEntryGroupsMap[structureLevel.ID].TotalNo = voteEntryGroupsMap[structureLevel.ID].TotalYes.Add(weight)
+		case "abstain":
+			voteEntryGroupsMap[structureLevel.ID].TotalAbstain = voteEntryGroupsMap[structureLevel.ID].TotalYes.Add(weight)
+		}
 		voteEntryGroupsMap[structureLevel.ID].Votes = append(
 			voteEntryGroupsMap[structureLevel.ID].Votes,
 			&vote,
@@ -203,38 +234,27 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 	pollMethod := pollConfigYNAOptions(poll.Config)
 	slideData.GroupedVotes = voteEntryGroups
 
-	/*
-		showValidVotesPercent := poll.OnehundredPercentBase != "disabled" &&
-			poll.OnehundredPercentBase != "YN" &&
-			(slideData.GlobalOption == nil || poll.OnehundredPercentBase[0] != 'Y')
-
-		displayPercAbstain := poll.OnehundredPercentBase ==
-			poll.OnehundredPercentBase == "cast" ||
-			poll.OnehundredPercentBase == "entitled" ||
-			poll.OnehundredPercentBase == "entitled_present" ||
-			poll.OnehundredPercentBase == "valid"
-	*/
-
+	_, isApproval := poll.Config.(*dsmodels.PollConfigApproval)
 	return map[string]any{
-		"_template":    "poll_single_vote",
-		"_fullHeight":  true,
-		"Data":         slideData,
-		"GlobalOption": slideData.GlobalOption,
-		// "DisplayPercAbstain":    displayPercAbstain,
-		// "GlobalOptionInBase":    poll.OnehundredPercentBase[0] != 'Y' && poll.OnehundredPercentBase != "disabled",
-		// "ShowValidVotesPercent": showValidVotesPercent,
-		"Title":            poll.Title,
-		"LiveVoting":       poll.State == "started" && poll.LiveVotingEnabled,
-		"HasResults":       isPublished,
-		"HasMultiOptions":  len(poll.OptionList) > 1,
-		"Poll":             poll,
-		"PollMethod":       pollMethod,
-		"GlobalPollMethod": slideData.GlobalOptionMethods,
-		"SingleOption":     len(poll.OptionList) == 1,
-		"NumVotes":         len(voteMap),
-		"NumNotVoted":      len(entitledUsers) - len(voteMap),
-		"NumEntitledUsers": len(entitledUsers),
-		"MaxColumns":       maxColumns,
+		"_template":             "poll_single_vote",
+		"_fullHeight":           true,
+		"Data":                  slideData,
+		"GlobalOption":          slideData.GlobalOption,
+		"DisplayPercAbstain":    slideData.DisplayPercAbstain,
+		"GlobalOptionInBase":    slideData.GlobalOptionInBase,
+		"ShowValidVotesPercent": slideData.ShowValidVotesPercent,
+		"Title":                 poll.Title,
+		"LiveVoting":            poll.State == "started" && poll.LiveVotingEnabled,
+		"HasResults":            isPublished,
+		"HasMultiOptions":       len(poll.OptionList) > 1,
+		"Poll":                  poll,
+		"PollMethod":            pollMethod,
+		"GlobalPollMethod":      slideData.GlobalOptionMethods,
+		"SingleOption":          isApproval,
+		"NumVotes":              len(voteMap),
+		"NumNotVoted":           len(entitledUsers) - len(voteMap),
+		"NumEntitledUsers":      len(entitledUsers),
+		"MaxColumns":            maxColumns,
 	}, nil
 }
 
@@ -349,10 +369,18 @@ func pollSingleVotesResult(
 
 		data.TotalVotesvalid = decimal.NewFromInt(result.VotesValid())
 
-		onehundredPercentBase := result.OneHundredPercentBase(poll.Config.(*dsmodels.PollConfigApproval))
+		config := poll.Config.(*dsmodels.PollConfigApproval)
+		onehundredPercentBase := result.OneHundredPercentBase(config)
 		if !onehundredPercentBase.IsZero() {
 			data.PercVotesvalid = data.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
+
+		data.OnehundredPercentBase = onehundredPercentBase
+		data.ShowValidVotesPercent = config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseDisabled
+		data.DisplayPercAbstain = config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast ||
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitled ||
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitledPresent ||
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseValid
 
 		option := &pollSingleVotesSlideOption{
 			TotalYes:     result.Yes,
@@ -382,6 +410,16 @@ func pollSingleVotesResult(
 			data.PercVotesvalid = data.TotalVotesvalid.DivRound(onehundredPercentBase, 5).Mul(decimal.NewFromInt(100))
 		}
 
+		data.OnehundredPercentBase = onehundredPercentBase
+		data.ShowValidVotesPercent = config.OnehundredPercentBase != dstypes.PollConfigSelection_OnehundredPercentBaseDisabled
+		data.GlobalOptionInBase = config.OnehundredPercentBase != dstypes.PollConfigSelection_OnehundredPercentBaseNoGeneral &&
+			config.OnehundredPercentBase != dstypes.PollConfigSelection_OnehundredPercentBaseDisabled
+		data.DisplayPercAbstain = config.OnehundredPercentBase == dstypes.PollConfigSelection_OnehundredPercentBaseNoGeneral ||
+			config.OnehundredPercentBase == dstypes.PollConfigSelection_OnehundredPercentBaseCast ||
+			config.OnehundredPercentBase == dstypes.PollConfigSelection_OnehundredPercentBaseEntitled ||
+			config.OnehundredPercentBase == dstypes.PollConfigSelection_OnehundredPercentBaseEntitledPresent ||
+			config.OnehundredPercentBase == dstypes.PollConfigSelection_OnehundredPercentBaseValid
+
 		for _, option := range poll.OptionList {
 			optionLabel, err := viewmodels.Option_OptionLabel(ctx, req.Fetch, req.Locale, &option)
 			if err != nil {
@@ -405,9 +443,9 @@ func pollSingleVotesResult(
 			data.Options = append(data.Options, option)
 		}
 
-		if config.MinOptionsAmount == 0 || config.AllowNota {
+		if poll.AllowEmpty || config.AllowNota {
 			option := pollSingleVotesSlideOption{
-				TotalAbstain: result.Abstain,
+				TotalAbstain: result.Empty,
 			}
 
 			if config.AllowNota && config.StrikeOut {
@@ -426,7 +464,7 @@ func pollSingleVotesResult(
 			data.GlobalOptionMethods = map[string]bool{
 				"Yes":     config.AllowNota && config.StrikeOut,
 				"No":      config.AllowNota && !config.StrikeOut,
-				"Abstain": config.MinOptionsAmount == 0,
+				"Abstain": poll.AllowEmpty,
 			}
 		}
 	}

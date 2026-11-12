@@ -13,5 +13,18 @@
       border-top: 1px solid #d3d3d3;
       border-bottom: 1px solid #d3d3d3;
     }
+
+    .majority {
+      vertical-align: bottom;
+    }
+
+    .result {
+      white-space: nowrap;
+      padding-left: 18px;
+    }
+
+    .num {
+      padding-right: 18px;
+    }
   }
 }

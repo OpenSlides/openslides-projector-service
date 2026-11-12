@@ -133,8 +133,20 @@
   }
 
   .doughnut-chart-slide {
+    position: relative;
     margin-top: 0px;
     justify-self: right;
+  }
+
+  .chart-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    .material-icons {
+      font-size: 80px;
+    }
   }
 }
 
