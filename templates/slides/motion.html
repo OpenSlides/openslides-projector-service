@@ -20,7 +20,7 @@
   <div style="{{ if .ShowSidebox }}width: calc(100% - 250px);{{ end }}">
     <!-- Title -->
     <div class="spacer"></div>
-    <div class="{{ if .ShowSidebox }}slidetitle{{ end }}">
+    <div class="{{ if .ShowSidebox }}slidetitle{{else}}slidetitle-no-border{{ end }}">
       <h1 class="projector_h1">
         {{ if .Motion.Number }}
           <span>{{ .Motion.Number }}:</span>

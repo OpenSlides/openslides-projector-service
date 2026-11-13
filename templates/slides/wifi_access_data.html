@@ -2,7 +2,9 @@
 
 <div class="content">
   <div class="transform-scale">
-    <h1 class="projector_h1">{{ Loc.Get "Wifi access data" }}</h1>
+    <div class="slidetitle-no-border">
+      <h1 class="projector_h1">{{ Loc.Get "Wifi access data" }}</h1>
+    </div>
     <div class="wifi-slide-content">
       {{ if .WlanData.QrString }}
         <projector-qr-code text="{{ .WlanData.QrString }}" size="450"></projector-qr-code>
