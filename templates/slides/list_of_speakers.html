@@ -43,20 +43,22 @@
           <span class="material-icons los-lock">lock</span>
         {{ end }}
       </h1>
-      <h2>
+      <h2 class="agenda-info">
         {{ if .ContentTitle.AgendaItemNumber }}
-          {{ .ContentTitle.AgendaItemNumber }}
+          <span>{{ .ContentTitle.AgendaItemNumber }}</span>
         {{ end }}
         {{ if and .ContentTitle.AgendaItemNumber .ContentTitle.Title }}
-          ·
+          <span class="separator">·</span>
         {{ end }}
         {{ if .ContentTitle.Title }}
-          {{ .ContentTitle.Title }}
+          <span class="title">{{ .ContentTitle.Title }}</span>
         {{ end }}
         {{ if and .Speakers.WaitingSpeakers .ShowNumSpeakers }}
-          &ndash;
-          {{ .WaitingSpeakers }}
-          {{ Loc.Get "Speakers" }}
+          <span class="separator">·</span>
+          <span class="speakers">
+            {{ .WaitingSpeakers }}
+            {{ Loc.Get "Speakers" }}
+          </span>
         {{ end }}
       </h2>
     </div>
