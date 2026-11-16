@@ -127,7 +127,7 @@ export function Projector(host, id, auth = () => ``, config = {}) {
     es.addEventListener(`connected`, e => {
       const timeOffset = +e.data - Math.floor(Date.now());
       window.serverTime = () => {
-        return new Date(Date.now() - timeOffset);
+        return new Date(Date.now() + timeOffset);
       };
       clock.update();
 
