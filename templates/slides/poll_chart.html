@@ -1,6 +1,17 @@
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_common.css" />
 <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_chart.css" />
 
+{{ define "votesValue" }}
+  {{ if eq .IntPart -1 }}
+    {{ Loc.Get "majority" }}
+  {{ else if eq .IntPart -2 }}
+    {{ Loc.Get "undocumented" }}
+  {{ else }}
+    {{ . }}
+  {{ end }}
+{{ end }}
+
+
 <div class="content scroll-inner">
   <div class="slidetitle">
     <h1>
@@ -30,7 +41,7 @@
                   </td>
                   <td style="min-width: 80px">
                     <div class="result-cell-definition">
-                      {{ $o.TotalVotes }}
+                      {{ template "votesValue" $o.TotalVotes }}
                     </div>
                   </td>
                   <td>
@@ -43,13 +54,13 @@
               {{ if eq .Poll.Config.OnehundredPercentBase "cast" }}
                 <tr class="valid-votes-row">
                   <td>{{ Loc.Get "Casted ballots" }}</td>
-                  <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+                  <td class="result-cell-definition">{{ template "votesValue" .Data.TotalValidvotes }}</td>
                   <td class="result-cell-definition">100 %</td>
                 </tr>
               {{ else }}
                 <tr class="valid-votes-row">
                   <td>{{ Loc.Get "Valid votes" }}</td>
-                  <td class="result-cell-definition">{{ .Data.TotalValidvotes }}</td>
+                  <td class="result-cell-definition">{{ template "votesValue" .Data.TotalValidvotes }}</td>
                   {{ if .Data.PercValidvotes }}
                     <td class="result-cell-definition">{{ .Data.PercValidvotes }} %</td>
                   {{ end }}

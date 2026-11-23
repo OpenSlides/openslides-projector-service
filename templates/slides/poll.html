@@ -3,6 +3,14 @@
   <link rel="stylesheet" type="text/css" href="/system/projector/static/slide/poll_table.css" />
 {{ end }}
 
+{{ define "specialVoteValue" }}
+  {{ if eq .IntPart -1 }}
+    {{ Loc.Get "majority" }}
+  {{ else if eq .IntPart -2 }}
+    {{ Loc.Get "undocumented" }}
+  {{ end }}
+{{ end }}
+
 
 <div class="content scroll-inner font-scale">
   <div class="slidetitle">
@@ -65,7 +73,7 @@
               </td>
               {{ if $.Methods.Yes }}
                 {{ if $o.TotalYes.IsNegative }}
-                  <td colspan="2" class="result yes">majority</td>
+                  <td colspan="2" class="result yes">{{ template "specialVoteValue" $o.TotalYes }}</td>
                 {{ else }}
                   <td class="result yes">
                     {{ if ne $.Base "disabled" }}
@@ -80,7 +88,7 @@
               {{ if $.Methods.No }}
                 {{ if $.Methods.Yes }}
                   {{ if $o.TotalNo.IsNegative }}
-                    <td colspan="2" class="result no">majority</td>
+                    <td colspan="2" class="result no">{{ template "specialVoteValue" $o.TotalNo }}</td>
                   {{ else }}
                     <td class="result no">
                       {{ if ne $.Base "disabled" }}
@@ -93,7 +101,7 @@
                   {{ end }}
                 {{ else }}
                   {{ if $o.TotalYes.IsNegative }}
-                    <td colspan="2" class="result yes">majority</td>
+                    <td colspan="2" class="result yes">{{ template "specialVoteValue" $o.TotalYes }}</td>
                   {{ else }}
                     <td class="result yes">
                       {{ if ne $.Base "disabled" }}
@@ -108,7 +116,7 @@
               {{ end }}
               {{ if $.Methods.Abstain }}
                 {{ if $o.TotalAbstain.IsNegative }}
-                  <td colspan="2" class="result abstain">majority</td>
+                  <td colspan="2" class="result abstain">{{ template "specialVoteValue" $o.TotalNo }}</td>
                 {{ else }}
                   <td class="result abstain">
                     {{ if and $.Data.DisplayPercAbstain (ne $.Base "disabled") }}

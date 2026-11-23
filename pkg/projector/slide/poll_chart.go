@@ -188,6 +188,15 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 		Val   float64 `json:"val"`
 	}
 
+	hasNegativeValues := false
+	for _, option := range data.Options {
+		if option.TotalVotes.IsNegative() {
+			hasNegativeValues = true
+			data.PercValidvotes = ""
+			break
+		}
+	}
+
 	chartData := []chartDataEntry{}
 	for i, option := range data.Options {
 		if option.GlobalOption {
@@ -203,16 +212,18 @@ func pollChartSlideHandler(ctx context.Context, req *projectionRequest) (map[str
 			Val:   option.TotalVotes.InexactFloat64(),
 		})
 
-		if !onehundredPercentBase.IsZero() && option.DisplayPerc {
+		if !hasNegativeValues && !onehundredPercentBase.IsZero() && option.DisplayPerc {
 			data.Options[i].PercVotes = option.TotalVotes.Div(onehundredPercentBase).Mul(decimal.NewFromInt(100)).Round(3).String()
 		}
 	}
 
-	chartDataJSON, err := json.Marshal(chartData)
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal chart data json %w", err)
+	if !hasNegativeValues {
+		chartDataJSON, err := json.Marshal(chartData)
+		if err != nil {
+			return nil, fmt.Errorf("could not marshal chart data json %w", err)
+		}
+		data.ChartData = string(chartDataJSON)
 	}
-	data.ChartData = string(chartDataJSON)
 
 	return map[string]any{
 		"_template":   "poll_chart",
