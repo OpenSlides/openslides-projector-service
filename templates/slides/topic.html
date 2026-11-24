@@ -1,10 +1,12 @@
 <div class="content font-scale scroll-inner">
-  <h1 class="projector_h1">
-    {{ if .AgendaItem.ItemNumber }}
-      <span>{{ .AgendaItem.ItemNumber }} &middot;</span>
-    {{ end }}
-    {{ .Topic.Title }}
-  </h1>
+  <div class="slidetitle-no-border">
+    <h1 class="projector_h1">
+      {{ if .AgendaItem.ItemNumber }}
+        <span>{{ .AgendaItem.ItemNumber }} &middot;</span>
+      {{ end }}
+      {{ .Topic.Title }}
+    </h1>
+  </div>
   <div class="detail-view-text">
     {{ .Text }}
   </div>

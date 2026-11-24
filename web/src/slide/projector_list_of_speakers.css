@@ -2,6 +2,27 @@
   .los-lock {
     vertical-align: text-top;
   }
+
+  .agenda-info {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    min-width: 0;
+    white-space: nowrap;
+
+    .title {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .separator,
+    .speakers {
+      flex: 0 0 auto;
+    }
+  }
 }
 
 .list-of-speakers.overlay h3 {
