@@ -380,7 +380,8 @@ func pollSingleVotesResult(
 		data.DisplayPercAbstain = config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast ||
 			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitled ||
 			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitledPresent ||
-			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseValid
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseValid ||
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNoAbstain
 
 		option := &pollSingleVotesSlideOption{
 			TotalYes:     result.Yes,
