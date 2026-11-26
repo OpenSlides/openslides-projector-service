@@ -31,16 +31,17 @@ type pollSingleVotesSlideVoteEntryGroup struct {
 }
 
 type pollSingleVotesSlideData struct {
-	GlobalOptionInBase    bool
-	DisplayPercAbstain    bool
-	ShowValidVotesPercent bool
-	OnehundredPercentBase decimal.Decimal
-	TotalVotesvalid       decimal.Decimal
-	PercVotesvalid        decimal.Decimal
-	GlobalOption          *pollSingleVotesSlideOption
-	GlobalOptionMethods   map[string]bool
-	Options               []*pollSingleVotesSlideOption
-	GroupedVotes          []*pollSingleVotesSlideVoteEntryGroup
+	GlobalOptionInBase       bool
+	DisplayPercAbstain       bool
+	ShowValidVotesPercent    bool
+	ShowEntitledUsersPercent bool
+	OnehundredPercentBase    decimal.Decimal
+	TotalVotesvalid          decimal.Decimal
+	PercVotesvalid           decimal.Decimal
+	GlobalOption             *pollSingleVotesSlideOption
+	GlobalOptionMethods      map[string]bool
+	Options                  []*pollSingleVotesSlideOption
+	GroupedVotes             []*pollSingleVotesSlideVoteEntryGroup
 }
 
 type pollSingleVotesSlideOption struct {
@@ -236,25 +237,26 @@ func pollSingleVotesSlideHandler(ctx context.Context, req *projectionRequest) (m
 
 	_, isApproval := poll.Config.(*dsmodels.PollConfigApproval)
 	return map[string]any{
-		"_template":             "poll_single_vote",
-		"_fullHeight":           true,
-		"Data":                  slideData,
-		"GlobalOption":          slideData.GlobalOption,
-		"DisplayPercAbstain":    slideData.DisplayPercAbstain,
-		"GlobalOptionInBase":    slideData.GlobalOptionInBase,
-		"ShowValidVotesPercent": slideData.ShowValidVotesPercent,
-		"Title":                 poll.Title,
-		"LiveVoting":            poll.State == "started" && poll.LiveVotingEnabled,
-		"HasResults":            isPublished,
-		"HasMultiOptions":       len(poll.OptionList) > 1,
-		"Poll":                  poll,
-		"PollMethod":            pollMethod,
-		"GlobalPollMethod":      slideData.GlobalOptionMethods,
-		"SingleOption":          isApproval,
-		"NumVotes":              len(voteMap),
-		"NumNotVoted":           len(entitledUsers) - len(voteMap),
-		"NumEntitledUsers":      len(entitledUsers),
-		"MaxColumns":            maxColumns,
+		"_template":                "poll_single_vote",
+		"_fullHeight":              true,
+		"Data":                     slideData,
+		"GlobalOption":             slideData.GlobalOption,
+		"DisplayPercAbstain":       slideData.DisplayPercAbstain,
+		"GlobalOptionInBase":       slideData.GlobalOptionInBase,
+		"ShowValidVotesPercent":    slideData.ShowValidVotesPercent,
+		"ShowEntitledUsersPercent": slideData.ShowEntitledUsersPercent,
+		"Title":                    poll.Title,
+		"LiveVoting":               poll.State == "started" && poll.LiveVotingEnabled,
+		"HasResults":               isPublished,
+		"HasMultiOptions":          len(poll.OptionList) > 1,
+		"Poll":                     poll,
+		"PollMethod":               pollMethod,
+		"GlobalPollMethod":         slideData.GlobalOptionMethods,
+		"SingleOption":             isApproval,
+		"NumVotes":                 len(voteMap),
+		"NumNotVoted":              len(entitledUsers) - len(voteMap),
+		"NumEntitledUsers":         len(entitledUsers),
+		"MaxColumns":               maxColumns,
 	}, nil
 }
 
@@ -377,10 +379,12 @@ func pollSingleVotesResult(
 
 		data.OnehundredPercentBase = onehundredPercentBase
 		data.ShowValidVotesPercent = config.OnehundredPercentBase != dstypes.PollConfigApproval_OnehundredPercentBaseDisabled
+		data.ShowEntitledUsersPercent = config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitled
 		data.DisplayPercAbstain = config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseCast ||
 			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitled ||
 			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseEntitledPresent ||
-			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseValid
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseValid ||
+			config.OnehundredPercentBase == dstypes.PollConfigApproval_OnehundredPercentBaseYesNoAbstain
 
 		option := &pollSingleVotesSlideOption{
 			TotalYes:     result.Yes,

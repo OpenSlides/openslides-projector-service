@@ -66,6 +66,9 @@
             <div>
               {{ Loc.Get "Entitled users" }}:
               {{ .NumEntitledUsers }}
+              {{ if .ShowEntitledUsersPercent }}
+                (100 %)
+              {{ end }}
               <!-- if eq .Poll.Config.OnehundredPercentBase "entitled"
                 { .Poll.entitled_users_at_stop.length | pollPercentBase: polldata }
               end -->
